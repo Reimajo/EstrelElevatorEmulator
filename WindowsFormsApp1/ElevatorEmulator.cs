@@ -192,6 +192,7 @@ namespace WindowsFormsApp1
         /// </summary>
         private void buttonCallDown_0_Click(object sender, EventArgs e)
         {
+            SetButtonColor(directionUp: false, stateCalled: true, floor: 0);
             _controller.API_LocalPlayerPressedCallButton(0, false);
         }
         /// <summary>
@@ -199,27 +200,31 @@ namespace WindowsFormsApp1
         /// </summary>
         private void buttonCallUp_0_Click(object sender, EventArgs e)
         {
+            SetButtonColor(directionUp: true, stateCalled: true, floor: 0);
             _controller.API_LocalPlayerPressedCallButton(0, true);
-        }
-        /// <summary>
-        /// User presses button "UP" on floor 5
-        /// </summary>
-        private void buttonCallUp_5_Click(object sender, EventArgs e)
-        {
-            _controller.API_LocalPlayerPressedCallButton(5, true);
         }
         /// <summary>
         /// User presses button "DOWN" on floor 5
         /// </summary>
         private void buttonCallDown_5_Click(object sender, EventArgs e)
         {
+            SetButtonColor(directionUp: false, stateCalled: true, floor: 5);
             _controller.API_LocalPlayerPressedCallButton(5, false);
+        }
+        /// <summary>
+        /// User presses button "UP" on floor 5
+        /// </summary>
+        private void buttonCallUp_5_Click(object sender, EventArgs e)
+        {
+            SetButtonColor(directionUp: true, stateCalled: true, floor: 5);
+            _controller.API_LocalPlayerPressedCallButton(5, true);
         }
         /// <summary>
         /// User presses button "DOWN" on floor 13 (topmost floor)
         /// </summary>
         private void buttonCallDown_13_Click(object sender, EventArgs e)
         {
+            SetButtonColor(directionUp: false, stateCalled: true, floor: 13);
             _controller.API_LocalPlayerPressedCallButton(13, false);
         }
         /// <summary>
@@ -227,6 +232,7 @@ namespace WindowsFormsApp1
         /// </summary>
         private void buttonCallUp_13_Click(object sender, EventArgs e)
         {
+            SetButtonColor(directionUp: true, stateCalled: true, floor: 13);
             _controller.API_LocalPlayerPressedCallButton(13, true);
         }
         /// <summary>
@@ -1032,10 +1038,12 @@ namespace WindowsFormsApp1
                     //TODO: link all elevator controllers here in Unity later
                     if (floor == 0)
                     {
+                        Debug.Print("Dropped request, SetElevatorNotCalledUp() floor " + floor);
                         _elevatorControllerReception.SetElevatorNotCalledUp(floor);
                     }
                     else
                     {
+                        Debug.Print("Dropped request, SetElevatorNotCalledUp() floor " + floor);
                         _elevatorControllerReception.SetElevatorNotCalledUp(floor);
                     }
                 }
@@ -1045,10 +1053,12 @@ namespace WindowsFormsApp1
                     //TODO: link all elevator controllers here in Unity later
                     if (floor == 0)
                     {
+                        Debug.Print("Dropped request, SetElevatorNotCalledDown() floor " + floor);
                         _elevatorControllerReception.SetElevatorNotCalledDown(floor);
                     }
                     else
                     {
+                        Debug.Print("Dropped request, SetElevatorNotCalledDown() floor " + floor);
                         _elevatorControllerReception.SetElevatorNotCalledDown(floor);
                     }
                 }
@@ -1065,6 +1075,7 @@ namespace WindowsFormsApp1
                 bool networkBoolState = GetSyncValue(SyncBoolReq_ElevatorCalledUp_0 + floor);
                 if (_elevatorIsCalledUp[floor] && !networkBoolState)
                 {
+                    Debug.Print("SetElevatorNotCalledUp() floor " + floor);
                     _elevatorIsCalledUp[floor] = false;
                     _elevatorControllerReception.SetElevatorNotCalledUp(floor);
                 }
@@ -1075,10 +1086,12 @@ namespace WindowsFormsApp1
                     //TODO: link all elevator controllers here in Unity later
                     if (floor == 0)
                     {
+                        Debug.Print("SetElevatorCalledUp() floor " + floor);
                         _elevatorControllerReception.SetElevatorCalledUp(floor);
                     }
                     else
                     {
+                        Debug.Print("SetElevatorCalledUp() floor " + floor);
                         //TODO: Replace with a different controller in Unity
                         _elevatorControllerReception.SetElevatorCalledUp(floor);
                     }
@@ -1087,6 +1100,7 @@ namespace WindowsFormsApp1
                 networkBoolState = GetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + floor);
                 if (_elevatorIsCalledDown[floor] && !networkBoolState)
                 {
+                    Debug.Print("SetElevatorNotCalledDown() floor " + floor);
                     _elevatorIsCalledDown[floor] = false;
                     _elevatorControllerReception.SetElevatorNotCalledDown(floor);
                 }
@@ -1097,10 +1111,12 @@ namespace WindowsFormsApp1
                     //TODO: link all elevator controllers here in Unity later
                     if (floor == 0)
                     {
+                        Debug.Print("SetElevatorCalledDown() floor " + floor);
                         _elevatorControllerReception.SetElevatorCalledDown(floor);
                     }
                     else
                     {
+                        Debug.Print("SetElevatorCalledDown() floor " + floor);
                         //TODO: Replace with a different controller in Unity
                         _elevatorControllerReception.SetElevatorCalledDown(floor);
                     }
