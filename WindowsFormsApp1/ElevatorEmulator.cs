@@ -62,18 +62,22 @@ namespace WindowsFormsApp1
         }
         internal void SetElevatorCalledDown(int floor)
         {
+            Debug.Print("SetElevatorCalledDown " + floor);
             SetButtonColor(false, true, floor);
         }
         internal void SetElevatorCalledUp(int floor)
         {
+            Debug.Print("SetElevatorCalledUp " + floor);
             SetButtonColor(true, true, floor);
         }
         internal void SetElevatorNotCalledDown(int floor)
         {
+            Debug.Print("SetElevatorNotCalledDown " + floor);
             SetButtonColor(false, false, floor);
         }
         internal void SetElevatorNotCalledUp(int floor)
         {
+            Debug.Print("SetElevatorNotCalledUp " + floor);
             SetButtonColor(true, false, floor);
         }
         /// <summary>
@@ -1032,7 +1036,7 @@ namespace WindowsFormsApp1
                     }
                     else
                     {
-                        _elevatorControllerArrivalArea.SetElevatorNotCalledUp(floor);
+                        _elevatorControllerReception.SetElevatorNotCalledUp(floor);
                     }
                 }
                 if (_locallyIsCalledDown[floor] && !GetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + floor) && time.GetTime() - _elevatorCallTimeDown[floor] > 1f)
@@ -1045,7 +1049,7 @@ namespace WindowsFormsApp1
                     }
                     else
                     {
-                        _elevatorControllerArrivalArea.SetElevatorNotCalledDown(floor);
+                        _elevatorControllerReception.SetElevatorNotCalledDown(floor);
                     }
                 }
             }
@@ -1098,7 +1102,7 @@ namespace WindowsFormsApp1
                     else
                     {
                         //TODO: Replace with a different controller in Unity
-                        _elevatorControllerArrivalArea.SetElevatorCalledDown(floor);
+                        _elevatorControllerReception.SetElevatorCalledDown(floor);
                     }
                 }
             }

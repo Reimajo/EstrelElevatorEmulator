@@ -17,3 +17,12 @@ C:\Users\Felix\source\repos\ElevatorEmulator.cs\WindowsFormsApp1\obj\Debug\Eleva
 C:\Users\Felix\source\repos\ElevatorEmulator.cs\WindowsFormsApp1\obj\Debug\ElevatorEmulator.csproj.GenerateResource.cache
 C:\Users\Felix\source\repos\ElevatorEmulator.cs\WindowsFormsApp1\obj\Debug\ElevatorEmulator.cs.exe
 C:\Users\Felix\source\repos\ElevatorEmulator.cs\WindowsFormsApp1\obj\Debug\ElevatorEmulator.cs.pdb
+C:\Users\Felix\Documents\GitHub\EstrelElevatorEmulator\WindowsFormsApp1\bin\Debug\ElevatorEmulator.cs.exe.config
+C:\Users\Felix\Documents\GitHub\EstrelElevatorEmulator\WindowsFormsApp1\bin\Debug\ElevatorEmulator.cs.exe
+C:\Users\Felix\Documents\GitHub\EstrelElevatorEmulator\WindowsFormsApp1\bin\Debug\ElevatorEmulator.cs.pdb
+C:\Users\Felix\Documents\GitHub\EstrelElevatorEmulator\WindowsFormsApp1\obj\Debug\ElevatorEmulator.csprojAssemblyReference.cache
+C:\Users\Felix\Documents\GitHub\EstrelElevatorEmulator\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.ElevatorEmulator.resources
+C:\Users\Felix\Documents\GitHub\EstrelElevatorEmulator\WindowsFormsApp1\obj\Debug\ElevatorEmulator.cs.Properties.Resources.resources
+C:\Users\Felix\Documents\GitHub\EstrelElevatorEmulator\WindowsFormsApp1\obj\Debug\ElevatorEmulator.csproj.GenerateResource.cache
+C:\Users\Felix\Documents\GitHub\EstrelElevatorEmulator\WindowsFormsApp1\obj\Debug\ElevatorEmulator.cs.exe
+C:\Users\Felix\Documents\GitHub\EstrelElevatorEmulator\WindowsFormsApp1\obj\Debug\ElevatorEmulator.cs.pdb
