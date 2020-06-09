@@ -431,6 +431,18 @@ namespace WindowsFormsApp1
                 case 13:
                     button13.BackColor = color;
                     break;
+                case 14:
+                    button14.BackColor = color;
+                    break;
+                case 15:
+                    button15.BackColor = color;
+                    break;
+                case 16:
+                    button16.BackColor = color;
+                    break;
+                case 17:
+                    button17.BackColor = color;
+                    break;
             }
         }
 
