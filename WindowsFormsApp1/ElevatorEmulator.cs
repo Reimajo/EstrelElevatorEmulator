@@ -1001,6 +1001,7 @@ namespace WindowsFormsApp1
         /// Running a single elevator, is only called by master in every Update
         /// 
         /// TODO: Moving down without internal target!
+        /// TODO: Reset floor time after going out of idle mode
         /// 
         /// </summary>
         private void MASTER_RunElevator(int elevatorNumber, int SyncBoolElevatorOpen, int SyncBoolElevatorIdle, int SyncBoolElevatorGoingUp, bool[] elevatorFloorTargets)
