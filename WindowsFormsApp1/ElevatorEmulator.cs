@@ -462,6 +462,15 @@ namespace WindowsFormsApp1
                 MASTER_RunElevatorControl();
             }
             LOCAL_RunLocalPlayer();
+            //TODO: remove on live build
+            TEST_DisplayElevatorStates();
+        }
+        //TODO: remove on live build
+        private void TEST_DisplayElevatorStates()
+        {
+            form1.DisplayElevatorState(0, GetSyncElevatorGoingUp(0), GetSyncValue(SyncBool_Elevator0idle), GetSyncValue(SyncBool_Elevator0open));
+            form1.DisplayElevatorState(1, GetSyncElevatorGoingUp(1), GetSyncValue(SyncBool_Elevator1idle), GetSyncValue(SyncBool_Elevator1open));
+            form1.DisplayElevatorState(2, GetSyncElevatorGoingUp(2), GetSyncValue(SyncBool_Elevator2idle), GetSyncValue(SyncBool_Elevator2open));
         }
         #endregion START_UPDATE_FUNCTIONS
         //------------------------------------------------------------------------------------------------------------
@@ -752,7 +761,7 @@ namespace WindowsFormsApp1
             if (targetFound)
             {
                 Debug.Print("[NetworkController] Elevator " + elevatorNumber + " was idle but now has an external target and is going up");
-                MASTER_SetElevatorDirection(elevatorNumber, goingUp:true);
+                MASTER_SetElevatorDirection(elevatorNumber, goingUp: true);
                 //this elevator basicly belongs to that floor then, so both targets are handled, but this isn't perfect
                 Debug.Print("[NetworkController] We're faking an EREQ next to set an internal target");
                 ELREQ_SetInternalTarget(elevatorNumber, nextTarget);
@@ -918,247 +927,314 @@ namespace WindowsFormsApp1
         //------------------------------------------------------------------------------------------------------------
         #region LOCAL_FUNCTIONS
         /// <summary>
-        /// Setting up the scene at startup or when it isn't setup yet
+        /// elevator request states, synced by master
         /// </summary>
-        private void LOCAL_ReadConstSceneElevatorStates()
-        {
-            Debug.Print("[NetworkController] Setting random elevator states for reception by localPlayer");
-            _elevator0Working = GetSyncValue(SyncBool_Elevator0working);
-            _elevator1Working = GetSyncValue(SyncBool_Elevator1working);
-            _elevator2Working = GetSyncValue(SyncBool_Elevator2working);
-            form1.DisplayElevatorBroken(_elevator0Working, _elevator1Working, _elevator2Working);
-            //NOPE _elevatorControllerReception._elevator1working = _elevator0Working;
-            //NOPE _elevatorControllerReception._elevator2working = _elevator1Working;
-            //NOPE _elevatorControllerReception._elevator3working = _elevator2Working;
-            //NOPE _elevatorControllerReception.SetupElevatorStates();
-            Debug.Print("[NetworkController] Random elevator states for reception are now set by localPlayer");
-        }
-        /// <summary> Elevator 0 open/close (localPlayer world view that is in sync with ElevatorController of Level 0)</summary>
-        private bool _elevator0isOpenReception = false;
-        /// <summary> Elevator 1 open/close (localPlayer world view that is in sync with ElevatorController of Level 0)</summary>
-        private bool _elevator1isOpenReception = false;
-        /// <summary> Elevator 2 open/close (localPlayer world view that is in sync with ElevatorController of Level 0)</summary>
-        private bool _elevator2isOpenReception = false;
+        private ulong _localSyncData1 = 0;
+        private uint _localSyncData2 = 0;
+        private bool[] _localSyncDataBools = new bool[84];
         /// <summary>
-        /// is called when network packets are received (only happens when there are more players except Master in the scene
+        /// The ulong maps as follows:-
+        ///  - 63-60 variable_1 (4bits)
+        ///  - 59-56 variable_2 (4bits)
+        ///  - 55-52 variable_2 (4bits)
+        ///  - 51-0 binary bools [0-51]
+        ///
+        /// The uint maps as follows:-
+        ///  - 31-0 binary bools [52-83(?)]
+        ///  
+        /// Is run every time a network packet is received by localPlayer
         /// </summary>
-        public void OnDeserialization()
+        private void LOCAL_CheckSyncData()
         {
-            if (!_worldIsLoaded)
-                return;
-            LOCAL_OnDeserialization(); //do nothing else in here or shit will break!
-        }
-        /// <summary>
-        /// Can be called by master (locally in Update) or by everyone else OnDeserialization (when SyncBool states change)
-        /// </summary>
-        private void LOCAL_OnDeserialization()
-        {
-            if (!_finishedLocalSetup)
+            //check if something from this synced var has changed
+            if (_syncData1 != _localSyncData1)
             {
-                if (time.GetTime() < 1f)
-                    return;
-                Debug.Print("[NetworkController] Local setup was started");
-                if (GetSyncValue(SyncBool_Initialized))
-                {
-                    LOCAL_ReadConstSceneElevatorStates();
-                    _finishedLocalSetup = true;
-                    Debug.Print("[NetworkController] Local setup was finished");
-                }
-                else
-                {
-                    return;
-                }
-            }
-            else
-            {
-                LOCAL_CheckElevatorStates();
-                LOCAL_CheckElevatorCallStateReception();
+                //position 52 to position 63 are floor levels that might have changed
                 LOCAL_CheckElevatorLevels();
+                //the positions 0-51 are binary bools that might have changed
+                for (int i = 1; i < 52; i++) //no need to check bool 0
+                {
+                    if (GetSyncValue(i) != _localSyncDataBools[i])
+                    {
+                        LOCAL_HandleSyncBoolChanged(i);
+                    }
+                }
+                //store new local sync data 1
+                _localSyncData1 = _syncData1;
+            }
+            //check if something from this synced var has changed
+            if (_syncData2 != _localSyncData2)
+            {
+                //the positions 0-31 are binary bools that might have changed (position 52-83)
+                for (int i = 52; i < 84; i++)
+                {
+                    if (GetSyncValue(i) != _localSyncDataBools[i])
+                    {
+                        LOCAL_HandleSyncBoolChanged(i);
+                    }
+                }
+                //store new local sync data 2
+                _localSyncData2 = _syncData2;
             }
         }
         /// <summary>
-        /// Run by LocalPlayer
-        /// Checking all bits and see if the real world alligns with it
+        /// Is called when the syncbool on position <see cref="syncBoolPosition"/> has changed
         /// </summary>
-        private void LOCAL_CheckElevatorStates()
+        private void LOCAL_HandleSyncBoolChanged(int syncBoolPosition)
         {
-            form1.DisplayElevatorState(0, GetSyncElevatorGoingUp(0), GetSyncValue(SyncBool_Elevator0idle), GetSyncValue(SyncBool_Elevator0open));
-            form1.DisplayElevatorState(1, GetSyncElevatorGoingUp(1), GetSyncValue(SyncBool_Elevator1idle), GetSyncValue(SyncBool_Elevator1open));
-            form1.DisplayElevatorState(2, GetSyncElevatorGoingUp(2), GetSyncValue(SyncBool_Elevator2idle), GetSyncValue(SyncBool_Elevator2open));
-            //Elevator 0 open/close
-            if (!_elevator0isOpenReception && GetSyncValue(SyncBool_Elevator0open))   //TODO: Check floor position on synced uint!
+            //read the new state
+            bool newState = !_localSyncDataBools[syncBoolPosition];
+            //change the locally known state to it
+            _localSyncDataBools[syncBoolPosition] = newState;
+            //adjust the scene elements to the new state
+            switch (syncBoolPosition)
             {
-                if (GetSyncElevatorFloor(0) != 0)
-                {
-                    Debug.Print("[NetworkController] Elevator 0 is currently at floor " + GetSyncElevatorFloor(0) + " so Reception won't open.");
-                }
-                else
-                {
-                    Debug.Print("[NetworkController] LocalPlayer received to open elevator 0");
-                    _elevatorControllerReception.OpenElevatorReception(0, GetSyncElevatorGoingUp(0), GetSyncValue(SyncBool_Elevator0idle));
-                    _elevator0isOpenReception = true;
-                }
-            }
-            else if (_elevator0isOpenReception && !GetSyncValue(SyncBool_Elevator0open))   //TODO: Check floor position on synced uint!
-            {
-                Debug.Print("[NetworkController] LocalPlayer received to close elevator 0");
-                _elevatorControllerReception.CloseElevatorReception(0);
-                _elevator0isOpenReception = false;
-            }
-            //Elevator 1 open/close
-            if (!_elevator1isOpenReception && GetSyncValue(SyncBool_Elevator1open))   //TODO: Check floor position on synced uint!
-            {
-                if (GetSyncElevatorFloor(1) != 0)
-                {
-                    Debug.Print("[NetworkController] Elevator 1 is currently at floor " + GetSyncElevatorFloor(1) + " so Reception won't open.");
-                }
-                else
-                {
-                    Debug.Print("[NetworkController] LocalPlayer received to open elevator 1");
-                    _elevatorControllerReception.OpenElevatorReception(1, GetSyncElevatorGoingUp(1), GetSyncValue(SyncBool_Elevator1idle));
-                    _elevator1isOpenReception = true;
-                }
-            }
-            else if (_elevator1isOpenReception && !GetSyncValue(SyncBool_Elevator1open))
-            {
-                Debug.Print("[NetworkController] LocalPlayer received to close elevator 1");
-                _elevatorControllerReception.CloseElevatorReception(1);
-                _elevator1isOpenReception = false;
-            }
-            //Elevator 2 open/close
-            if (!_elevator2isOpenReception && GetSyncValue(SyncBool_Elevator2open) && GetSyncElevatorFloor(2) == 0)
-            {
-                if (GetSyncElevatorFloor(2) != 0)
-                {
-                    Debug.Print("[NetworkController] Elevator 2 is currently at floor " + GetSyncElevatorFloor(2) + " so Reception won't open.");
-                }
-                else
-                {
-                    Debug.Print("[NetworkController] LocalPlayer received to open elevator 2");
-                    _elevatorControllerReception.OpenElevatorReception(2, GetSyncElevatorGoingUp(2), GetSyncValue(SyncBool_Elevator2idle));
-                    _elevator2isOpenReception = true;
-                }
-            }
-            else if (_elevator2isOpenReception && !GetSyncValue(SyncBool_Elevator2open))
-            {
-                Debug.Print("[NetworkController] LocalPlayer received to open elevator 2");
-                _elevatorControllerReception.CloseElevatorReception(2);
-                _elevator2isOpenReception = false;
-            }
-        }
-        //Local copies of elevator state to check them against SyncBool states
-        private int _localPlayerFloor = 0; //this is only relevant once we figure out instancing in Unity
-        private bool[] _elevatorIsCalledDown = new bool[14];
-        private bool[] _elevatorIsCalledUp = new bool[14];
-        private bool[] _locallyIsCalledDown = new bool[14];
-        private bool[] _locallyIsCalledUp = new bool[14];
-        private float[] _elevatorCallTimeUp = new float[14];
-        private float[] _elevatorCallTimeDown = new float[14];
-        /// <summary>
-        /// This function is called in every Update()
-        /// </summary>
-        private void LOCAL_RunLocalPlayer()
-        {
-            //Checking if local call was handled or dropped
-            LOCAL_CheckIfElevatorCallWasReceived();
-        }
-        /// <summary>
-        /// Checking if the elevator was successfully called by master after we've called it, else we drop the request
-        /// </summary>
-        private void LOCAL_CheckIfElevatorCallWasReceived()
-        {
-            for (int floor = 0; floor <= 13; floor++)
-            {
-                //Check if there is a pending request
-                if (_locallyIsCalledUp[floor] && !GetSyncValue(SyncBoolReq_ElevatorCalledUp_0 + floor) && time.GetTime() - _elevatorCallTimeUp[floor] > 1f)
-                {
-                    _locallyIsCalledUp[floor] = false;
-                    //TODO: link all elevator controllers here in Unity later
-                    if (floor == 0)
-                    {
-                        Debug.Print("Dropped request, SetElevatorNotCalledUp() floor " + floor);
-                        _elevatorControllerReception.SetElevatorNotCalledUp(floor);
-                    }
-                    else
-                    {
-                        Debug.Print("Dropped request, SetElevatorNotCalledUp() floor " + floor);
-                        _elevatorControllerReception.SetElevatorNotCalledUp(floor);
-                    }
-                }
-                if (_locallyIsCalledDown[floor] && !GetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + floor) && time.GetTime() - _elevatorCallTimeDown[floor] > 1f)
-                {
-                    _locallyIsCalledDown[floor] = false;
-                    //TODO: link all elevator controllers here in Unity later
-                    if (floor == 0)
-                    {
-                        Debug.Print("Dropped request, SetElevatorNotCalledDown() floor " + floor);
-                        _elevatorControllerReception.SetElevatorNotCalledDown(floor);
-                    }
-                    else
-                    {
-                        Debug.Print("Dropped request, SetElevatorNotCalledDown() floor " + floor);
-                        _elevatorControllerReception.SetElevatorNotCalledDown(floor);
-                    }
-                }
-            }
-        }
-        /// <summary>
-        /// Checking elevator callsign states (the callbutton-panels / UP-DOWN buttons)
-        /// </summary>
-        private void LOCAL_CheckElevatorCallStateReception()
-        {
-            for (int floor = 0; floor <= 13; floor++)
-            {
-                //Check if the master has set an elevator call to up
-                bool networkBoolState = GetSyncValue(SyncBoolReq_ElevatorCalledUp_0 + floor);
-                if (_elevatorIsCalledUp[floor] && !networkBoolState)
-                {
-                    Debug.Print("SetElevatorNotCalledUp() floor " + floor);
-                    _elevatorIsCalledUp[floor] = false;
-                    _elevatorControllerReception.SetElevatorNotCalledUp(floor);
-                }
-                else if (!_elevatorIsCalledUp[floor] && networkBoolState)
-                {
-                    _elevatorIsCalledUp[floor] = true;
-                    _locallyIsCalledUp[floor] = false; //local call can be dropped now
-                    //TODO: link all elevator controllers here in Unity later
-                    if (floor == 0)
-                    {
-                        Debug.Print("SetElevatorCalledUp() floor " + floor);
-                        _elevatorControllerReception.SetElevatorCalledUp(floor);
-                    }
-                    else
-                    {
-                        Debug.Print("SetElevatorCalledUp() floor " + floor);
-                        //TODO: Replace with a different controller in Unity
-                        _elevatorControllerReception.SetElevatorCalledUp(floor);
-                    }
-                }
-                //Check if the master has set an elevator call to down from reception
-                networkBoolState = GetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + floor);
-                if (_elevatorIsCalledDown[floor] && !networkBoolState)
-                {
-                    Debug.Print("SetElevatorNotCalledDown() floor " + floor);
-                    _elevatorIsCalledDown[floor] = false;
-                    _elevatorControllerReception.SetElevatorNotCalledDown(floor);
-                }
-                else if (!_elevatorIsCalledDown[floor] && networkBoolState)
-                {
-                    _elevatorIsCalledDown[floor] = true;
-                    _locallyIsCalledDown[floor] = false; //local call can be dropped now
-                    //TODO: link all elevator controllers here in Unity later
-                    if (floor == 0)
-                    {
-                        Debug.Print("SetElevatorCalledDown() floor " + floor);
-                        _elevatorControllerReception.SetElevatorCalledDown(floor);
-                    }
-                    else
-                    {
-                        Debug.Print("SetElevatorCalledDown() floor " + floor);
-                        //TODO: Replace with a different controller in Unity
-                        _elevatorControllerReception.SetElevatorCalledDown(floor);
-                    }
-                }
+                case SyncBool_Elevator0open:
+                    LOCAL_OpenCloseElevator(0, setOpen: newState);
+                    break;
+                case SyncBool_Elevator1open:
+                    LOCAL_OpenCloseElevator(1, setOpen: newState);
+                    break;
+                case SyncBool_Elevator2open:
+                    LOCAL_OpenCloseElevator(2, setOpen: newState);
+                    break;
+                case SyncBool_Elevator0idle:
+                    LOCAL_SetElevatorIdle(0, isIdle: newState);
+                    break;
+                case SyncBool_Elevator1idle:
+                    LOCAL_SetElevatorIdle(1, isIdle: newState);
+                    break;
+                case SyncBool_Elevator2idle:
+                    LOCAL_SetElevatorIdle(2, isIdle: newState);
+                    break;
+                case SyncBool_Elevator0goingUp:
+                    LOCAL_SetElevatorDirection(0, goingUp: newState);
+                    break;
+                case SyncBool_Elevator1goingUp:
+                    LOCAL_SetElevatorDirection(1, goingUp: newState);
+                    break;
+                case SyncBool_Elevator2goingUp:
+                    LOCAL_SetElevatorDirection(2, goingUp: newState);
+                    break;
+                //case SyncBoolReq_ElevatorCalled#J2#_#1#:
+                //LOCAL_SetElevatorCallButtonState(#1#, buttonUp: #J1#, called: newState);
+                //break;
+                case SyncBoolReq_ElevatorCalledUp_0:
+                    LOCAL_SetElevatorCallButtonState(0, buttonUp: true, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledUp_1:
+                    LOCAL_SetElevatorCallButtonState(1, buttonUp: true, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledUp_2:
+                    LOCAL_SetElevatorCallButtonState(2, buttonUp: true, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledUp_3:
+                    LOCAL_SetElevatorCallButtonState(3, buttonUp: true, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledUp_4:
+                    LOCAL_SetElevatorCallButtonState(4, buttonUp: true, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledUp_5:
+                    LOCAL_SetElevatorCallButtonState(5, buttonUp: true, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledUp_6:
+                    LOCAL_SetElevatorCallButtonState(6, buttonUp: true, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledUp_7:
+                    LOCAL_SetElevatorCallButtonState(7, buttonUp: true, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledUp_8:
+                    LOCAL_SetElevatorCallButtonState(8, buttonUp: true, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledUp_9:
+                    LOCAL_SetElevatorCallButtonState(9, buttonUp: true, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledUp_10:
+                    LOCAL_SetElevatorCallButtonState(10, buttonUp: true, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledUp_11:
+                    LOCAL_SetElevatorCallButtonState(11, buttonUp: true, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledUp_12:
+                    LOCAL_SetElevatorCallButtonState(12, buttonUp: true, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledUp_13:
+                    LOCAL_SetElevatorCallButtonState(13, buttonUp: true, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledDown_0:
+                    LOCAL_SetElevatorCallButtonState(0, buttonUp: false, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledDown_1:
+                    LOCAL_SetElevatorCallButtonState(1, buttonUp: false, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledDown_2:
+                    LOCAL_SetElevatorCallButtonState(2, buttonUp: false, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledDown_3:
+                    LOCAL_SetElevatorCallButtonState(3, buttonUp: false, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledDown_4:
+                    LOCAL_SetElevatorCallButtonState(4, buttonUp: false, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledDown_5:
+                    LOCAL_SetElevatorCallButtonState(5, buttonUp: false, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledDown_6:
+                    LOCAL_SetElevatorCallButtonState(6, buttonUp: false, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledDown_7:
+                    LOCAL_SetElevatorCallButtonState(7, buttonUp: false, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledDown_8:
+                    LOCAL_SetElevatorCallButtonState(8, buttonUp: false, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledDown_9:
+                    LOCAL_SetElevatorCallButtonState(9, buttonUp: false, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledDown_10:
+                    LOCAL_SetElevatorCallButtonState(10, buttonUp: false, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledDown_11:
+                    LOCAL_SetElevatorCallButtonState(11, buttonUp: false, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledDown_12:
+                    LOCAL_SetElevatorCallButtonState(12, buttonUp: false, called: newState);
+                    break;
+                case SyncBoolReq_ElevatorCalledDown_13:
+                    LOCAL_SetElevatorCallButtonState(13, buttonUp: false, called: newState);
+                    break;
+                //case SyncBoolReq_Elevator#J1#CalledToFloor_#1#:
+                //    LOCAL_SetElevatorInternalButtonState(#J1#,#1#, called: newState);
+                //    break;
+                case SyncBoolReq_Elevator0CalledToFloor_0:
+                    LOCAL_SetElevatorInternalButtonState(0, 0, called: newState);
+                    break;
+                case SyncBoolReq_Elevator0CalledToFloor_1:
+                    LOCAL_SetElevatorInternalButtonState(0, 1, called: newState);
+                    break;
+                case SyncBoolReq_Elevator0CalledToFloor_2:
+                    LOCAL_SetElevatorInternalButtonState(0, 2, called: newState);
+                    break;
+                case SyncBoolReq_Elevator0CalledToFloor_3:
+                    LOCAL_SetElevatorInternalButtonState(0, 3, called: newState);
+                    break;
+                case SyncBoolReq_Elevator0CalledToFloor_4:
+                    LOCAL_SetElevatorInternalButtonState(0, 4, called: newState);
+                    break;
+                case SyncBoolReq_Elevator0CalledToFloor_5:
+                    LOCAL_SetElevatorInternalButtonState(0, 5, called: newState);
+                    break;
+                case SyncBoolReq_Elevator0CalledToFloor_6:
+                    LOCAL_SetElevatorInternalButtonState(0, 6, called: newState);
+                    break;
+                case SyncBoolReq_Elevator0CalledToFloor_7:
+                    LOCAL_SetElevatorInternalButtonState(0, 7, called: newState);
+                    break;
+                case SyncBoolReq_Elevator0CalledToFloor_8:
+                    LOCAL_SetElevatorInternalButtonState(0, 8, called: newState);
+                    break;
+                case SyncBoolReq_Elevator0CalledToFloor_9:
+                    LOCAL_SetElevatorInternalButtonState(0, 9, called: newState);
+                    break;
+                case SyncBoolReq_Elevator0CalledToFloor_10:
+                    LOCAL_SetElevatorInternalButtonState(0, 10, called: newState);
+                    break;
+                case SyncBoolReq_Elevator0CalledToFloor_11:
+                    LOCAL_SetElevatorInternalButtonState(0, 11, called: newState);
+                    break;
+                case SyncBoolReq_Elevator0CalledToFloor_12:
+                    LOCAL_SetElevatorInternalButtonState(0, 12, called: newState);
+                    break;
+                case SyncBoolReq_Elevator0CalledToFloor_13:
+                    LOCAL_SetElevatorInternalButtonState(0, 13, called: newState);
+                    break;
+                case SyncBoolReq_Elevator1CalledToFloor_0:
+                    LOCAL_SetElevatorInternalButtonState(1, 0, called: newState);
+                    break;
+                case SyncBoolReq_Elevator1CalledToFloor_1:
+                    LOCAL_SetElevatorInternalButtonState(1, 1, called: newState);
+                    break;
+                case SyncBoolReq_Elevator1CalledToFloor_2:
+                    LOCAL_SetElevatorInternalButtonState(1, 2, called: newState);
+                    break;
+                case SyncBoolReq_Elevator1CalledToFloor_3:
+                    LOCAL_SetElevatorInternalButtonState(1, 3, called: newState);
+                    break;
+                case SyncBoolReq_Elevator1CalledToFloor_4:
+                    LOCAL_SetElevatorInternalButtonState(1, 4, called: newState);
+                    break;
+                case SyncBoolReq_Elevator1CalledToFloor_5:
+                    LOCAL_SetElevatorInternalButtonState(1, 5, called: newState);
+                    break;
+                case SyncBoolReq_Elevator1CalledToFloor_6:
+                    LOCAL_SetElevatorInternalButtonState(1, 6, called: newState);
+                    break;
+                case SyncBoolReq_Elevator1CalledToFloor_7:
+                    LOCAL_SetElevatorInternalButtonState(1, 7, called: newState);
+                    break;
+                case SyncBoolReq_Elevator1CalledToFloor_8:
+                    LOCAL_SetElevatorInternalButtonState(1, 8, called: newState);
+                    break;
+                case SyncBoolReq_Elevator1CalledToFloor_9:
+                    LOCAL_SetElevatorInternalButtonState(1, 9, called: newState);
+                    break;
+                case SyncBoolReq_Elevator1CalledToFloor_10:
+                    LOCAL_SetElevatorInternalButtonState(1, 10, called: newState);
+                    break;
+                case SyncBoolReq_Elevator1CalledToFloor_11:
+                    LOCAL_SetElevatorInternalButtonState(1, 11, called: newState);
+                    break;
+                case SyncBoolReq_Elevator1CalledToFloor_12:
+                    LOCAL_SetElevatorInternalButtonState(1, 12, called: newState);
+                    break;
+                case SyncBoolReq_Elevator1CalledToFloor_13:
+                    LOCAL_SetElevatorInternalButtonState(1, 13, called: newState);
+                    break;
+                case SyncBoolReq_Elevator2CalledToFloor_0:
+                    LOCAL_SetElevatorInternalButtonState(2, 0, called: newState);
+                    break;
+                case SyncBoolReq_Elevator2CalledToFloor_1:
+                    LOCAL_SetElevatorInternalButtonState(2, 1, called: newState);
+                    break;
+                case SyncBoolReq_Elevator2CalledToFloor_2:
+                    LOCAL_SetElevatorInternalButtonState(2, 2, called: newState);
+                    break;
+                case SyncBoolReq_Elevator2CalledToFloor_3:
+                    LOCAL_SetElevatorInternalButtonState(2, 3, called: newState);
+                    break;
+                case SyncBoolReq_Elevator2CalledToFloor_4:
+                    LOCAL_SetElevatorInternalButtonState(2, 4, called: newState);
+                    break;
+                case SyncBoolReq_Elevator2CalledToFloor_5:
+                    LOCAL_SetElevatorInternalButtonState(2, 5, called: newState);
+                    break;
+                case SyncBoolReq_Elevator2CalledToFloor_6:
+                    LOCAL_SetElevatorInternalButtonState(2, 6, called: newState);
+                    break;
+                case SyncBoolReq_Elevator2CalledToFloor_7:
+                    LOCAL_SetElevatorInternalButtonState(2, 7, called: newState);
+                    break;
+                case SyncBoolReq_Elevator2CalledToFloor_8:
+                    LOCAL_SetElevatorInternalButtonState(2, 8, called: newState);
+                    break;
+                case SyncBoolReq_Elevator2CalledToFloor_9:
+                    LOCAL_SetElevatorInternalButtonState(2, 9, called: newState);
+                    break;
+                case SyncBoolReq_Elevator2CalledToFloor_10:
+                    LOCAL_SetElevatorInternalButtonState(2, 10, called: newState);
+                    break;
+                case SyncBoolReq_Elevator2CalledToFloor_11:
+                    LOCAL_SetElevatorInternalButtonState(2, 11, called: newState);
+                    break;
+                case SyncBoolReq_Elevator2CalledToFloor_12:
+                    LOCAL_SetElevatorInternalButtonState(2, 12, called: newState);
+                    break;
+                case SyncBoolReq_Elevator2CalledToFloor_13:
+                    LOCAL_SetElevatorInternalButtonState(2, 13, called: newState);
+                    break;
+                default:
+                    Debug.Print("ERROR: UNKNOWN BOOL HAS CHANGED IN SYNCBOOL, position: " + syncBoolPosition);
+                    break;
             }
         }
         /// <summary>
@@ -1191,6 +1267,281 @@ namespace WindowsFormsApp1
                 _localElevator2Level = floorNumber;
             }
         }
+        /// <summary>
+        /// Setting a button inside an elevator to a different state
+        /// </summary>
+        private void LOCAL_SetElevatorInternalButtonState(int elevatorNumber, int floorNumber, bool called)
+        {
+            _elevatorControllerArrivalArea.SetElevatorFloorButtonState(elevatorNumber, floorNumber, called);
+        }
+        /// <summary>
+        /// When a state of a floor callbutton changed, we need to update that button to on or off
+        /// </summary>
+        private void LOCAL_SetElevatorCallButtonState(int floorNumber, bool buttonUp, bool called)
+        {
+            if(buttonUp)
+            {
+                if(called)
+                {
+                    _elevatorControllerReception.SetElevatorCalledUp(floorNumber);
+                }
+                else
+                {
+                    _elevatorControllerReception.SetElevatorNotCalledUp(floorNumber);
+                }
+            } 
+            else
+            {
+                if (called)
+                {
+                    _elevatorControllerReception.SetElevatorCalledDown(floorNumber);
+                }
+                else
+                {
+                    _elevatorControllerReception.SetElevatorNotCalledDown(floorNumber);
+                }
+            }
+        }
+        /// <summary>
+        /// Is run ONCE by localPlayer on scene load.
+        /// Setting up the scene at startup or when it isn't setup yet
+        /// </summary>
+        private void LOCAL_ReadConstSceneElevatorStates()
+        {
+            Debug.Print("[NetworkController] Setting random elevator states for reception by localPlayer");
+            _elevator0Working = GetSyncValue(SyncBool_Elevator0working);
+            _elevator1Working = GetSyncValue(SyncBool_Elevator1working);
+            _elevator2Working = GetSyncValue(SyncBool_Elevator2working);
+            form1.DisplayElevatorBroken(_elevator0Working, _elevator1Working, _elevator2Working);
+            //NOPE _elevatorControllerReception._elevator1working = _elevator0Working;
+            //NOPE _elevatorControllerReception._elevator2working = _elevator1Working;
+            //NOPE _elevatorControllerReception._elevator3working = _elevator2Working;
+            //NOPE _elevatorControllerReception.SetupElevatorStates();
+            Debug.Print("[NetworkController] Random elevator states for reception are now set by localPlayer");
+        }
+        /// <summary>
+        /// is called when network packets are received (only happens when there are more players except Master in the scene
+        /// </summary>
+        public void OnDeserialization()
+        {
+            if (!_worldIsLoaded)
+                return;
+            LOCAL_OnDeserialization(); //do nothing else in here or shit will break!
+        }
+        /// <summary>
+        /// Can be called by master (locally in Update) or by everyone else OnDeserialization (when SyncBool states change)
+        /// </summary>
+        private void LOCAL_OnDeserialization()
+        {
+            if (!_finishedLocalSetup)
+            {
+                if (time.GetTime() < 1f) //no scene setup before at least 1 second has passed to ensure the update loop has already started
+                    return;
+                Debug.Print("[NetworkController] Local setup was started");
+                if (GetSyncValue(SyncBool_Initialized))
+                {
+                    LOCAL_ReadConstSceneElevatorStates();
+                    _finishedLocalSetup = true;
+                    Debug.Print("[NetworkController] Local setup was finished");
+                }
+                else
+                {
+                    return;
+                }
+            }
+            else
+            {
+                LOCAL_CheckSyncData();
+            }
+        }
+        /// <summary>
+        /// Sending an elevator open/close event to the elevator controller of the right floor
+        /// </summary>
+        /// <param name="elevatorNumber"></param>
+        private void LOCAL_OpenCloseElevator(int elevatorNumber, bool setOpen)
+        {
+            int floorNumber = GetSyncElevatorFloor(elevatorNumber);
+            if (setOpen)
+            {
+                Debug.Print("[NetworkController] LocalPlayer received to close elevator " + elevatorNumber + " on floor " + floorNumber);
+                if (floorNumber != 0)
+                {
+                    Debug.Print("[NetworkController] Elevator " + elevatorNumber + " is currently at floor " + floorNumber + " so Reception won't open.");
+                }
+                else
+                {
+                    _elevatorControllerReception.OpenElevatorReception(elevatorNumber, GetSyncElevatorGoingUp(elevatorNumber), GetSyncValue(SyncBool_Elevator0idle + elevatorNumber));
+                }
+                //TODO: add all other floors here
+            }
+            else
+            {
+                Debug.Print("[NetworkController] LocalPlayer received to close elevator " + elevatorNumber + " on floor " + floorNumber);
+                if (floorNumber != 0)
+                {
+                    Debug.Print("[NetworkController] Elevator " + elevatorNumber + " is currently at floor " + floorNumber + " so Reception won't close.");
+                }
+                else
+                {
+                    _elevatorControllerReception.CloseElevatorReception(elevatorNumber);
+                }
+                //TODO: add all other floors here
+            }
+        }
+        /// <summary>
+        /// Setting an elevator idle will set all calls handled on that floor and set both arrows active, if the elevator is open, else nothing happens
+        /// </summary>
+        /// <param name="elevatorNumber"></param>
+        private void LOCAL_SetElevatorIdle(int elevatorNumber, bool isIdle)
+        {
+            if (!GetIfElevatorIsOpen(elevatorNumber))
+            {
+                Debug.Print("[NetworkController] LocalPlayer received to set elevator " + elevatorNumber + " IDLE=" + isIdle.ToString() + ", but it isn't open");
+                return;
+            }
+            int floorNumber = GetSyncElevatorFloor(elevatorNumber);
+            Debug.Print("[NetworkController] LocalPlayer received to set elevator " + elevatorNumber + " IDLE=" + isIdle.ToString() + " on floor " + floorNumber);
+            if (floorNumber != 0)
+            {
+                Debug.Print("[NetworkController] Elevator " + elevatorNumber + " is currently at floor " + floorNumber + " so Reception won't change IDLE state.");
+            }
+            else
+            {
+                _elevatorControllerReception.SetElevatorIdle(elevatorNumber, isIdle);
+            }
+        }
+        /// <summary>
+        /// Setting the new elevator direction will affect button calls and arrows if the elevator is open
+        /// </summary>
+        private void LOCAL_SetElevatorDirection(int elevatorNumber, bool goingUp)
+        {
+            throw new NotImplementedException();
+        }
+        //Local copies of elevator state to check them against SyncBool states
+        private bool[] _pendingCallDown = new bool[14];
+        private int _pendingCallDown_COUNT = 0;
+        private bool[] _pendingCallUp = new bool[14];
+        private int _pendingCallUp_COUNT = 0;
+        private float[] _pendingCallTimeUp = new float[14];
+        private float[] _pendingCallTimeDown = new float[14];
+        /// <summary>
+        /// This function is called in every Update()
+        /// </summary>
+        private void LOCAL_RunLocalPlayer()
+        {
+            //Checking if local call was handled or dropped
+            LOCAL_CheckIfElevatorCallWasReceived();
+        }
+        /// <summary>
+        /// Checking if the elevator was successfully called by master after we've called it, else we drop the request
+        /// </summary>
+        private void LOCAL_CheckIfElevatorCallWasReceived()
+        {
+            if (_pendingCallUp_COUNT != 0)
+            {
+                for (int floor = 0; floor <= 13; floor++)
+                {
+                    //Check if there is a pending request
+                    if (_pendingCallUp[floor] && time.GetTime() - _pendingCallTimeUp[floor] > 1f && !GetSyncValue(SyncBoolReq_ElevatorCalledUp_0 + floor))
+                    {
+                        _pendingCallUp[floor] = false;
+                        _pendingCallUp_COUNT--;
+                        //TODO: link all elevator controllers here in Unity later
+                        if (floor == 0)
+                        {
+                            Debug.Print("Dropped request, SetElevatorNotCalledUp() floor " + floor);
+                            _elevatorControllerReception.SetElevatorNotCalledUp(floor);
+                        }
+                        else
+                        {
+                            Debug.Print("Dropped request, SetElevatorNotCalledUp() floor " + floor);
+                            _elevatorControllerReception.SetElevatorNotCalledUp(floor);
+                        }
+                    }
+                }
+            }
+            if (_pendingCallDown_COUNT != 0)
+            {
+                for (int floor = 0; floor <= 13; floor++)
+                {
+                    if (_pendingCallDown[floor] && time.GetTime() - _pendingCallTimeDown[floor] > 1f && !GetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + floor))
+                    {
+                        _pendingCallDown[floor] = false;
+                        _pendingCallDown_COUNT--;
+                        //TODO: link all elevator controllers here in Unity later
+                        if (floor == 0)
+                        {
+                            Debug.Print("Dropped request, SetElevatorNotCalledDown() floor " + floor);
+                            _elevatorControllerReception.SetElevatorNotCalledDown(floor);
+                        }
+                        else
+                        {
+                            Debug.Print("Dropped request, SetElevatorNotCalledDown() floor " + floor);
+                            _elevatorControllerReception.SetElevatorNotCalledDown(floor);
+                        }
+                    }
+                }
+            }
+        }
+        ///// <summary>
+        ///// Checking elevator callsign states (the callbutton-panels / UP-DOWN buttons)
+        ///// </summary>
+        //private void LOCAL_CheckElevatorCallStateReception()
+        //{
+        //    for (int floor = 0; floor <= 13; floor++)
+        //    {
+        //        //Check if the master has set an elevator call to up
+        //        bool networkBoolState = GetSyncValue(SyncBoolReq_ElevatorCalledUp_0 + floor);
+        //        if (_elevatorIsCalledUp[floor] && !networkBoolState)
+        //        {
+        //            Debug.Print("SetElevatorNotCalledUp() floor " + floor);
+        //            _elevatorIsCalledUp[floor] = false;
+        //            _elevatorControllerReception.SetElevatorNotCalledUp(floor);
+        //        }
+        //        else if (!_elevatorIsCalledUp[floor] && networkBoolState)
+        //        {
+        //            _elevatorIsCalledUp[floor] = true;
+        //            _locallyIsCalledUp[floor] = false; //local call can be dropped now
+        //                                               //TODO: link all elevator controllers here in Unity later
+        //            if (floor == 0)
+        //            {
+        //                Debug.Print("SetElevatorCalledUp() floor " + floor);
+        //                _elevatorControllerReception.SetElevatorCalledUp(floor);
+        //            }
+        //            else
+        //            {
+        //                Debug.Print("SetElevatorCalledUp() floor " + floor);
+        //                //TODO: Replace with a different controller in Unity
+        //                _elevatorControllerReception.SetElevatorCalledUp(floor);
+        //            }
+        //        }
+        //        //Check if the master has set an elevator call to down from reception
+        //        networkBoolState = GetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + floor);
+        //        if (_elevatorIsCalledDown[floor] && !networkBoolState)
+        //        {
+        //            Debug.Print("SetElevatorNotCalledDown() floor " + floor);
+        //            _elevatorIsCalledDown[floor] = false;
+        //            _elevatorControllerReception.SetElevatorNotCalledDown(floor);
+        //        }
+        //        else if (!_elevatorIsCalledDown[floor] && networkBoolState)
+        //        {
+        //            _elevatorIsCalledDown[floor] = true;
+        //            _locallyIsCalledDown[floor] = false; //local call can be dropped now
+        //                                                 //TODO: link all elevator controllers here in Unity later
+        //            if (floor == 0)
+        //            {
+        //                Debug.Print("SetElevatorCalledDown() floor " + floor);
+        //                _elevatorControllerReception.SetElevatorCalledDown(floor);
+        //            }
+        //            else
+        //            {
+        //                Debug.Print("SetElevatorCalledDown() floor " + floor);
+        //                //TODO: Replace with a different controller in Unity
+        //                _elevatorControllerReception.SetElevatorCalledDown(floor);
+        //            }
+        //        }
+        //    }
+        //}
         #endregion LOCAL_FUNCTIONS
         //------------------------------------------------------------------------------------------------------------
         //------------------------------- API for elevator buttons ---------------------------------------------------
@@ -1201,21 +1552,23 @@ namespace WindowsFormsApp1
             if (directionUp)
             {
                 Debug.Print("[NetworkController] Elevator called to floor " + floorNumber + " by localPlayer (Up)");
-                if (_elevatorIsCalledUp[floorNumber] || _locallyIsCalledUp[floorNumber])
+                if (_pendingCallUp[floorNumber] || GetSyncValue(SyncBoolReq_ElevatorCalledUp_0+floorNumber))
                     return;
-                _locallyIsCalledUp[floorNumber] = true;
-                _elevatorCallTimeUp[floorNumber] = time.GetTime();
+                _pendingCallUp[floorNumber] = true;
+                _pendingCallTimeUp[floorNumber] = time.GetTime();
+                _pendingCallUp_COUNT++;
                 _elevatorRequester.RequestElevatorFloorButton(directionUp, floorNumber);
             }
             else
             {
                 Debug.Print("[NetworkController] Elevator called to floor " + floorNumber + " by localPlayer (Down)");
-                if (_elevatorIsCalledDown[floorNumber] || _locallyIsCalledDown[floorNumber])
+                if (_pendingCallDown[floorNumber] || GetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + floorNumber))
                     return;
-                _locallyIsCalledDown[floorNumber] = true;
-                _elevatorCallTimeDown[floorNumber] = time.GetTime();
+                _pendingCallDown[floorNumber] = true;
+                _pendingCallTimeDown[floorNumber] = time.GetTime();
+                _pendingCallDown_COUNT++;
+                _elevatorRequester.RequestElevatorFloorButton(directionUp, floorNumber);
             }
-            _elevatorRequester.RequestElevatorFloorButton(directionUp, floorNumber);
         }
         /// <summary>
         /// When localPlayer pressed a button INSIDE the elevator
@@ -1372,7 +1725,6 @@ namespace WindowsFormsApp1
         //------------------------------------------------------------------------------------------------------------
         //------------------------------------------ SyncBool lowlevel code ------------------------------------------
         //------------------------------------------------------------------------------------------------------------
-
         /// <summary>
         /// This script sets and reads individual bits within a uint as well as encoding three numbers (nibbles) within the most significant bytes
         /// 
@@ -1394,7 +1746,6 @@ namespace WindowsFormsApp1
         private const byte ulongBoolStartPosition = 51;
         private const ulong nibbleMask = 15; // ...0000 0000 1111
         private const int elevatorFloorNumberOffset = -2; //Keks floor hack offset
-
         /// <summary>
         /// Modifies a _syncData1 & _syncData2 on the bit level.
         /// Sets "value" to bit "position" of "input".
@@ -1671,6 +2022,11 @@ namespace WindowsFormsApp1
         internal void SetElevatorCalledUp(int floor)
         {
             form1.SetElevatorCalledUp(floor);
+        }
+
+        internal void SetElevatorFloorButtonState(int elevatorNumber, int floorNumber, bool called)
+        {
+            Debug.Print("Elevator " + elevatorNumber + " would change floor " + floorNumber + " button to called:" + called.ToString() + ", but this function isn't implemented yet.");
         }
 
         internal void SetElevatorLevelOnDisplay(int floorNumber, int v)
