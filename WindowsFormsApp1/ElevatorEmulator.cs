@@ -735,7 +735,7 @@ namespace WindowsFormsApp1
             //if we found an internal target, we go out of idle mode and set the new direction up
             if (targetFound)
             {
-                Debug.Print("[NetworkController] Elevator " + elevatorNumber + " was idle but now as an internal target and is going up");
+                Debug.Print("[NetworkController] Elevator " + elevatorNumber + " was idle but now has an internal target and is going up");
                 MASTER_SetElevatorDirection(elevatorNumber, goingUp: true);
                 return;
             }
@@ -752,7 +752,7 @@ namespace WindowsFormsApp1
             //if we found an internal target, we go out of idle mode and set the new direction down
             if (targetFound)
             {
-                Debug.Print("[NetworkController] Elevator " + elevatorNumber + " was idle but now as an internal target and is going down");
+                Debug.Print("[NetworkController] Elevator " + elevatorNumber + " was idle but now has an internal target and is going down");
                 MASTER_SetElevatorDirection(elevatorNumber, goingUp: false);
                 return;
             }
@@ -1503,65 +1503,6 @@ namespace WindowsFormsApp1
                 }
             }
         }
-        ///// <summary>
-        ///// Checking elevator callsign states (the callbutton-panels / UP-DOWN buttons)
-        ///// </summary>
-        //private void LOCAL_CheckElevatorCallStateReception()
-        //{
-        //    for (int floor = 0; floor <= 13; floor++)
-        //    {
-        //        //Check if the master has set an elevator call to up
-        //        bool networkBoolState = GetSyncValue(SyncBoolReq_ElevatorCalledUp_0 + floor);
-        //        if (_elevatorIsCalledUp[floor] && !networkBoolState)
-        //        {
-        //            Debug.Print("SetElevatorNotCalledUp() floor " + floor);
-        //            _elevatorIsCalledUp[floor] = false;
-        //            _elevatorControllerReception.SetElevatorNotCalledUp(floor);
-        //        }
-        //        else if (!_elevatorIsCalledUp[floor] && networkBoolState)
-        //        {
-        //            _elevatorIsCalledUp[floor] = true;
-        //            _locallyIsCalledUp[floor] = false; //local call can be dropped now
-        //                                               //TODO: link all elevator controllers here in Unity later
-        //            if (floor == 0)
-        //            {
-        //                Debug.Print("SetElevatorCalledUp() floor " + floor);
-        //                _elevatorControllerReception.SetElevatorCalledUp(floor);
-        //            }
-        //            else
-        //            {
-        //                Debug.Print("SetElevatorCalledUp() floor " + floor);
-        //                //TODO: Replace with a different controller in Unity
-        //                _elevatorControllerReception.SetElevatorCalledUp(floor);
-        //            }
-        //        }
-        //        //Check if the master has set an elevator call to down from reception
-        //        networkBoolState = GetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + floor);
-        //        if (_elevatorIsCalledDown[floor] && !networkBoolState)
-        //        {
-        //            Debug.Print("SetElevatorNotCalledDown() floor " + floor);
-        //            _elevatorIsCalledDown[floor] = false;
-        //            _elevatorControllerReception.SetElevatorNotCalledDown(floor);
-        //        }
-        //        else if (!_elevatorIsCalledDown[floor] && networkBoolState)
-        //        {
-        //            _elevatorIsCalledDown[floor] = true;
-        //            _locallyIsCalledDown[floor] = false; //local call can be dropped now
-        //                                                 //TODO: link all elevator controllers here in Unity later
-        //            if (floor == 0)
-        //            {
-        //                Debug.Print("SetElevatorCalledDown() floor " + floor);
-        //                _elevatorControllerReception.SetElevatorCalledDown(floor);
-        //            }
-        //            else
-        //            {
-        //                Debug.Print("SetElevatorCalledDown() floor " + floor);
-        //                //TODO: Replace with a different controller in Unity
-        //                _elevatorControllerReception.SetElevatorCalledDown(floor);
-        //            }
-        //        }
-        //    }
-        //}
         #endregion LOCAL_FUNCTIONS
         //------------------------------------------------------------------------------------------------------------
         //------------------------------- API for elevator buttons ---------------------------------------------------
@@ -1681,25 +1622,29 @@ namespace WindowsFormsApp1
         /// </summary>
         public void ELREQ_SetInternalTarget(int elevatorNumber, int floorNumber)
         {
-            Debug.Print("[NetworkController] Master receiver client request to set target for elevator " + elevatorNumber + " to floor " + floorNumber);
+            Debug.Print("[NetworkController] Master received client request to set target for elevator " + elevatorNumber + " to floor " + floorNumber);
             if (elevatorNumber == 0 && !GetSyncValue(SyncBoolReq_Elevator0CalledToFloor_0 + floorNumber))
             {
                 MASTER_SetSyncValue(SyncBoolReq_Elevator0CalledToFloor_0 + floorNumber, true);
                 _elevator0FloorTargets_MASTER[floorNumber] = true;
                 _elevator0FloorTargets_MASTER_COUNT++;
+                return;
             }
             else if (elevatorNumber == 1 && !GetSyncValue(SyncBoolReq_Elevator1CalledToFloor_0 + floorNumber))
             {
                 MASTER_SetSyncValue(SyncBoolReq_Elevator1CalledToFloor_0 + floorNumber, true);
                 _elevator1FloorTargets_MASTER[floorNumber] = true;
                 _elevator1FloorTargets_MASTER_COUNT++;
+                return;
             }
             else if (elevatorNumber == 2 && !GetSyncValue(SyncBoolReq_Elevator2CalledToFloor_0 + floorNumber))
             {
                 MASTER_SetSyncValue(SyncBoolReq_Elevator2CalledToFloor_0 + floorNumber, true);
                 _elevator2FloorTargets_MASTER[floorNumber] = true;
                 _elevator2FloorTargets_MASTER_COUNT++;
+                return;
             }
+            Debug.Print("No target was set since the elevator is already called to that floor");
         }
         /// <summary>
         /// Checks if there is already an open elevator on this floor which is going in the target direction
