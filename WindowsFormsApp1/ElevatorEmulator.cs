@@ -144,6 +144,13 @@ namespace WindowsFormsApp1
             }
         }
         /// <summary>
+        /// Setting the elevator direction of an open elevator
+        /// </summary>
+        internal void SetElevatorDirectionDisplay(int elevatorNumber, bool isGoingUp, bool isIdle)
+        {
+            DisplayElevatorDoorState(isIdle, isGoingUp, elevatorNumber, textBoxElevator1OpenReception, textBoxElevator2OpenReception, textBoxElevator3OpenReception, true);
+        }
+        /// <summary>
         /// Opening elevators on floor 0 / reception
         /// </summary>
         internal void OpenElevatorReception(int elevatorNumber, bool isGoingUp, bool isIdle)
@@ -461,7 +468,8 @@ namespace WindowsFormsApp1
                 //only the current master does this
                 MASTER_RunElevatorControl();
             }
-            LOCAL_RunLocalPlayer();
+            //Checking if local call was handled or dropped
+            LOCAL_CheckIfElevatorCallWasReceived();
             //TODO: remove on live build
             TEST_DisplayElevatorStates();
         }
@@ -1272,7 +1280,7 @@ namespace WindowsFormsApp1
         /// </summary>
         private void LOCAL_SetElevatorInternalButtonState(int elevatorNumber, int floorNumber, bool called)
         {
-            _elevatorControllerArrivalArea.SetElevatorFloorButtonState(elevatorNumber, floorNumber, called);
+            _elevatorControllerReception.SetElevatorFloorButtonState(elevatorNumber, floorNumber, called);
         }
         /// <summary>
         /// When a state of a floor callbutton changed, we need to update that button to on or off
@@ -1363,7 +1371,7 @@ namespace WindowsFormsApp1
             int floorNumber = GetSyncElevatorFloor(elevatorNumber);
             if (setOpen)
             {
-                Debug.Print("[NetworkController] LocalPlayer received to close elevator " + elevatorNumber + " on floor " + floorNumber);
+                Debug.Print("[NetworkController] LocalPlayer received to open elevator " + elevatorNumber + " on floor " + floorNumber);
                 if (floorNumber != 0)
                 {
                     Debug.Print("[NetworkController] Elevator " + elevatorNumber + " is currently at floor " + floorNumber + " so Reception won't open.");
@@ -1407,7 +1415,7 @@ namespace WindowsFormsApp1
             }
             else
             {
-                _elevatorControllerReception.SetElevatorIdle(elevatorNumber, isIdle);
+                _elevatorControllerReception.SetElevatorDirectionDisplay(elevatorNumber, GetSyncElevatorGoingUp(elevatorNumber), isIdle);
             }
         }
         /// <summary>
@@ -1415,7 +1423,21 @@ namespace WindowsFormsApp1
         /// </summary>
         private void LOCAL_SetElevatorDirection(int elevatorNumber, bool goingUp)
         {
-            throw new NotImplementedException();
+            if (!GetIfElevatorIsOpen(elevatorNumber))
+            {
+                Debug.Print("[NetworkController] LocalPlayer received to set elevator " + elevatorNumber + " GoingUp=" + goingUp.ToString() + ", but it isn't open");
+                return;
+            }
+            int floorNumber = GetSyncElevatorFloor(elevatorNumber);
+            Debug.Print("[NetworkController] LocalPlayer received to set elevator " + elevatorNumber + " GoingUp=" + goingUp.ToString() + " on floor " + floorNumber);
+            if (floorNumber != 0)
+            {
+                Debug.Print("[NetworkController] Elevator " + elevatorNumber + " is currently at floor " + floorNumber + " so Reception won't change GoingUp state.");
+            }
+            else
+            {
+                _elevatorControllerReception.SetElevatorDirectionDisplay(elevatorNumber, goingUp, GetSyncValue(SyncBool_Elevator0idle + elevatorNumber));
+            }
         }
         //Local copies of elevator state to check them against SyncBool states
         private bool[] _pendingCallDown = new bool[14];
@@ -1425,20 +1447,13 @@ namespace WindowsFormsApp1
         private float[] _pendingCallTimeUp = new float[14];
         private float[] _pendingCallTimeDown = new float[14];
         /// <summary>
-        /// This function is called in every Update()
-        /// </summary>
-        private void LOCAL_RunLocalPlayer()
-        {
-            //Checking if local call was handled or dropped
-            LOCAL_CheckIfElevatorCallWasReceived();
-        }
-        /// <summary>
-        /// Checking if the elevator was successfully called by master after we've called it, else we drop the request
+        /// In every Update(): Checking if the elevator was successfully called by master after we've called it, else we drop the request
         /// </summary>
         private void LOCAL_CheckIfElevatorCallWasReceived()
         {
             if (_pendingCallUp_COUNT != 0)
             {
+                Debug.Print("There is " + _pendingCallUp_COUNT + " pending call up.");
                 for (int floor = 0; floor <= 13; floor++)
                 {
                     //Check if there is a pending request
@@ -1462,6 +1477,7 @@ namespace WindowsFormsApp1
             }
             if (_pendingCallDown_COUNT != 0)
             {
+                Debug.Print("There is " + _pendingCallUp_COUNT + " pending call down.");
                 for (int floor = 0; floor <= 13; floor++)
                 {
                     if (_pendingCallDown[floor] && time.GetTime() - _pendingCallTimeDown[floor] > 1f && !GetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + floor))
@@ -2009,19 +2025,14 @@ namespace WindowsFormsApp1
             form1.CloseElevatorReception(elevatorNumber);
         }
 
+        internal void SetElevatorDirectionDisplay(int elevatorNumber, bool isGoingUp, bool isIdle)
+        {
+            form1.SetElevatorDirectionDisplay(elevatorNumber, isGoingUp, isIdle);
+        }
+
         internal void OpenElevatorReception(int elevatorNumber, bool isGoingUp, bool isIdle)
         {
             form1.OpenElevatorReception(elevatorNumber, isGoingUp, isIdle);
-        }
-
-        internal void SetElevatorCalledDown(int floor)
-        {
-            form1.SetElevatorCalledDown(floor);
-        }
-
-        internal void SetElevatorCalledUp(int floor)
-        {
-            form1.SetElevatorCalledUp(floor);
         }
 
         internal void SetElevatorFloorButtonState(int elevatorNumber, int floorNumber, bool called)
@@ -2038,10 +2049,17 @@ namespace WindowsFormsApp1
         {
             form1.SetElevatorNotCalledDown(floor);
         }
-
         internal void SetElevatorNotCalledUp(int floor)
         {
             form1.SetElevatorNotCalledUp(floor);
+        }
+        internal void SetElevatorCalledDown(int floor)
+        {
+            form1.SetElevatorCalledDown(floor);
+        }
+        internal void SetElevatorCalledUp(int floor)
+        {
+            form1.SetElevatorCalledUp(floor);
         }
     }
     /// <summary>
