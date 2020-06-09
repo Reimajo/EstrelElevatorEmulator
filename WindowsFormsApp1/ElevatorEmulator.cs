@@ -12,6 +12,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
 
 namespace WindowsFormsApp1
 {
+    #region GUI_class
     /// <summary>
     /// This is the GUI component section which controls the buttons and textbox components
     /// It's not part of the Unity build
@@ -253,6 +254,10 @@ namespace WindowsFormsApp1
                 textBoxElevator3OpenReception.Text = "BROKEN";
         }
     }
+    #endregion GUI_class
+    //----------------------------------------------------------------------------------------------------------------
+    //------------------- GUI Class ----------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------------------------------------------
     /// <summary>
     /// Please don't removed outcommented stuff here, this would break the Unity Version
     /// This is the class we need to work on, everything around it is basicly not relevant
@@ -260,11 +265,14 @@ namespace WindowsFormsApp1
     /// </summary>
     public class NetworkingController
     {
+        #region justForEmulator
         //----- just added for emulator--------
         public ElevatorEmulator form1;
         private readonly Time time = new Time();
         private readonly bool _localPlayerisMaster = true;
         //-------------------------------------
+        #endregion justForEmulator
+        #region variables
         public ElevatorRequester _elevatorRequester;
         public ElevatorController _elevatorControllerReception;
         public ElevatorController _elevatorControllerArrivalArea;
@@ -287,6 +295,21 @@ namespace WindowsFormsApp1
         private bool _finishedLocalSetup = false;
         private bool _isMaster = false;
         private bool _worldIsLoaded = false;
+        /// <summary>
+        /// Locally storing which elevator is currently working and which isn't, since we only need to read this 
+        /// once from the SYNC state and it won't change, so it would be a waste to read it every time again
+        /// 
+        /// This is read by LOCAL but also used by MASTER
+        /// 
+        /// </summary>
+        private bool _elevator0Working = false;
+        private bool _elevator1Working = false;
+        private bool _elevator2Working = false;
+        #endregion variables
+        //------------------------------------------------------------------------------------------------------------
+        //------------------------------------SYNCBOOL ENUM-----------------------------------------------------------
+        //------------------------------------------------------------------------------------------------------------
+        #region ENUM_SYNCBOOL
         /// <summary>
         /// "ENUM" of different bools that are synced in _syncData
         /// (ENUM isn't possible in Udon, so we use this here)
@@ -393,6 +416,11 @@ namespace WindowsFormsApp1
         /// State of the elevator bell
         /// </summary>
         private const int SyncBoolReq_BellOn = 83;
+        #endregion ENUM_SYNCBOOL
+        //------------------------------------------------------------------------------------------------------------
+        //----------------------------------- START/UPDATE functions -------------------------------------------------
+        //------------------------------------------------------------------------------------------------------------
+        #region START_UPDATE_FUNCTIONS
         /// <summary>
         /// Initializing the scene
         /// </summary>
@@ -406,7 +434,7 @@ namespace WindowsFormsApp1
             {
                 _isMaster = true;
                 MASTER_SetConstSceneElevatorStates();
-                FirstMasterSetupElevatorControl();
+                MASTER_FirstMasterSetupElevatorControl();
             }
             //NOPE _elevatorControllerReception.CustomStart();
             //NOPE _insidePanelScriptElevator0Desktop.CustomStart();
@@ -415,71 +443,31 @@ namespace WindowsFormsApp1
             _worldIsLoaded = true;
         }
         /// <summary>
-        /// Locally storing which elevator is currently working and which isn't, since we only need to read this 
-        /// once from the SYNC state and it won't change, so it would be a waste to read it every time again
+        /// This update is run every frame
         /// </summary>
-        private bool _elevator0Working = false;
-        private bool _elevator1Working = false;
-        private bool _elevator2Working = false;
-        /// <summary>
-        /// Setting up the scene at startup or when it isn't setup yet
-        /// </summary>
-        private void ReadConstSceneElevatorStates()
+        public void Update()
         {
-            Debug.Print("[NetworkController] Setting random elevator states for reception by localPlayer");
-            _elevator0Working = GetSyncValue(SyncBool_Elevator0working);
-            _elevator1Working = GetSyncValue(SyncBool_Elevator1working);
-            _elevator2Working = GetSyncValue(SyncBool_Elevator2working);
-            form1.DisplayElevatorBroken(_elevator0Working, _elevator1Working, _elevator2Working);
-            //NOPE _elevatorControllerReception._elevator1working = _elevator0Working;
-            //NOPE _elevatorControllerReception._elevator2working = _elevator1Working;
-            //NOPE _elevatorControllerReception._elevator3working = _elevator2Working;
-            //NOPE _elevatorControllerReception.SetupElevatorStates();
-            Debug.Print("[NetworkController] Random elevator states for reception are now set by localPlayer");
-        }
-        /// <summary> Elevator 0 open/close (localPlayer world view that is in sync with ElevatorController of Level 0)</summary>
-        private bool _elevator0isOpenReception = false;
-        /// <summary> Elevator 1 open/close (localPlayer world view that is in sync with ElevatorController of Level 0)</summary>
-        private bool _elevator1isOpenReception = false;
-        /// <summary> Elevator 2 open/close (localPlayer world view that is in sync with ElevatorController of Level 0)</summary>
-        private bool _elevator2isOpenReception = false;
-        /// <summary>
-        /// is called when network packets are received (only happens when there are more players except Master in the scene
-        /// </summary>
-        public void OnDeserialization()
-        {
-            if (!_worldIsLoaded)
-                return;
-            LocalOnDeserialization(); //do nothing else in here or shit will break!
-        }
-        /// <summary>
-        /// Can be called by master (locally in Update) or by everyone else OnDeserialization (when SyncBool states change)
-        /// </summary>
-        private void LocalOnDeserialization()
-        {
-            if (!_finishedLocalSetup)
+            //Debug.Print("Time: " + time.GetTime());
+            if (_localPlayerisMaster)
             {
-                if (time.GetTime() < 1f)
-                    return;
-                Debug.Print("[NetworkController] Local setup was started");
-                if (GetSyncValue(SyncBool_Initialized))
+                if (!_isMaster)
                 {
-                    ReadConstSceneElevatorStates();
-                    _finishedLocalSetup = true;
-                    Debug.Print("[NetworkController] Local setup was finished");
+                    Debug.Print("[NetworkController] Master has changed!");
+                    MASTER_OnMasterChanged();
+                    _isMaster = true;
                 }
-                else
-                {
-                    return;
-                }
+                //first process network events because Master can't do that else
+                LOCAL_OnDeserialization();
+                //only the current master does this
+                MASTER_RunElevatorControl();
             }
-            else
-            {
-                LOCAL_CheckElevatorStates();
-                LOCAL_CheckElevatorCallStateReception();
-                LOCAL_CheckElevatorLevels();
-            }
+            LOCAL_RunLocalPlayer();
         }
+        #endregion START_UPDATE_FUNCTIONS
+        //------------------------------------------------------------------------------------------------------------
+        //----------------------------------- MASTER functions -------------------------------------------------------
+        //------------------------------------------------------------------------------------------------------------
+        #region MASTER_FUNCTIONS
         /// <summary>
         /// locally storing where each elevator is and has to go, these need to be checked against SyncBool states 
         /// </summary>
@@ -498,7 +486,7 @@ namespace WindowsFormsApp1
         /// <summary>
         /// The first Master (on instance start) needs to run this once to set the initial elevator states and positions
         /// </summary>
-        private void FirstMasterSetupElevatorControl()
+        private void MASTER_FirstMasterSetupElevatorControl()
         {
             Debug.Print("[NetworkController] FirstMasterSetupElevatorControl started");
             MASTER_SetSyncValue(SyncBool_Elevator0goingUp, false);
@@ -511,6 +499,26 @@ namespace WindowsFormsApp1
             MASTER_SetSyncElevatorFloor(1, 4);
             MASTER_SetSyncElevatorFloor(2, 4);
             Debug.Print("[NetworkController] FirstMasterSetupElevatorControl finished");
+        }
+        /// <summary>
+        /// When the master changes, we need to load the SyncBool states into local copies to run the elevator controller correct
+        /// </summary>
+        private void MASTER_OnMasterChanged()
+        {
+            //taking all content from SyncedData into local arrays
+            //TODO: Implement this
+            //setting _calledToFloor
+            for (int i = 0; i <= 13; i++)
+            {
+                //_calledToFloor[i] = GetSyncValue( );
+            }
+            _timeAtCurrentFloorElevatorOpened_MASTER[0] = time.GetTime();
+            _timeAtCurrentFloorElevatorOpened_MASTER[1] = time.GetTime();
+            _timeAtCurrentFloorElevatorOpened_MASTER[2] = time.GetTime();
+            _timeAtCurrentFloorElevatorClosed_MASTER[0] = time.GetTime();
+            _timeAtCurrentFloorElevatorClosed_MASTER[1] = time.GetTime();
+            _timeAtCurrentFloorElevatorClosed_MASTER[2] = time.GetTime();
+            _elevatorCheckTick_MASTER = 1;
         }
         /// <summary>
         /// The master runs this elevator controller in every Update()
@@ -854,6 +862,120 @@ namespace WindowsFormsApp1
             Debug.Print("ERROR: Unknown elevator number in MASTER_GetInternalTargetCount!");
             return 0; // to make the compiler happy
         }
+        //-----------------------------------------------------------------------------------------------------------------------------
+        /// <summary>
+        ///  sets the elevators into the random state which is determined by master user uwu
+        ///  this can't be "random", but we have a pool of 7 allowed states
+        /// </summary>
+        private void MASTER_SetConstSceneElevatorStates()
+        {
+            //to make testing easier, we only allow one state right now
+            int random = 4; // UnityEngine.Random.Range(0, 7);
+            switch (random)
+            {
+                case 0:
+                    MASTER_SetSyncValue(SyncBool_Elevator0working, true);
+                    MASTER_SetSyncValue(SyncBool_Elevator1working, true);
+                    MASTER_SetSyncValue(SyncBool_Elevator2working, true);
+                    break;
+                case 1:
+                    MASTER_SetSyncValue(SyncBool_Elevator0working, false);
+                    MASTER_SetSyncValue(SyncBool_Elevator1working, true);
+                    MASTER_SetSyncValue(SyncBool_Elevator2working, true);
+                    break;
+                case 2:
+                    MASTER_SetSyncValue(SyncBool_Elevator0working, true);
+                    MASTER_SetSyncValue(SyncBool_Elevator1working, false);
+                    MASTER_SetSyncValue(SyncBool_Elevator2working, true);
+                    break;
+                case 3:
+                    MASTER_SetSyncValue(SyncBool_Elevator0working, true);
+                    MASTER_SetSyncValue(SyncBool_Elevator1working, true);
+                    MASTER_SetSyncValue(SyncBool_Elevator2working, false);
+                    break;
+                case 4:
+                    MASTER_SetSyncValue(SyncBool_Elevator0working, true);
+                    MASTER_SetSyncValue(SyncBool_Elevator1working, false);
+                    MASTER_SetSyncValue(SyncBool_Elevator2working, false);
+                    break;
+                case 5:
+                    MASTER_SetSyncValue(SyncBool_Elevator0working, false);
+                    MASTER_SetSyncValue(SyncBool_Elevator1working, true);
+                    MASTER_SetSyncValue(SyncBool_Elevator2working, false);
+                    break;
+                default:
+                    MASTER_SetSyncValue(SyncBool_Elevator0working, false);
+                    MASTER_SetSyncValue(SyncBool_Elevator1working, false);
+                    MASTER_SetSyncValue(SyncBool_Elevator2working, true);
+                    break;
+            }
+            MASTER_SetSyncValue(SyncBool_Initialized, true);
+            Debug.Print("[NetworkController] Random elevator states are now set by master");
+        }
+        #endregion MASTER_FUNCTIONS
+        //------------------------------------------------------------------------------------------------------------
+        //----------------------------------- LOCAL functions --------------------------------------------------------
+        //------------------------------------------------------------------------------------------------------------
+        #region LOCAL_FUNCTIONS
+        /// <summary>
+        /// Setting up the scene at startup or when it isn't setup yet
+        /// </summary>
+        private void LOCAL_ReadConstSceneElevatorStates()
+        {
+            Debug.Print("[NetworkController] Setting random elevator states for reception by localPlayer");
+            _elevator0Working = GetSyncValue(SyncBool_Elevator0working);
+            _elevator1Working = GetSyncValue(SyncBool_Elevator1working);
+            _elevator2Working = GetSyncValue(SyncBool_Elevator2working);
+            form1.DisplayElevatorBroken(_elevator0Working, _elevator1Working, _elevator2Working);
+            //NOPE _elevatorControllerReception._elevator1working = _elevator0Working;
+            //NOPE _elevatorControllerReception._elevator2working = _elevator1Working;
+            //NOPE _elevatorControllerReception._elevator3working = _elevator2Working;
+            //NOPE _elevatorControllerReception.SetupElevatorStates();
+            Debug.Print("[NetworkController] Random elevator states for reception are now set by localPlayer");
+        }
+        /// <summary> Elevator 0 open/close (localPlayer world view that is in sync with ElevatorController of Level 0)</summary>
+        private bool _elevator0isOpenReception = false;
+        /// <summary> Elevator 1 open/close (localPlayer world view that is in sync with ElevatorController of Level 0)</summary>
+        private bool _elevator1isOpenReception = false;
+        /// <summary> Elevator 2 open/close (localPlayer world view that is in sync with ElevatorController of Level 0)</summary>
+        private bool _elevator2isOpenReception = false;
+        /// <summary>
+        /// is called when network packets are received (only happens when there are more players except Master in the scene
+        /// </summary>
+        public void OnDeserialization()
+        {
+            if (!_worldIsLoaded)
+                return;
+            LOCAL_OnDeserialization(); //do nothing else in here or shit will break!
+        }
+        /// <summary>
+        /// Can be called by master (locally in Update) or by everyone else OnDeserialization (when SyncBool states change)
+        /// </summary>
+        private void LOCAL_OnDeserialization()
+        {
+            if (!_finishedLocalSetup)
+            {
+                if (time.GetTime() < 1f)
+                    return;
+                Debug.Print("[NetworkController] Local setup was started");
+                if (GetSyncValue(SyncBool_Initialized))
+                {
+                    LOCAL_ReadConstSceneElevatorStates();
+                    _finishedLocalSetup = true;
+                    Debug.Print("[NetworkController] Local setup was finished");
+                }
+                else
+                {
+                    return;
+                }
+            }
+            else
+            {
+                LOCAL_CheckElevatorStates();
+                LOCAL_CheckElevatorCallStateReception();
+                LOCAL_CheckElevatorLevels();
+            }
+        }
         /// <summary>
         /// Run by LocalPlayer
         /// Checking all bits and see if the real world alligns with it
@@ -924,98 +1046,6 @@ namespace WindowsFormsApp1
                 _elevator2isOpenReception = false;
             }
         }
-        /// <summary>
-        /// This update is run every frame
-        /// </summary>
-        public void Update()
-        {
-            //Debug.Print("Time: " + time.GetTime());
-            if (_localPlayerisMaster)
-            {
-                if (!_isMaster)
-                {
-                    Debug.Print("[NetworkController] Master has changed!");
-                    MASTER_OnMasterChanged();
-                    _isMaster = true;
-                }
-                //first process network events because Master can't do that else
-                LocalOnDeserialization();
-                //only the current master does this
-                MASTER_RunElevatorControl();
-            }
-            //Checking if local call was handled or dropped
-            LOCAL_CheckIfElevatorCallWasReceived();
-        }
-        /// <summary>
-        /// When the master changes, we need to load the SyncBool states into local copies to run the elevator controller correct
-        /// </summary>
-        private void MASTER_OnMasterChanged()
-        {
-            //taking all content from SyncedData into local arrays
-            //TODO: Implement this
-            //setting _calledToFloor
-            for (int i = 0; i <= 13; i++)
-            {
-                //_calledToFloor[i] = GetSyncValue( );
-            }
-            _timeAtCurrentFloorElevatorOpened_MASTER[0] = time.GetTime();
-            _timeAtCurrentFloorElevatorOpened_MASTER[1] = time.GetTime();
-            _timeAtCurrentFloorElevatorOpened_MASTER[2] = time.GetTime();
-            _timeAtCurrentFloorElevatorClosed_MASTER[0] = time.GetTime();
-            _timeAtCurrentFloorElevatorClosed_MASTER[1] = time.GetTime();
-            _timeAtCurrentFloorElevatorClosed_MASTER[2] = time.GetTime();
-            _elevatorCheckTick_MASTER = 1;
-        }
-        //-----------------------------------------------------------------------------------------------------------------------------
-        /// <summary>
-        ///  sets the elevators into the random state which is determined by master user uwu
-        ///  this can't be "random", but we have a pool of 7 allowed states
-        /// </summary>
-        private void MASTER_SetConstSceneElevatorStates()
-        {
-            //to make testing easier, we only allow one state right now
-            int random = 4; // UnityEngine.Random.Range(0, 7);
-            switch (random)
-            {
-                case 0:
-                    MASTER_SetSyncValue(SyncBool_Elevator0working, true);
-                    MASTER_SetSyncValue(SyncBool_Elevator1working, true);
-                    MASTER_SetSyncValue(SyncBool_Elevator2working, true);
-                    break;
-                case 1:
-                    MASTER_SetSyncValue(SyncBool_Elevator0working, false);
-                    MASTER_SetSyncValue(SyncBool_Elevator1working, true);
-                    MASTER_SetSyncValue(SyncBool_Elevator2working, true);
-                    break;
-                case 2:
-                    MASTER_SetSyncValue(SyncBool_Elevator0working, true);
-                    MASTER_SetSyncValue(SyncBool_Elevator1working, false);
-                    MASTER_SetSyncValue(SyncBool_Elevator2working, true);
-                    break;
-                case 3:
-                    MASTER_SetSyncValue(SyncBool_Elevator0working, true);
-                    MASTER_SetSyncValue(SyncBool_Elevator1working, true);
-                    MASTER_SetSyncValue(SyncBool_Elevator2working, false);
-                    break;
-                case 4:
-                    MASTER_SetSyncValue(SyncBool_Elevator0working, true);
-                    MASTER_SetSyncValue(SyncBool_Elevator1working, false);
-                    MASTER_SetSyncValue(SyncBool_Elevator2working, false);
-                    break;
-                case 5:
-                    MASTER_SetSyncValue(SyncBool_Elevator0working, false);
-                    MASTER_SetSyncValue(SyncBool_Elevator1working, true);
-                    MASTER_SetSyncValue(SyncBool_Elevator2working, false);
-                    break;
-                default:
-                    MASTER_SetSyncValue(SyncBool_Elevator0working, false);
-                    MASTER_SetSyncValue(SyncBool_Elevator1working, false);
-                    MASTER_SetSyncValue(SyncBool_Elevator2working, true);
-                    break;
-            }
-            MASTER_SetSyncValue(SyncBool_Initialized, true);
-            Debug.Print("[NetworkController] Random elevator states are now set by master");
-        }
         //Local copies of elevator state to check them against SyncBool states
         private int _localPlayerFloor = 0; //this is only relevant once we figure out instancing in Unity
         private bool[] _elevatorIsCalledDown = new bool[14];
@@ -1024,6 +1054,14 @@ namespace WindowsFormsApp1
         private bool[] _locallyIsCalledUp = new bool[14];
         private float[] _elevatorCallTimeUp = new float[14];
         private float[] _elevatorCallTimeDown = new float[14];
+        /// <summary>
+        /// This function is called in every Update()
+        /// </summary>
+        private void LOCAL_RunLocalPlayer()
+        {
+            //Checking if local call was handled or dropped
+            LOCAL_CheckIfElevatorCallWasReceived();
+        }
         /// <summary>
         /// Checking if the elevator was successfully called by master after we've called it, else we drop the request
         /// </summary>
@@ -1153,7 +1191,11 @@ namespace WindowsFormsApp1
                 _localElevator2Level = floorNumber;
             }
         }
-        //------------------------------- API ---------------------------------
+        #endregion LOCAL_FUNCTIONS
+        //------------------------------------------------------------------------------------------------------------
+        //------------------------------- API for elevator buttons ---------------------------------------------------
+        //------------------------------------------------------------------------------------------------------------
+        #region API_FUNCTIONS
         public void API_LocalPlayerPressedCallButton(int floorNumber, bool directionUp)
         {
             if (directionUp)
@@ -1217,7 +1259,11 @@ namespace WindowsFormsApp1
             //every other button is an internal floor request, button 4 is floor 0 etc.
             _elevatorRequester.RequestElevatorInternalTarget(elevatorNumber, buttonNumber - 4);
         }
-        //---------------------------- Network Call Receivers-----------------------------------------
+        #endregion API_FUNCTIONS
+        //------------------------------------------------------------------------------------------------------------
+        //--------------------------------- Network Call Receivers----------------------------------------------------
+        //------------------------------------------------------------------------------------------------------------
+        #region ELREQ_FUNCTIONS
         /// <summary>
         /// This function receives a client request (and is run by master-only)
         /// </summary>
@@ -1304,11 +1350,11 @@ namespace WindowsFormsApp1
             }
             return false;
         }
-
-
+        #endregion ELREQ_FUNCTIONS
         //------------------------------------------------------------------------------------------------------------
-        //------------------------------------------ SyncBool Interface ----------------------------------------------
+        //----------------------------------SyncBool Interface -------------------------------------------------------
         //------------------------------------------------------------------------------------------------------------
+        #region SYNCBOOL_FUNCTIONS
         /// <summary>
         /// Checks if that elevator is currently open
         /// </summary>
@@ -1580,9 +1626,11 @@ namespace WindowsFormsApp1
             }
         }
     }
-
-    //------------------------------------ Emulator classes ----------------------------------
-
+    #endregion SYNCBOOL_FUNCTIONS
+    //----------------------------------------------------------------------------------------------------------------
+    //--------------------------------------- Emulator classes -------------------------------------------------------
+    //----------------------------------------------------------------------------------------------------------------
+    #region EMULATOR_FUNCTIONS
     /// <summary>
     /// Emulator of unity time
     /// </summary>
@@ -1668,5 +1716,5 @@ namespace WindowsFormsApp1
             _networkingController.ELREQ_SetInternalTarget(elevatorNumber, floor);
         }
     }
-
+    #endregion EMULATOR_FUNCTIONS
 }
