@@ -833,16 +833,19 @@ namespace WindowsFormsApp1
             }
             if (elevatorNumber == 0 && _elevator0FloorTargets_MASTER[currentFloor])
             {
+                MASTER_SetSyncValue(SyncBoolReq_Elevator0CalledToFloor_0 + currentFloor, false);
                 _elevator0FloorTargets_MASTER[currentFloor] = false;
                 _elevator0FloorTargets_MASTER_COUNT--;
             }
             else if (elevatorNumber == 1 && _elevator1FloorTargets_MASTER[currentFloor])
             {
+                MASTER_SetSyncValue(SyncBoolReq_Elevator1CalledToFloor_0 + currentFloor, false);
                 _elevator1FloorTargets_MASTER[currentFloor] = false;
                 _elevator1FloorTargets_MASTER_COUNT--;
             }
             else if (elevatorNumber == 2 && _elevator2FloorTargets_MASTER[currentFloor])
             {
+                MASTER_SetSyncValue(SyncBoolReq_Elevator2CalledToFloor_0 + currentFloor, false);
                 _elevator2FloorTargets_MASTER[currentFloor] = false;
                 _elevator2FloorTargets_MASTER_COUNT--;
             }
@@ -1594,7 +1597,7 @@ namespace WindowsFormsApp1
             }
             else if (!directionUp && !GetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + floor))
             {
-                if (!MASTER_ElevatorAlreadyThereAndOpen(floor, true))
+                if (!MASTER_ElevatorAlreadyThereAndOpen(floor, false))
                 {
                     MASTER_SetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + floor, true);
                     _calledToFloorToGoDown_MASTER[floor] = true;
@@ -1625,6 +1628,7 @@ namespace WindowsFormsApp1
             Debug.Print("[NetworkController] Master received client request to set target for elevator " + elevatorNumber + " to floor " + floorNumber);
             if (elevatorNumber == 0 && !GetSyncValue(SyncBoolReq_Elevator0CalledToFloor_0 + floorNumber))
             {
+                Debug.Print("Internal target was now set.");
                 MASTER_SetSyncValue(SyncBoolReq_Elevator0CalledToFloor_0 + floorNumber, true);
                 _elevator0FloorTargets_MASTER[floorNumber] = true;
                 _elevator0FloorTargets_MASTER_COUNT++;
@@ -1632,6 +1636,7 @@ namespace WindowsFormsApp1
             }
             else if (elevatorNumber == 1 && !GetSyncValue(SyncBoolReq_Elevator1CalledToFloor_0 + floorNumber))
             {
+                Debug.Print("Internal target was now set.");
                 MASTER_SetSyncValue(SyncBoolReq_Elevator1CalledToFloor_0 + floorNumber, true);
                 _elevator1FloorTargets_MASTER[floorNumber] = true;
                 _elevator1FloorTargets_MASTER_COUNT++;
@@ -1639,6 +1644,7 @@ namespace WindowsFormsApp1
             }
             else if (elevatorNumber == 2 && !GetSyncValue(SyncBoolReq_Elevator2CalledToFloor_0 + floorNumber))
             {
+                Debug.Print("Internal target was now set.");
                 MASTER_SetSyncValue(SyncBoolReq_Elevator2CalledToFloor_0 + floorNumber, true);
                 _elevator2FloorTargets_MASTER[floorNumber] = true;
                 _elevator2FloorTargets_MASTER_COUNT++;
@@ -1654,15 +1660,15 @@ namespace WindowsFormsApp1
         /// <returns></returns>
         private bool MASTER_ElevatorAlreadyThereAndOpen(int floor, bool directionUp)
         {
-            if (_elevator0Working && GetSyncElevatorFloor(0) == 0 && GetSyncValue(SyncBool_Elevator0open))
+            if (_elevator0Working && GetSyncElevatorFloor(0) == floor && GetSyncValue(SyncBool_Elevator0open) && (GetSyncValue(SyncBool_Elevator0goingUp) || GetSyncValue(SyncBool_Elevator0idle)))
             {
                 return true;
             }
-            if (_elevator1Working && GetSyncElevatorFloor(1) == 0 && GetSyncValue(SyncBool_Elevator1open))
+            if (_elevator1Working && GetSyncElevatorFloor(1) == floor && GetSyncValue(SyncBool_Elevator1open) && (GetSyncValue(SyncBool_Elevator1goingUp) || GetSyncValue(SyncBool_Elevator1idle)))
             {
                 return true;
             }
-            if (_elevator2Working && GetSyncElevatorFloor(2) == 0 && GetSyncValue(SyncBool_Elevator2open))
+            if (_elevator2Working && GetSyncElevatorFloor(2) == floor && GetSyncValue(SyncBool_Elevator2open) && (GetSyncValue(SyncBool_Elevator2goingUp) || GetSyncValue(SyncBool_Elevator2idle)))
             {
                 return true;
             }
