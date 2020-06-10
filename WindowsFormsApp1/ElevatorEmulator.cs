@@ -514,7 +514,6 @@ namespace WindowsFormsApp1
                     break;
             }
         }
-
         #region internalElevatorButtons
         //internal elevator buttons
         private void button1_Click(object sender, EventArgs e)
@@ -615,17 +614,11 @@ namespace WindowsFormsApp1
         }
         #endregion internalElevatorButtons
         #region ExternalCallButtons
-        /// <summary>
-        /// User presses button "DOWN" on floor 0 / reception
-        /// </summary>
         private void buttonCallDown_0_Click(object sender, EventArgs e)
         {
             SetButtonColor(directionUp: false, stateCalled: true, floor: 0);
             _controller.API_LocalPlayerPressedCallButton(0, false);
         }
-        /// <summary>
-        /// User presses button "UP" on floor 0 / reception
-        /// </summary>
         private void buttonCallUp_0_Click(object sender, EventArgs e)
         {
             SetButtonColor(directionUp: true, stateCalled: true, floor: 0);
@@ -671,17 +664,11 @@ namespace WindowsFormsApp1
             SetButtonColor(directionUp: true, stateCalled: true, floor: 4);
             _controller.API_LocalPlayerPressedCallButton(4, true);
         }
-        /// <summary>
-        /// User presses button "DOWN" on floor 5
-        /// </summary>
         private void buttonCallDown_5_Click(object sender, EventArgs e)
         {
             SetButtonColor(directionUp: false, stateCalled: true, floor: 5);
             _controller.API_LocalPlayerPressedCallButton(5, false);
         }
-        /// <summary>
-        /// User presses button "UP" on floor 5
-        /// </summary>
         private void buttonCallUp_5_Click(object sender, EventArgs e)
         {
             SetButtonColor(directionUp: true, stateCalled: true, floor: 5);
@@ -757,17 +744,11 @@ namespace WindowsFormsApp1
             SetButtonColor(directionUp: false, stateCalled: true, floor: 12);
             _controller.API_LocalPlayerPressedCallButton(12, false);
         }
-        /// <summary>
-        /// User presses button "DOWN" on floor 13 (topmost floor)
-        /// </summary>
         private void buttonCallDown_13_Click(object sender, EventArgs e)
         {
             SetButtonColor(directionUp: false, stateCalled: true, floor: 13);
             _controller.API_LocalPlayerPressedCallButton(13, false);
         }
-        /// <summary>
-        /// User presses button "UP" on floor 13 (topmost floor)
-        /// </summary>
         private void buttonCallUp_13_Click(object sender, EventArgs e)
         {
             SetButtonColor(directionUp: true, stateCalled: true, floor: 13);
@@ -856,6 +837,7 @@ namespace WindowsFormsApp1
             _controller.API_LocalPlayerPressedElevatorButton(1, 17);
         }
         #endregion InternalButtonsElevator1
+        #region InternalButtonsElevator2
         private void button0_2_Click(object sender, EventArgs e)
         {
             SetElevatorButtonColor(stateCalled: true, buttonNumber: 0, 2);
@@ -936,6 +918,7 @@ namespace WindowsFormsApp1
             SetElevatorButtonColor(stateCalled: true, buttonNumber: 17, 2);
             _controller.API_LocalPlayerPressedElevatorButton(2, 17);
         }
+        #endregion InternalButtonsElevator2
     }
     #endregion GUI_class
     //----------------------------------------------------------------------------------------------------------------
@@ -1551,7 +1534,25 @@ namespace WindowsFormsApp1
         /// <param name="floor"></param>
         private void MASTER_HandleFloorDoorOpening(int elevatorNumber, int currentFloor, bool directionUp, bool isIdle)
         {
+            //first handle the floor targets
             MASTER_HandleFloorTarget(elevatorNumber, currentFloor, directionUp, isIdle);
+            if (!isIdle)
+            {
+                //if we are on floor 0 or floor 13 and not idle, handle the targets in reverse direction
+                if (currentFloor == 13 || currentFloor == 0 || MASTER_GetInternalTargetCount(elevatorNumber) == 0)
+                {
+                    MASTER_SetElevatorIdle(elevatorNumber);
+                    MASTER_HandleFloorTarget(elevatorNumber, currentFloor, directionUp, isIdle: true);
+                }
+                else if((directionUp && GetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + currentFloor)) && (!directionUp && GetSyncValue(SyncBoolReq_ElevatorCalledUp_0 + currentFloor)))
+                {
+                    //TODO: solve this issue here
+                    //then the other directional button is pressed on that floor level and we should consider to handle it
+                    //and set this elevator to idle if the other button on that floor wasn't pressed and there is no internal target
+                    //on this way, so the elevator would reverse next. We also need to reverse the elevator in that case.
+                }
+            }
+            //now we can actually open the elevator
             MASTER_SetSyncValue(SyncBool_Elevator0open + elevatorNumber, true); //opening the elevator
             _elevatorIsDriving_MASTER[elevatorNumber] = false;
             _timeAtCurrentFloorElevatorOpened_MASTER[elevatorNumber] = time.GetTime();
