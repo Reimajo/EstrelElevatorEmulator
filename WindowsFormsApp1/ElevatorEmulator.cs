@@ -377,9 +377,9 @@ namespace WindowsFormsApp1
         /// <summary>
         /// Setting a button bg color inside the elevator
         /// </summary>
-        public void SetElevatorButtonColor(bool stateCalled, int buttonNumber)
+        public void SetElevatorButtonColor(bool stateCalled, int buttonNumber, int elevatorNumber)
         {
-            Debug.Print("[UI] Set internal button " + buttonNumber + " called:" + stateCalled.ToString());
+            Debug.Print("[UI] Set internal button " + buttonNumber + " called:" + stateCalled.ToString() + " on elevator " + elevatorNumber);
             Color color;
             if (stateCalled)
             {
@@ -389,59 +389,128 @@ namespace WindowsFormsApp1
             {
                 color = Color.LightGray;
             }
+            Button elevatorButton0;
+            Button elevatorButton1;
+            Button elevatorButton4;
+            Button elevatorButton5;
+            Button elevatorButton6;
+            Button elevatorButton7;
+            Button elevatorButton8;
+            Button elevatorButton9;
+            Button elevatorButton10;
+            Button elevatorButton11;
+            Button elevatorButton12;
+            Button elevatorButton13;
+            Button elevatorButton14;
+            Button elevatorButton15;
+            Button elevatorButton16;
+            Button elevatorButton17;
+            switch (elevatorNumber)
+            {
+                case 0:
+                    elevatorButton0 = button0;
+                    elevatorButton1 = button1;
+                    elevatorButton4 = button4;
+                    elevatorButton5 = button5;
+                    elevatorButton6 = button6;
+                    elevatorButton7 = button7;
+                    elevatorButton8 = button8;
+                    elevatorButton9 = button9;
+                    elevatorButton10 = button10;
+                    elevatorButton11 = button11;
+                    elevatorButton12 = button12;
+                    elevatorButton13 = button13;
+                    elevatorButton14 = button14;
+                    elevatorButton15 = button15;
+                    elevatorButton16 = button16;
+                    elevatorButton17 = button17;
+                    break;
+                case 1:
+                    elevatorButton0 = button0_1;
+                    elevatorButton1 = button1_1;
+                    elevatorButton4 = button4_1;
+                    elevatorButton5 = button5_1;
+                    elevatorButton6 = button6_1;
+                    elevatorButton7 = button7_1;
+                    elevatorButton8 = button8_1;
+                    elevatorButton9 = button9_1;
+                    elevatorButton10 = button10_1;
+                    elevatorButton11 = button11_1;
+                    elevatorButton12 = button12_1;
+                    elevatorButton13 = button13_1;
+                    elevatorButton14 = button14_1;
+                    elevatorButton15 = button15_1;
+                    elevatorButton16 = button16_1;
+                    elevatorButton17 = button17_1;
+                    break;
+                default:
+                    elevatorButton0 = button0_2;
+                    elevatorButton1 = button1_2;
+                    elevatorButton4 = button4_2;
+                    elevatorButton5 = button5_2;
+                    elevatorButton6 = button6_2;
+                    elevatorButton7 = button7_2;
+                    elevatorButton8 = button8_2;
+                    elevatorButton9 = button9_2;
+                    elevatorButton10 = button10_2;
+                    elevatorButton11 = button11_2;
+                    elevatorButton12 = button12_2;
+                    elevatorButton13 = button13_2;
+                    elevatorButton14 = button14_2;
+                    elevatorButton15 = button15_2;
+                    elevatorButton16 = button16_2;
+                    elevatorButton17 = button17_2;
+                    break;
+            }
             switch (buttonNumber)
             {
                 case 0:
-                    button0.BackColor = color;
+                    elevatorButton0.BackColor = color;
                     break;
                 case 1:
-                    button1.BackColor = color;
-                    break;
-                case 2:
-                    break;
-                case 3:
+                    elevatorButton1.BackColor = color;
                     break;
                 case 4:
-                    button4.BackColor = color;
+                    elevatorButton4.BackColor = color;
                     break;
                 case 5:
-                    button5.BackColor = color;
+                    elevatorButton5.BackColor = color;
                     break;
                 case 6:
-                    button6.BackColor = color;
+                    elevatorButton6.BackColor = color;
                     break;
                 case 7:
-                    button7.BackColor = color;
+                    elevatorButton7.BackColor = color;
                     break;
                 case 8:
-                    button8.BackColor = color;
+                    elevatorButton8.BackColor = color;
                     break;
                 case 9:
-                    button9.BackColor = color;
+                    elevatorButton9.BackColor = color;
                     break;
                 case 10:
-                    button10.BackColor = color;
+                    elevatorButton10.BackColor = color;
                     break;
                 case 11:
-                    button11.BackColor = color;
+                    elevatorButton11.BackColor = color;
                     break;
                 case 12:
-                    button12.BackColor = color;
+                    elevatorButton12.BackColor = color;
                     break;
                 case 13:
-                    button13.BackColor = color;
+                    elevatorButton13.BackColor = color;
                     break;
                 case 14:
-                    button14.BackColor = color;
+                    elevatorButton14.BackColor = color;
                     break;
                 case 15:
-                    button15.BackColor = color;
+                    elevatorButton15.BackColor = color;
                     break;
                 case 16:
-                    button16.BackColor = color;
+                    elevatorButton16.BackColor = color;
                     break;
                 case 17:
-                    button17.BackColor = color;
+                    elevatorButton17.BackColor = color;
                     break;
             }
         }
@@ -463,85 +532,85 @@ namespace WindowsFormsApp1
         private void button4_Click(object sender, EventArgs e)
         {
             //floor 0
-            SetElevatorButtonColor(stateCalled: true, buttonNumber: 4);
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 4, 0);
             _controller.API_LocalPlayerPressedElevatorButton(0, 4);
         }
         private void button5_Click(object sender, EventArgs e)
         {
             // floor 1
-            SetElevatorButtonColor(stateCalled: true, buttonNumber: 5);
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 5, 0);
             _controller.API_LocalPlayerPressedElevatorButton(0, 5);
         }
         private void button6_Click(object sender, EventArgs e)
         {
             //2
-            SetElevatorButtonColor(stateCalled: true, buttonNumber: 6);
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 6, 0);
             _controller.API_LocalPlayerPressedElevatorButton(0, 6);
         }
         private void button7_Click(object sender, EventArgs e)
         {
             //3
-            SetElevatorButtonColor(stateCalled: true, buttonNumber: 7);
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 7, 0);
             _controller.API_LocalPlayerPressedElevatorButton(0, 7);
         }
         private void button8_Click(object sender, EventArgs e)
         {
             //4
-            SetElevatorButtonColor(stateCalled: true, buttonNumber: 8);
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 8, 0);
             _controller.API_LocalPlayerPressedElevatorButton(0, 8);
         }
         private void button9_Click(object sender, EventArgs e)
         {
             //5
-            SetElevatorButtonColor(stateCalled: true, buttonNumber: 9);
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 9, 0);
             _controller.API_LocalPlayerPressedElevatorButton(0, 9);
         }
         private void button10_Click(object sender, EventArgs e)
         {
             //6
-            SetElevatorButtonColor(stateCalled: true, buttonNumber: 10);
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 10, 0);
             _controller.API_LocalPlayerPressedElevatorButton(0, 10);
         }
         private void button11_Click(object sender, EventArgs e)
         {
             //7
-            SetElevatorButtonColor(stateCalled: true, buttonNumber: 11);
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 11, 0);
             _controller.API_LocalPlayerPressedElevatorButton(0, 11);
         }
         private void button12_Click(object sender, EventArgs e)
         {
             //8
-            SetElevatorButtonColor(stateCalled: true, buttonNumber: 12);
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 12, 0);
             _controller.API_LocalPlayerPressedElevatorButton(0, 12);
         }
         private void button13_Click(object sender, EventArgs e)
         {
             //9
-            SetElevatorButtonColor(stateCalled: true, buttonNumber: 13);
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 13, 0);
             _controller.API_LocalPlayerPressedElevatorButton(0, 13);
         }
         private void button14_Click(object sender, EventArgs e)
         {
             //10
-            SetElevatorButtonColor(stateCalled: true, buttonNumber: 14);
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 14, 0);
             _controller.API_LocalPlayerPressedElevatorButton(0, 14);
         }
         private void button15_Click(object sender, EventArgs e)
         {
             //11
-            SetElevatorButtonColor(stateCalled: true, buttonNumber: 15);
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 15, 0);
             _controller.API_LocalPlayerPressedElevatorButton(0, 15);
         }
         private void button16_Click(object sender, EventArgs e)
         {
             //12
-            SetElevatorButtonColor(stateCalled: true, buttonNumber: 16);
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 16, 0);
             _controller.API_LocalPlayerPressedElevatorButton(0, 16);
         }
         private void button17_Click(object sender, EventArgs e)
         {
             //13
-            SetElevatorButtonColor(stateCalled: true, buttonNumber: 17);
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 17, 0);
             _controller.API_LocalPlayerPressedElevatorButton(0, 17);
         }
         #endregion internalElevatorButtons
@@ -705,6 +774,168 @@ namespace WindowsFormsApp1
             _controller.API_LocalPlayerPressedCallButton(13, true);
         }
         #endregion ExternalCallButtons
+        #region InternalButtonsElevator1
+        private void button0_1_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 0, 1);
+            _controller.API_LocalPlayerPressedElevatorButton(1, 0);
+        }
+        private void button1_1_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 1, 1);
+            _controller.API_LocalPlayerPressedElevatorButton(1, 1);
+        }
+        private void button4_1_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 4, 1);
+            _controller.API_LocalPlayerPressedElevatorButton(1, 4);
+        }
+        private void button5_1_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 5, 1);
+            _controller.API_LocalPlayerPressedElevatorButton(1, 5);
+        }
+        private void button6_1_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 6, 1);
+            _controller.API_LocalPlayerPressedElevatorButton(1, 6);
+        }
+        private void button7_1_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 7, 1);
+            _controller.API_LocalPlayerPressedElevatorButton(1, 7);
+        }
+        private void button8_1_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 8, 1);
+            _controller.API_LocalPlayerPressedElevatorButton(1, 8);
+        }
+        private void button9_1_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 9, 1);
+            _controller.API_LocalPlayerPressedElevatorButton(1, 9);
+        }
+        private void button10_1_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 10, 1);
+            _controller.API_LocalPlayerPressedElevatorButton(1, 10);
+        }
+        private void button11_1_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 11, 1);
+            _controller.API_LocalPlayerPressedElevatorButton(1, 11);
+        }
+        private void button12_1_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 12, 1);
+            _controller.API_LocalPlayerPressedElevatorButton(1, 12);
+        }
+        private void button13_1_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 13, 1);
+            _controller.API_LocalPlayerPressedElevatorButton(1, 13);
+        }
+        private void button14_1_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 14, 1);
+            _controller.API_LocalPlayerPressedElevatorButton(1, 14);
+        }
+        private void button15_1_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 15, 1);
+            _controller.API_LocalPlayerPressedElevatorButton(1, 15);
+        }
+        private void button16_1_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 16, 1);
+            _controller.API_LocalPlayerPressedElevatorButton(1, 16);
+        }
+        private void button17_1_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 17, 1);
+            _controller.API_LocalPlayerPressedElevatorButton(1, 17);
+        }
+        #endregion InternalButtonsElevator1
+        private void button0_2_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 0, 2);
+            _controller.API_LocalPlayerPressedElevatorButton(2, 0);
+        }
+        private void button1_2_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 1, 2);
+            _controller.API_LocalPlayerPressedElevatorButton(2, 1);
+        }
+        private void button4_2_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 4, 2);
+            _controller.API_LocalPlayerPressedElevatorButton(2, 4);
+        }
+        private void button5_2_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 5, 2);
+            _controller.API_LocalPlayerPressedElevatorButton(2, 5);
+        }
+        private void button6_2_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 6, 2);
+            _controller.API_LocalPlayerPressedElevatorButton(2, 6);
+        }
+        private void button7_2_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 7, 2);
+            _controller.API_LocalPlayerPressedElevatorButton(2, 7);
+        }
+        private void button8_2_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 8, 2);
+            _controller.API_LocalPlayerPressedElevatorButton(2, 8);
+        }
+        private void button9_2_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 9, 2);
+            _controller.API_LocalPlayerPressedElevatorButton(2, 9);
+        }
+        private void button10_2_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 10, 2);
+            _controller.API_LocalPlayerPressedElevatorButton(2, 10);
+        }
+        private void button11_2_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 11, 2);
+            _controller.API_LocalPlayerPressedElevatorButton(2, 11);
+        }
+        private void button12_2_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 12, 2);
+            _controller.API_LocalPlayerPressedElevatorButton(2, 12);
+        }
+        private void button13_2_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 13, 2);
+            _controller.API_LocalPlayerPressedElevatorButton(2, 13);
+        }
+        private void button14_2_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 14, 2);
+            _controller.API_LocalPlayerPressedElevatorButton(2, 14);
+        }
+        private void button15_2_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 15, 2);
+            _controller.API_LocalPlayerPressedElevatorButton(2, 15);
+        }
+        private void button16_2_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 16, 2);
+            _controller.API_LocalPlayerPressedElevatorButton(2, 16);
+        }
+        private void button17_2_Click(object sender, EventArgs e)
+        {
+            SetElevatorButtonColor(stateCalled: true, buttonNumber: 17, 2);
+            _controller.API_LocalPlayerPressedElevatorButton(2, 17);
+        }
     }
     #endregion GUI_class
     //----------------------------------------------------------------------------------------------------------------
@@ -935,6 +1166,7 @@ namespace WindowsFormsApp1
         /// <summary>
         /// locally storing where each elevator is and has to go, these need to be checked against SyncBool states 
         /// </summary>
+        private bool[] _elevatorIsDriving_MASTER = new bool[3]; //this array is local only and not synced
         private bool[] _calledToFloorToGoUp_MASTER = new bool[14];
         private int _calledToFloorToGoUp_MASTER_COUNT = 0;
         private bool[] _calledToFloorToGoDown_MASTER = new bool[14];
@@ -972,6 +1204,7 @@ namespace WindowsFormsApp1
         private void MASTER_OnMasterChanged()
         {
             //resetting arrays and counters
+            _elevatorIsDriving_MASTER = new bool[3];
             _elevator0FloorTargets_MASTER = new bool[14];
             _elevator0FloorTargets_MASTER_COUNT = 0;
             _elevator1FloorTargets_MASTER = new bool[14];
@@ -1054,16 +1287,16 @@ namespace WindowsFormsApp1
             if (_elevatorCheckTick_MASTER >= 4)
                 _elevatorCheckTick_MASTER = 1;
         }
-        private const float TIME_TO_STAY_CLOSED_AFTER_GOING_OUT_OF_IDLE = 2f;
+        private const float TIME_TO_STAY_CLOSED_AFTER_GOING_OUT_OF_IDLE = 3f;
         private const float TIME_TO_STAY_OPEN = 5f; // 10f is normal
         private const float TIME_TO_STAY_OPEN_RECEPTION = 5f; //30f is normal
-        private const float TIME_TO_STAY_CLOSED = 2f; //MUST BE 4f IN UNITY! Because of the closing animation
+        private const float TIME_TO_STAY_CLOSED = 4f; //MUST BE 4f IN UNITY! Because of the closing animation
+        private const float TIME_TO_DRIVE_ONE_FLOOR = 2f;
         /// <summary>
         /// Running a single elevator, is only called by master in every Update
         /// 
         /// TODO: Moving down without internal target! (currently, setting an EREQ is a workaround for cheaper calculations)
-        /// TODO: Reset floor time after closing, so that the elevator "accelerates" first
-        /// TODO: Have a shorter timespan for an elevator that is travelling
+        /// TODO: Ignore targets that generated fake-EREQs for other elevators
         /// 
         /// </summary>
         private void MASTER_RunElevator(int elevatorNumber, int SyncBoolElevatorOpen, int SyncBoolElevatorIdle, int SyncBoolElevatorGoingUp, bool[] elevatorFloorTargets)
@@ -1101,11 +1334,17 @@ namespace WindowsFormsApp1
                     return;
                 }
             }
-            else if (time.GetTime() - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] < TIME_TO_STAY_CLOSED)
+            else if (!_elevatorIsDriving_MASTER[elevatorNumber] && time.GetTime() - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] < TIME_TO_STAY_CLOSED)
             {
+                _elevatorIsDriving_MASTER[elevatorNumber] = true;
                 //an elevator must stay closed for the duration of the closing animation
                 //however, we could still process user-requests to open it again here
                 //we can't move an elevator that isn't fully closed yet
+                return;
+            }
+            else if (time.GetTime() - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] < TIME_TO_DRIVE_ONE_FLOOR)
+            {
+                //driving a floor must take a certain amount of time
                 return;
             }
             //an elevator that is going up will only handle internal targets and up requests
@@ -1314,6 +1553,7 @@ namespace WindowsFormsApp1
         {
             MASTER_HandleFloorTarget(elevatorNumber, currentFloor, directionUp, isIdle);
             MASTER_SetSyncValue(SyncBool_Elevator0open + elevatorNumber, true); //opening the elevator
+            _elevatorIsDriving_MASTER[elevatorNumber] = false;
             _timeAtCurrentFloorElevatorOpened_MASTER[elevatorNumber] = time.GetTime();
         }
         /// <summary>
@@ -1395,7 +1635,7 @@ namespace WindowsFormsApp1
         private void MASTER_SetConstSceneElevatorStates()
         {
             //to make testing easier, we only allow one state right now
-            int random = 4; // UnityEngine.Random.Range(0, 7);
+            int random = 0; // UnityEngine.Random.Range(0, 7);
             switch (random)
             {
                 case 0:
@@ -2591,7 +2831,7 @@ namespace WindowsFormsApp1
 
         internal void SetElevatorFloorButtonState(int elevatorNumber, int floorNumber, bool called)
         {
-            form1.SetElevatorButtonColor(called, floorNumber + 4);
+            form1.SetElevatorButtonColor(called, floorNumber + 4, elevatorNumber);
             //Debug.Print("Elevator " + elevatorNumber + " would change floor " + floorNumber + " button to called:" + called.ToString() + ", but this function isn't implemented yet.");
         }
 
