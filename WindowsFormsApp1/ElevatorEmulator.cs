@@ -76,7 +76,7 @@ namespace WindowsFormsApp1
                 SetFloorColor(positionElevator1, Color.OrangeRed);
             }
             else if (textBoxElevator2OpenReception.Text != "BROKEN")
-            { 
+            {
                 SetFloorColor(positionElevator1, Color.Purple);
             }
             if (textBoxElevator3State.Text.Contains("OPEN"))
@@ -88,7 +88,7 @@ namespace WindowsFormsApp1
                 SetFloorColor(positionElevator2, Color.Purple);
             }
         }
-        private void SetFloorColor(int floor , Color color)
+        private void SetFloorColor(int floor, Color color)
         {
             switch (floor)
             {
@@ -711,9 +711,9 @@ namespace WindowsFormsApp1
     //------------------- GUI Class ----------------------------------------------------------------------------------
     //----------------------------------------------------------------------------------------------------------------
     /// <summary>
-    /// Please don't removed outcommented stuff here, this would break the Unity Version
+    /// Please don't remove outcommented stuff here, this would break the Unity Version
     /// This is the class we need to work on, everything around it is basicly not relevant
-    /// and has only the emulation purpose
+    /// and has only the emulation purpose, thus it's poorly written
     /// </summary>
     public class NetworkingController
     {
@@ -913,8 +913,10 @@ namespace WindowsFormsApp1
                 //only the current master does this
                 MASTER_RunElevatorControl();
             }
-            //Checking if local call was handled or dropped
-            LOCAL_CheckIfElevatorCallWasReceived();
+            //Checking if local external call was handled or dropped
+            LOCAL_CheckIfElevatorExternalCallWasReceived();
+            //Checking if local internal call was handled or dropped
+            LOCAL_CheckIfElevatorInternalCallWasReceived();
             //TODO: remove on live build
             TEST_DisplayElevatorStates();
         }
@@ -934,8 +936,9 @@ namespace WindowsFormsApp1
         /// locally storing where each elevator is and has to go, these need to be checked against SyncBool states 
         /// </summary>
         private bool[] _calledToFloorToGoUp_MASTER = new bool[14];
+        private int _calledToFloorToGoUp_MASTER_COUNT = 0;
         private bool[] _calledToFloorToGoDown_MASTER = new bool[14];
-        //private int[] _elevatorCurrentFloor = new int[3];
+        private int _calledToFloorToGoDown_MASTER_COUNT = 0;
         private bool[] _elevator0FloorTargets_MASTER = new bool[14];
         private int _elevator0FloorTargets_MASTER_COUNT = 0;
         private bool[] _elevator1FloorTargets_MASTER = new bool[14];
@@ -964,22 +967,55 @@ namespace WindowsFormsApp1
         }
         /// <summary>
         /// When the master changes, we need to load the SyncBool states into local copies to run the elevator controller correct
+        /// before we actually run the elevator controller for the first time
         /// </summary>
         private void MASTER_OnMasterChanged()
         {
+            //resetting arrays and counters
+            _elevator0FloorTargets_MASTER = new bool[14];
+            _elevator0FloorTargets_MASTER_COUNT = 0;
+            _elevator1FloorTargets_MASTER = new bool[14];
+            _elevator1FloorTargets_MASTER_COUNT = 0;
+            _elevator2FloorTargets_MASTER = new bool[14];
+            _elevator2FloorTargets_MASTER_COUNT = 0;
+            _calledToFloorToGoUp_MASTER = new bool[14];
+            _calledToFloorToGoUp_MASTER_COUNT = 0;
+            _calledToFloorToGoDown_MASTER = new bool[14];
+            _calledToFloorToGoDown_MASTER_COUNT = 0;
             //taking all content from SyncedData into local arrays
-            //TODO: Implement this
-            //setting _calledToFloor
             for (int i = 0; i <= 13; i++)
             {
-                //_calledToFloor[i] = GetSyncValue( );
+                if (GetSyncValue(SyncBoolReq_Elevator0CalledToFloor_0 + i))
+                {
+                    _elevator0FloorTargets_MASTER[i] = true;
+                    _elevator0FloorTargets_MASTER_COUNT++;
+                }
+                if (GetSyncValue(SyncBoolReq_Elevator1CalledToFloor_0 + i))
+                {
+                    _elevator1FloorTargets_MASTER[i] = true;
+                    _elevator1FloorTargets_MASTER_COUNT++;
+                }
+                if (GetSyncValue(SyncBoolReq_Elevator2CalledToFloor_0 + i))
+                {
+                    _elevator2FloorTargets_MASTER[i] = true;
+                    _elevator2FloorTargets_MASTER_COUNT++;
+                }
+                if (GetSyncValue(SyncBoolReq_ElevatorCalledUp_0 + i))
+                {
+                    _calledToFloorToGoUp_MASTER[i] = true;
+                    _calledToFloorToGoUp_MASTER_COUNT++;
+                }
+                if (GetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + i))
+                {
+                    _calledToFloorToGoDown_MASTER[i] = true;
+                    _calledToFloorToGoDown_MASTER_COUNT++;
+                }
             }
-            _timeAtCurrentFloorElevatorOpened_MASTER[0] = time.GetTime();
-            _timeAtCurrentFloorElevatorOpened_MASTER[1] = time.GetTime();
-            _timeAtCurrentFloorElevatorOpened_MASTER[2] = time.GetTime();
-            _timeAtCurrentFloorElevatorClosed_MASTER[0] = time.GetTime();
-            _timeAtCurrentFloorElevatorClosed_MASTER[1] = time.GetTime();
-            _timeAtCurrentFloorElevatorClosed_MASTER[2] = time.GetTime();
+            for (int i = 0; i <= 2; i++)
+            {
+                _timeAtCurrentFloorElevatorOpened_MASTER[i] = time.GetTime();
+                _timeAtCurrentFloorElevatorClosed_MASTER[i] = time.GetTime();
+            }
             _elevatorCheckTick_MASTER = 1;
         }
         /// <summary>
@@ -1001,19 +1037,33 @@ namespace WindowsFormsApp1
                 MASTER_RunElevator(2, SyncBool_Elevator2open, SyncBool_Elevator2idle, SyncBool_Elevator2goingUp, _elevator2FloorTargets_MASTER);
             }
             _elevatorCheckTick_MASTER++;
+            //TODO: Remove before pushing live
+            if (false && _elevatorCheckTick_MASTER == 4)
+            {
+                if (_elevator0FloorTargets_MASTER_COUNT != 0)
+                    Debug.Print("_elevator0FloorTargets_MASTER_COUNT:" + _elevator0FloorTargets_MASTER_COUNT);
+                if (_elevator1FloorTargets_MASTER_COUNT != 0)
+                    Debug.Print("_elevator1FloorTargets_MASTER_COUNT:" + _elevator1FloorTargets_MASTER_COUNT);
+                if (_elevator2FloorTargets_MASTER_COUNT != 0)
+                    Debug.Print("_elevator2FloorTargets_MASTER_COUNT:" + _elevator2FloorTargets_MASTER_COUNT);
+                if (_calledToFloorToGoUp_MASTER_COUNT != 0)
+                    Debug.Print("_calledToFloorToGoUp_MASTER_COUNT:" + _calledToFloorToGoUp_MASTER_COUNT);
+                if (_calledToFloorToGoDown_MASTER_COUNT != 0)
+                    Debug.Print("_calledToFloorToGoDown_MASTER_COUNT:" + _calledToFloorToGoDown_MASTER_COUNT);
+            }
             if (_elevatorCheckTick_MASTER >= 4)
                 _elevatorCheckTick_MASTER = 1;
         }
-
+        private const float TIME_TO_STAY_CLOSED_AFTER_GOING_OUT_OF_IDLE = 2f;
         private const float TIME_TO_STAY_OPEN = 5f; // 10f is normal
         private const float TIME_TO_STAY_OPEN_RECEPTION = 5f; //30f is normal
-        //TODO: Have a shorter timespan for an elevator that is travelling
         private const float TIME_TO_STAY_CLOSED = 2f; //MUST BE 4f IN UNITY! Because of the closing animation
         /// <summary>
         /// Running a single elevator, is only called by master in every Update
         /// 
-        /// TODO: Moving down without internal target!
-        /// TODO: Reset floor time after going out of idle mode
+        /// TODO: Moving down without internal target! (currently, setting an EREQ is a workaround for cheaper calculations)
+        /// TODO: Reset floor time after closing, so that the elevator "accelerates" first
+        /// TODO: Have a shorter timespan for an elevator that is travelling
         /// 
         /// </summary>
         private void MASTER_RunElevator(int elevatorNumber, int SyncBoolElevatorOpen, int SyncBoolElevatorIdle, int SyncBoolElevatorGoingUp, bool[] elevatorFloorTargets)
@@ -1026,7 +1076,7 @@ namespace WindowsFormsApp1
             //we can't handle people blocking the elevator, so we will ignore ongoing requests and save them for later
             if (GetSyncValue(SyncBoolElevatorOpen))
             {
-                //an elevator must stay open for 10 seconds
+                //an elevator must stay open for n seconds
                 if (!(currentFloor == 0) && time.GetTime() - _timeAtCurrentFloorElevatorOpened_MASTER[elevatorNumber] > TIME_TO_STAY_OPEN || currentFloor == 0 && time.GetTime() - _timeAtCurrentFloorElevatorOpened_MASTER[elevatorNumber] > TIME_TO_STAY_OPEN_RECEPTION)
                 {
                     Debug.Print("[NetworkController] Elevator " + elevatorNumber + " closing on floor " + currentFloor);
@@ -1069,7 +1119,7 @@ namespace WindowsFormsApp1
                     //the code must end here since we just stopped the elevator
                     return;
                 }
-                else //checking for next target
+                else if (MASTER_GetInternalTargetCount(elevatorNumber) != 0) //checking for next target
                 {
                     for (int i = currentFloor + 1; i <= 13; i++)
                     {
@@ -1087,25 +1137,22 @@ namespace WindowsFormsApp1
                         //the code must end here since we are now travelling further
                         return;
                     }
-                    else
+                    //since there is no internal target on the way up, we now check if there is one on the way down
+                    //first checking if there is a target on the way down (haha lol rip people on higher floors)
+                    for (int i = currentFloor - 1; i >= 0; i--)
                     {
-                        //since there is no internal target on the way up, we now check if there is one on the way down
-                        //first checking if there is a target on the way down (haha lol rip people on higher floors)
-                        for (int i = currentFloor - 1; i >= 0; i--)
+                        if (elevatorFloorTargets[i]) //those are internal targets called from passengers
                         {
-                            if (elevatorFloorTargets[i]) //those are internal targets called from passengers
-                            {
-                                targetFound = true;
-                                break;
-                            }
+                            targetFound = true;
+                            break;
                         }
-                        if (targetFound)
-                        {
-                            // this means we are now reversing the elevator direction
-                            MASTER_SetElevatorDirection(elevatorNumber, goingUp: false);
-                            elevatorGoingUp = false;
-                            // since the following code will handle this direction, we don't need to do anything else.
-                        }
+                    }
+                    if (targetFound)
+                    {
+                        // this means we are now reversing the elevator direction
+                        MASTER_SetElevatorDirection(elevatorNumber, goingUp: false);
+                        elevatorGoingUp = false;
+                        // since the following code will handle this direction, we don't need to do anything else.
                     }
                 }
             }
@@ -1119,7 +1166,7 @@ namespace WindowsFormsApp1
                     //the code must end here since we just opened the elevator
                     return;
                 }
-                else //checking for next target
+                else if (MASTER_GetInternalTargetCount(elevatorNumber) != 0) //checking for next target
                 {
                     if (!targetFound)
                     {
@@ -1141,24 +1188,21 @@ namespace WindowsFormsApp1
                         //the code must end here since we are now travelling further
                         return;
                     }
-                    else
+                    //since there is no internal target on the way down, we now check if there is one on the way up
+                    for (int i = currentFloor + 1; i <= 13; i++)
                     {
-                        //since there is no internal target on the way down, we now check if there is one on the way up
-                        for (int i = currentFloor + 1; i <= 13; i++)
+                        if (elevatorFloorTargets[i]) //those are internal targets called from passengers
                         {
-                            if (elevatorFloorTargets[i]) //those are internal targets called from passengers
-                            {
-                                targetFound = true;
-                                break;
-                            }
+                            targetFound = true;
+                            break;
                         }
-                        if (targetFound)
-                        {
-                            // this means we are now reversing the elevator direction
-                            MASTER_SetSyncValue(SyncBoolElevatorGoingUp, true);
-                            // since the next loop code will handle this direction, we need to stop execution now
-                            return;
-                        }
+                    }
+                    if (targetFound)
+                    {
+                        // this means we are now reversing the elevator direction
+                        MASTER_SetSyncValue(SyncBoolElevatorGoingUp, true);
+                        // since the next loop code will handle this direction, we need to stop execution now
+                        return;
                     }
                 }
             }
@@ -1173,80 +1217,86 @@ namespace WindowsFormsApp1
             }
             //if we reach this line, we need to find the next target first
             int nextTarget = 0;
-            //Now we need to check if there is an internal target on the way up
-            for (int i = currentFloor + 1; i <= 13; i++)
+            if (MASTER_GetInternalTargetCount(elevatorNumber) != 0) //checking for next target
             {
-                if (elevatorFloorTargets[i]) //those are all internal targets
+                //Now we need to check if there is an internal target on the way up
+                for (int i = currentFloor + 1; i <= 13; i++)
                 {
-                    targetFound = true;
-                    nextTarget = i;
-                    break;
+                    if (elevatorFloorTargets[i]) //those are all internal targets
+                    {
+                        targetFound = true;
+                        nextTarget = i;
+                        break;
+                    }
                 }
-            }
-            //if we found an internal target, we go out of idle mode and set the new direction up
-            if (targetFound)
-            {
-                Debug.Print("[NetworkController] Elevator " + elevatorNumber + " was idle but now has an internal target and is going up");
-                MASTER_SetElevatorDirection(elevatorNumber, goingUp: true);
-                return;
-            }
-            //Now we need to check if there is an internal target on the way down
-            for (int i = currentFloor - 1; i >= 0; i--)
-            {
-                if (elevatorFloorTargets[i]) //those are internal targets called from passengers
+                //if we found an internal target, we go out of idle mode and set the new direction up
+                if (targetFound)
                 {
-                    targetFound = true;
-                    nextTarget = i;
-                    break;
+                    Debug.Print("[NetworkController] Elevator " + elevatorNumber + " was idle but now has an internal target and is going up");
+                    MASTER_SetElevatorDirection(elevatorNumber, goingUp: true);
+                    return;
                 }
-            }
-            //if we found an internal target, we go out of idle mode and set the new direction down
-            if (targetFound)
-            {
-                Debug.Print("[NetworkController] Elevator " + elevatorNumber + " was idle but now has an internal target and is going down");
-                MASTER_SetElevatorDirection(elevatorNumber, goingUp: false);
-                return;
+                //Now we need to check if there is an internal target on the way down
+                for (int i = currentFloor - 1; i >= 0; i--)
+                {
+                    if (elevatorFloorTargets[i]) //those are internal targets called from passengers
+                    {
+                        targetFound = true;
+                        nextTarget = i;
+                        break;
+                    }
+                }
+                //if we found an internal target, we go out of idle mode and set the new direction down
+                if (targetFound)
+                {
+                    Debug.Print("[NetworkController] Elevator " + elevatorNumber + " was idle but now has an internal target and is going down");
+                    MASTER_SetElevatorDirection(elevatorNumber, goingUp: false);
+                    return;
+                }
             }
             //--------------------------------------------------------------------------------------------------
-            //if we reach this code line, there is no internal target and we need to check external targets next
-            for (int i = currentFloor + 1; i <= 13; i++)
+            if (_calledToFloorToGoUp_MASTER_COUNT != 0 || _calledToFloorToGoDown_MASTER_COUNT != 0) //checking for next target
             {
-                if (_calledToFloorToGoUp_MASTER[i] || _calledToFloorToGoDown_MASTER[i]) //those are external targets
+                //if we reach this code line, there is no internal target and we need to check external targets next
+                for (int i = currentFloor + 1; i <= 13; i++)
                 {
-                    targetFound = true;
-                    nextTarget = i;
-                    break;
+                    if (_calledToFloorToGoUp_MASTER[i] || _calledToFloorToGoDown_MASTER[i]) //those are external targets
+                    {
+                        targetFound = true;
+                        nextTarget = i;
+                        break;
+                    }
                 }
-            }
-            //if we found an internal target, we go out of idle mode and set the new direction up
-            if (targetFound)
-            {
-                Debug.Print("[NetworkController] Elevator " + elevatorNumber + " was idle but now has an external target and is going up");
-                MASTER_SetElevatorDirection(elevatorNumber, goingUp: true);
-                //this elevator basicly belongs to that floor then, so both targets are handled, but this isn't perfect
-                Debug.Print("[NetworkController] We're faking an EREQ next to set an internal target");
-                ELREQ_SetInternalTarget(elevatorNumber, nextTarget);
-                return;
-            }
-            //Now we need to check if there is an external target on the way down
-            for (int i = currentFloor - 1; i >= 0; i--)
-            {
-                if (_calledToFloorToGoUp_MASTER[i] || _calledToFloorToGoDown_MASTER[i]) //those are external targets
+                //if we found an internal target, we go out of idle mode and set the new direction up
+                if (targetFound)
                 {
-                    targetFound = true;
-                    nextTarget = i;
-                    break;
+                    Debug.Print("[NetworkController] Elevator " + elevatorNumber + " was idle but now has an external target and is going up");
+                    MASTER_SetElevatorDirection(elevatorNumber, goingUp: true);
+                    //this elevator basicly belongs to that floor then, so both targets are handled, but this isn't perfect
+                    Debug.Print("[NetworkController] We're faking an EREQ next to set an internal target");
+                    ELREQ_SetInternalTarget(elevatorNumber, nextTarget);
+                    return;
                 }
-            }
-            //if we found an internal target, we go out of idle mode and set the new direction down
-            if (targetFound)
-            {
-                Debug.Print("[NetworkController] Elevator " + elevatorNumber + " was idle but now as an external target and is going down");
-                MASTER_SetElevatorDirection(elevatorNumber, goingUp: false);
-                //this elevator basicly belongs to that floor then, so both targets are handled, but this isn't perfect
-                Debug.Print("[NetworkController] We're faking an EREQ next to set an internal target");
-                ELREQ_SetInternalTarget(elevatorNumber, nextTarget);
-                return;
+                //Now we need to check if there is an external target on the way down
+                for (int i = currentFloor - 1; i >= 0; i--)
+                {
+                    if (_calledToFloorToGoUp_MASTER[i] || _calledToFloorToGoDown_MASTER[i]) //those are external targets
+                    {
+                        targetFound = true;
+                        nextTarget = i;
+                        break;
+                    }
+                }
+                //if we found an internal target, we go out of idle mode and set the new direction down
+                if (targetFound)
+                {
+                    Debug.Print("[NetworkController] Elevator " + elevatorNumber + " was idle but now as an external target and is going down");
+                    MASTER_SetElevatorDirection(elevatorNumber, goingUp: false);
+                    //this elevator basicly belongs to that floor then, so both targets are handled, but this isn't perfect
+                    Debug.Print("[NetworkController] We're faking an EREQ next to set an internal target");
+                    ELREQ_SetInternalTarget(elevatorNumber, nextTarget);
+                    return;
+                }
             }
             //------------------------------------
             //reaching this code line means there is no next target and the elevator must go into idle mode
@@ -1274,13 +1324,15 @@ namespace WindowsFormsApp1
         {
             if ((directionUp || isIdle) && _calledToFloorToGoUp_MASTER[currentFloor])
             {
-                _calledToFloorToGoUp_MASTER[currentFloor] = false; //this target was now handled
                 MASTER_SetSyncValue(SyncBoolReq_ElevatorCalledUp_0 + currentFloor, false);
+                _calledToFloorToGoUp_MASTER[currentFloor] = false; //this target was now handled
+                _calledToFloorToGoUp_MASTER_COUNT--;
             }
             if ((!directionUp || isIdle) && _calledToFloorToGoDown_MASTER[currentFloor])
             {
-                _calledToFloorToGoDown_MASTER[currentFloor] = false; //this target was now handled
                 MASTER_SetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + currentFloor, false);
+                _calledToFloorToGoDown_MASTER[currentFloor] = false; //this target was now handled
+                _calledToFloorToGoDown_MASTER_COUNT--;
             }
             if (elevatorNumber == 0 && _elevator0FloorTargets_MASTER[currentFloor])
             {
@@ -1307,7 +1359,11 @@ namespace WindowsFormsApp1
         private void MASTER_SetElevatorDirection(int elevatorNumber, bool goingUp)
         {
             MASTER_SetSyncValue(SyncBool_Elevator0goingUp + elevatorNumber, goingUp);
-            MASTER_SetSyncValue(SyncBool_Elevator0idle + elevatorNumber, false);
+            if (GetSyncValue(SyncBool_Elevator0idle + elevatorNumber))
+            {
+                MASTER_SetSyncValue(SyncBool_Elevator0idle + elevatorNumber, false);
+                _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] = time.GetTime() + TIME_TO_STAY_CLOSED - TIME_TO_STAY_CLOSED_AFTER_GOING_OUT_OF_IDLE;
+            }
         }
         /// <summary>
         /// Setting the elevator in idle mode
@@ -1891,67 +1947,138 @@ namespace WindowsFormsApp1
                 _elevatorControllerReception.SetElevatorDirectionDisplay(elevatorNumber, goingUp, GetSyncValue(SyncBool_Elevator0idle + elevatorNumber));
             }
         }
+        //------------------------------------- external elevator calls from floor buttons ------------------------------------------------
         //Local copies of elevator state to check them against SyncBool states
-        private bool[] _pendingCallDown = new bool[14];
-        private int _pendingCallDown_COUNT = 0;
-        private bool[] _pendingCallUp = new bool[14];
-        private int _pendingCallUp_COUNT = 0;
-        private float[] _pendingCallTimeUp = new float[14];
-        private float[] _pendingCallTimeDown = new float[14];
+        private bool[] _pendingCallDown_LOCAL_EXT = new bool[14];
+        private int _pendingCallDown_COUNT_LOCAL_EXT = 0;
+        private bool[] _pendingCallUp_LOCAL_EXT = new bool[14];
+        private int _pendingCallUp_COUNT_LOCAL_EXT = 0;
+        private float[] _pendingCallTimeUp_LOCAL_EXT = new float[14];
+        private float[] _pendingCallTimeDown_LOCAL_EXT = new float[14];
         /// <summary>
-        /// In every Update(): Checking if the elevator was successfully called by master after we've called it, else we drop the request
+        /// In every Update(): Checking if the external elevator was successfully called by master after we've called it, else we drop the request
         /// </summary>
-        private void LOCAL_CheckIfElevatorCallWasReceived()
+        private void LOCAL_CheckIfElevatorExternalCallWasReceived()
         {
-            if (_pendingCallUp_COUNT != 0)
+            if (_pendingCallUp_COUNT_LOCAL_EXT != 0)
             {
                 //Debug.Print("There is " + _pendingCallUp_COUNT + " pending call up.");
                 for (int floor = 0; floor <= 13; floor++)
                 {
                     //Check if there is a pending request
-                    if (_pendingCallUp[floor] && time.GetTime() - _pendingCallTimeUp[floor] > 1f)
+                    if (_pendingCallUp_LOCAL_EXT[floor] && time.GetTime() - _pendingCallTimeUp_LOCAL_EXT[floor] > 1.5f)
                     {
-                        _pendingCallUp[floor] = false;
-                        _pendingCallUp_COUNT--;
+                        _pendingCallUp_LOCAL_EXT[floor] = false;
+                        _pendingCallUp_COUNT_LOCAL_EXT--;
                         if (!GetSyncValue(SyncBoolReq_ElevatorCalledUp_0 + floor))
                         {
                             //TODO: link all elevator controllers here in Unity later
                             if (floor == 0)
                             {
-                                Debug.Print("Dropped request, SetElevatorNotCalledUp() floor " + floor + " after " + (time.GetTime() - _pendingCallTimeUp[floor]).ToString() + " seconds.");
+                                Debug.Print("Dropped request, SetElevatorNotCalledUp() floor " + floor + " after " + (time.GetTime() - _pendingCallTimeUp_LOCAL_EXT[floor]).ToString() + " seconds.");
                                 _elevatorControllerReception.SetElevatorNotCalledUp(floor);
                             }
                             else
                             {
-                                Debug.Print("Dropped request, SetElevatorNotCalledUp() floor " + floor + " after " + (time.GetTime() - _pendingCallTimeUp[floor]).ToString() + " seconds.");
+                                Debug.Print("Dropped request, SetElevatorNotCalledUp() floor " + floor + " after " + (time.GetTime() - _pendingCallTimeUp_LOCAL_EXT[floor]).ToString() + " seconds.");
                                 _elevatorControllerReception.SetElevatorNotCalledUp(floor);
                             }
                         }
                     }
                 }
             }
-            if (_pendingCallDown_COUNT != 0)
+            if (_pendingCallDown_COUNT_LOCAL_EXT != 0)
             {
                 //Debug.Print("There is " + _pendingCallUp_COUNT + " pending call down.");
                 for (int floor = 0; floor <= 13; floor++)
                 {
-                    if (_pendingCallDown[floor] && time.GetTime() - _pendingCallTimeDown[floor] > 2f)
+                    if (_pendingCallDown_LOCAL_EXT[floor] && time.GetTime() - _pendingCallTimeDown_LOCAL_EXT[floor] > 1.5f)
                     {
-                        _pendingCallDown[floor] = false;
-                        _pendingCallDown_COUNT--;
+                        _pendingCallDown_LOCAL_EXT[floor] = false;
+                        _pendingCallDown_COUNT_LOCAL_EXT--;
                         if (!GetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + floor))
                         {
                             //TODO: link all elevator controllers here in Unity later
                             if (floor == 0)
                             {
-                                Debug.Print("Dropped request, SetElevatorNotCalledDown() floor " + floor + " after " + (time.GetTime() - _pendingCallTimeDown[floor]).ToString() + " seconds.");
+                                Debug.Print("Dropped request, SetElevatorNotCalledDown() floor " + floor + " after " + (time.GetTime() - _pendingCallTimeDown_LOCAL_EXT[floor]).ToString() + " seconds.");
                                 _elevatorControllerReception.SetElevatorNotCalledDown(floor);
                             }
                             else
                             {
-                                Debug.Print("Dropped request, SetElevatorNotCalledDown() floor " + floor + " after " + (time.GetTime() - _pendingCallTimeDown[floor]).ToString() + " seconds.");
+                                Debug.Print("Dropped request, SetElevatorNotCalledDown() floor " + floor + " after " + (time.GetTime() - _pendingCallTimeDown_LOCAL_EXT[floor]).ToString() + " seconds.");
                                 _elevatorControllerReception.SetElevatorNotCalledDown(floor);
                             }
+                        }
+                    }
+                }
+            }
+        }
+        //------------------------------------- internal elevator calls from elevator buttons ------------------------------------------------
+        //Local copies of elevator state to check them against SyncBool states
+        private bool[] _pendingCallElevator0_LOCAL_INT = new bool[14];
+        private int _pendingCallElevator0_COUNT_LOCAL_INT = 0;
+        private float[] _pendingCallElevator0Time_LOCAL_INT = new float[14];
+        //Local copies of elevator state to check them against SyncBool states
+        private bool[] _pendingCallElevator1_LOCAL_INT = new bool[14];
+        private int _pendingCallElevator1_COUNT_LOCAL_INT = 0;
+        private float[] _pendingCallElevator1Time_LOCAL_INT = new float[14];
+        //Local copies of elevator state to check them against SyncBool states
+        private bool[] _pendingCallElevator2_LOCAL_INT = new bool[14];
+        private int _pendingCallElevator2_COUNT_LOCAL_INT = 0;
+        private float[] _pendingCallElevator2Time_LOCAL_INT = new float[14];
+        /// <summary>
+        /// In every Update(): Checking if the INTernal elevator was successfully called by master after we've called it, else we drop the request
+        /// </summary>
+        private void LOCAL_CheckIfElevatorInternalCallWasReceived()
+        {
+            if (_pendingCallElevator1_COUNT_LOCAL_INT != 0)
+            {
+                //Debug.Print("There is " + _pendingCallElevator1_COUNT + " pending call internally.");
+                for (int floor = 0; floor <= 13; floor++)
+                {
+                    if (_pendingCallElevator1_LOCAL_INT[floor] && time.GetTime() - _pendingCallElevator1Time_LOCAL_INT[floor] > 1.5f)
+                    {
+                        _pendingCallElevator1_LOCAL_INT[floor] = false;
+                        _pendingCallElevator1_COUNT_LOCAL_INT--;
+                        if (!GetSyncValue(SyncBoolReq_Elevator0CalledToFloor_0 + floor))
+                        {
+                            Debug.Print("Dropped request, SetElevatorInternalButtonState() button " + floor + " after " + (time.GetTime() - _pendingCallElevator1Time_LOCAL_INT[floor]).ToString() + " seconds.");
+                            LOCAL_SetElevatorInternalButtonState(0, floor, called: false);
+                        }
+                    }
+                }
+            }
+            if (_pendingCallElevator0_COUNT_LOCAL_INT != 0)
+            {
+                //Debug.Print("There is " + _pendingCallElevator0_COUNT + " pending call internally.");
+                for (int floor = 0; floor <= 13; floor++)
+                {
+                    if (_pendingCallElevator0_LOCAL_INT[floor] && time.GetTime() - _pendingCallElevator0Time_LOCAL_INT[floor] > 1.5f)
+                    {
+                        _pendingCallElevator0_LOCAL_INT[floor] = false;
+                        _pendingCallElevator0_COUNT_LOCAL_INT--;
+                        if (!GetSyncValue(SyncBoolReq_Elevator0CalledToFloor_0 + floor))
+                        {
+                            Debug.Print("Dropped request, SetElevatorInternalButtonState() button " + floor + " after " + (time.GetTime() - _pendingCallElevator0Time_LOCAL_INT[floor]).ToString() + " seconds.");
+                            LOCAL_SetElevatorInternalButtonState(0, floor, called: false);
+                        }
+                    }
+                }
+            }
+            if (_pendingCallElevator2_COUNT_LOCAL_INT != 0)
+            {
+                //Debug.Print("There is " + _pendingCallElevator2_COUNT + " pending call internally.");
+                for (int floor = 0; floor <= 13; floor++)
+                {
+                    if (_pendingCallElevator2_LOCAL_INT[floor] && time.GetTime() - _pendingCallElevator2Time_LOCAL_INT[floor] > 1.5f)
+                    {
+                        _pendingCallElevator2_LOCAL_INT[floor] = false;
+                        _pendingCallElevator2_COUNT_LOCAL_INT--;
+                        if (!GetSyncValue(SyncBoolReq_Elevator0CalledToFloor_0 + floor))
+                        {
+                            Debug.Print("Dropped request, SetElevatorInternalButtonState() button " + floor + " after " + (time.GetTime() - _pendingCallElevator2Time_LOCAL_INT[floor]).ToString() + " seconds.");
+                            LOCAL_SetElevatorInternalButtonState(0, floor, called: false);
                         }
                     }
                 }
@@ -1967,21 +2094,21 @@ namespace WindowsFormsApp1
             if (directionUp)
             {
                 Debug.Print("[NetworkController] Elevator called to floor " + floorNumber + " by localPlayer (Up)");
-                if (_pendingCallUp[floorNumber] || GetSyncValue(SyncBoolReq_ElevatorCalledUp_0 + floorNumber))
+                if (_pendingCallUp_LOCAL_EXT[floorNumber] || GetSyncValue(SyncBoolReq_ElevatorCalledUp_0 + floorNumber))
                     return;
-                _pendingCallUp[floorNumber] = true;
-                _pendingCallTimeUp[floorNumber] = time.GetTime();
-                _pendingCallUp_COUNT++;
+                _pendingCallUp_LOCAL_EXT[floorNumber] = true;
+                _pendingCallTimeUp_LOCAL_EXT[floorNumber] = time.GetTime();
+                _pendingCallUp_COUNT_LOCAL_EXT++;
                 _elevatorRequester.RequestElevatorFloorButton(directionUp, floorNumber);
             }
             else
             {
                 Debug.Print("[NetworkController] Elevator called to floor " + floorNumber + " by localPlayer (Down)");
-                if (_pendingCallDown[floorNumber] || GetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + floorNumber))
+                if (_pendingCallDown_LOCAL_EXT[floorNumber] || GetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + floorNumber))
                     return;
-                _pendingCallDown[floorNumber] = true;
-                _pendingCallTimeDown[floorNumber] = time.GetTime();
-                _pendingCallDown_COUNT++;
+                _pendingCallDown_LOCAL_EXT[floorNumber] = true;
+                _pendingCallTimeDown_LOCAL_EXT[floorNumber] = time.GetTime();
+                _pendingCallDown_COUNT_LOCAL_EXT++;
                 _elevatorRequester.RequestElevatorFloorButton(directionUp, floorNumber);
             }
         }
@@ -2025,7 +2152,26 @@ namespace WindowsFormsApp1
                 return;
             }
             //every other button is an internal floor request, button 4 is floor 0 etc.
-            _elevatorRequester.RequestElevatorInternalTarget(elevatorNumber, buttonNumber - 4);
+            int floorNumber = buttonNumber - 4;
+            switch (elevatorNumber)
+            {
+                case 0:
+                    _pendingCallElevator0_LOCAL_INT[floorNumber] = true; ;
+                    _pendingCallElevator0_COUNT_LOCAL_INT++;
+                    _pendingCallElevator0Time_LOCAL_INT[floorNumber] = time.GetTime();
+                    break;
+                case 1:
+                    _pendingCallElevator1_LOCAL_INT[floorNumber] = true; ;
+                    _pendingCallElevator1_COUNT_LOCAL_INT++;
+                    _pendingCallElevator1Time_LOCAL_INT[floorNumber] = time.GetTime();
+                    break;
+                case 2:
+                    _pendingCallElevator2_LOCAL_INT[floorNumber] = true; ;
+                    _pendingCallElevator2_COUNT_LOCAL_INT++;
+                    _pendingCallElevator2Time_LOCAL_INT[floorNumber] = time.GetTime();
+                    break;
+            }
+            _elevatorRequester.RequestElevatorInternalTarget(elevatorNumber, floorNumber);
         }
         #endregion API_FUNCTIONS
         //------------------------------------------------------------------------------------------------------------
@@ -2044,6 +2190,7 @@ namespace WindowsFormsApp1
                 {
                     MASTER_SetSyncValue(SyncBoolReq_ElevatorCalledUp_0 + floor, true);
                     _calledToFloorToGoUp_MASTER[floor] = true;
+                    _calledToFloorToGoUp_MASTER_COUNT++;
                 }
             }
             else if (!directionUp && !GetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + floor))
@@ -2052,6 +2199,7 @@ namespace WindowsFormsApp1
                 {
                     MASTER_SetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + floor, true);
                     _calledToFloorToGoDown_MASTER[floor] = true;
+                    _calledToFloorToGoDown_MASTER_COUNT++;
                 }
             }
         }
@@ -2443,7 +2591,7 @@ namespace WindowsFormsApp1
 
         internal void SetElevatorFloorButtonState(int elevatorNumber, int floorNumber, bool called)
         {
-            form1.SetElevatorButtonColor(called, floorNumber+4);
+            form1.SetElevatorButtonColor(called, floorNumber + 4);
             //Debug.Print("Elevator " + elevatorNumber + " would change floor " + floorNumber + " button to called:" + called.ToString() + ", but this function isn't implemented yet.");
         }
 
