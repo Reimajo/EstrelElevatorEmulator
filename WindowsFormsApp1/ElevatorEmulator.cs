@@ -1257,6 +1257,7 @@ namespace WindowsFormsApp1
         private int _elevator2FloorTargets_MASTER_COUNT = 0;
         private float[] _timeAtCurrentFloorElevatorOpened_MASTER = new float[3];
         private float[] _timeAtCurrentFloorElevatorClosed_MASTER = new float[3];
+        private bool[] _floorHasFakeEREQ_MASTER = new bool[14];
         private int _elevatorCheckTick_MASTER = 1;
         /// <summary>
         /// The first Master (on instance start) needs to run this once to set the initial elevator states and positions
@@ -1293,6 +1294,7 @@ namespace WindowsFormsApp1
             _calledToFloorToGoUp_MASTER_COUNT = 0;
             _calledToFloorToGoDown_MASTER = new bool[14];
             _calledToFloorToGoDown_MASTER_COUNT = 0;
+            _floorHasFakeEREQ_MASTER = new bool[14];
             //taking all content from SyncedData into local arrays
             for (int i = 0; i <= 13; i++)
             {
@@ -1577,7 +1579,7 @@ namespace WindowsFormsApp1
                 //if we reach this code line, there is no internal target and we need to check external targets next
                 for (int i = currentFloor + 1; i <= 13; i++)
                 {
-                    if (_calledToFloorToGoUp_MASTER[i] || _calledToFloorToGoDown_MASTER[i]) //those are external targets
+                    if ((_calledToFloorToGoUp_MASTER[i] || _calledToFloorToGoDown_MASTER[i]) && !_floorHasFakeEREQ_MASTER[i])  //those are external targets
                     {
                         targetFound = true;
                         nextTarget = i;
@@ -1592,12 +1594,13 @@ namespace WindowsFormsApp1
                     //this elevator basicly belongs to that floor then, so both targets are handled, but this isn't perfect
                     Debug.Print("[NetworkController] We're faking an EREQ next to set an internal target");
                     ELREQ_SetInternalTarget(elevatorNumber, nextTarget);
+                    _floorHasFakeEREQ_MASTER[nextTarget] = true;
                     return;
                 }
                 //Now we need to check if there is an external target on the way down
                 for (int i = currentFloor - 1; i >= 0; i--)
                 {
-                    if (_calledToFloorToGoUp_MASTER[i] || _calledToFloorToGoDown_MASTER[i]) //those are external targets
+                    if ((_calledToFloorToGoUp_MASTER[i] || _calledToFloorToGoDown_MASTER[i]) && !_floorHasFakeEREQ_MASTER[i]) //those are external targets
                     {
                         targetFound = true;
                         nextTarget = i;
@@ -1612,6 +1615,7 @@ namespace WindowsFormsApp1
                     //this elevator basicly belongs to that floor then, so both targets are handled, but this isn't perfect
                     Debug.Print("[NetworkController] We're faking an EREQ next to set an internal target");
                     ELREQ_SetInternalTarget(elevatorNumber, nextTarget);
+                    _floorHasFakeEREQ_MASTER[nextTarget] = true;
                     return;
                 }
             }
@@ -1738,6 +1742,7 @@ namespace WindowsFormsApp1
                 _elevator2FloorTargets_MASTER[currentFloor] = false;
                 _elevator2FloorTargets_MASTER_COUNT--;
             }
+            _floorHasFakeEREQ_MASTER[currentFloor] = false;
         }
         /// <summary>
         /// Sets the elevator travel direction
