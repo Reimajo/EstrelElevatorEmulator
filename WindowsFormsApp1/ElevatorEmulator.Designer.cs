@@ -161,6 +161,7 @@
             this.button4_2 = new System.Windows.Forms.Button();
             this.button0_2 = new System.Windows.Forms.Button();
             this.button1_2 = new System.Windows.Forms.Button();
+            this.buttonPlayPause = new System.Windows.Forms.Button();
             this.panelFloor0.SuspendLayout();
             this.panelFloor1.SuspendLayout();
             this.panelFloor2.SuspendLayout();
@@ -1603,12 +1604,24 @@
             this.button1_2.UseVisualStyleBackColor = false;
             this.button1_2.Click += new System.EventHandler(this.button1_2_Click);
             // 
+            // buttonPlayPause
+            // 
+            this.buttonPlayPause.BackColor = System.Drawing.Color.LightGray;
+            this.buttonPlayPause.Location = new System.Drawing.Point(26, 323);
+            this.buttonPlayPause.Name = "buttonPlayPause";
+            this.buttonPlayPause.Size = new System.Drawing.Size(100, 36);
+            this.buttonPlayPause.TabIndex = 40;
+            this.buttonPlayPause.Text = "Play/Pause";
+            this.buttonPlayPause.UseVisualStyleBackColor = false;
+            this.buttonPlayPause.Click += new System.EventHandler(this.buttonPlayPause_Click);
+            // 
             // ElevatorEmulator
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.DimGray;
             this.ClientSize = new System.Drawing.Size(1671, 660);
+            this.Controls.Add(this.buttonPlayPause);
             this.Controls.Add(this.panel3);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.label14);
@@ -1822,6 +1835,7 @@
         private System.Windows.Forms.Button button4_2;
         private System.Windows.Forms.Button button0_2;
         private System.Windows.Forms.Button button1_2;
+        private System.Windows.Forms.Button buttonPlayPause;
     }
 }
 

@@ -43,6 +43,8 @@ namespace WindowsFormsApp1
         /// </summary>
         private void timer1_Tick(object sender, EventArgs e)
         {
+            if (isPause)
+                return;
             _controller.Update();
             SetElevatorCurrentPositionsInGui();
         }
@@ -919,6 +921,19 @@ namespace WindowsFormsApp1
             _controller.API_LocalPlayerPressedElevatorButton(2, 17);
         }
         #endregion InternalButtonsElevator2
+        private bool isPause = false;
+        private void buttonPlayPause_Click(object sender, EventArgs e)
+        {
+            isPause = !isPause;
+            if(isPause)
+            {
+                buttonPlayPause.BackColor = Color.Red;
+            }
+            else
+            {
+                buttonPlayPause.BackColor = Color.LightGray;
+            }
+        }
     }
     #endregion GUI_class
     //----------------------------------------------------------------------------------------------------------------
@@ -1534,25 +1549,75 @@ namespace WindowsFormsApp1
         /// <param name="floor"></param>
         private void MASTER_HandleFloorDoorOpening(int elevatorNumber, int currentFloor, bool directionUp, bool isIdle)
         {
-            //first handle the floor targets
-            MASTER_HandleFloorTarget(elevatorNumber, currentFloor, directionUp, isIdle);
-            if (!isIdle)
+            //TODO: I tried to solve this issue here, please check/test
+            //When the other directional button is pressed on that floor level and we should consider to handle it
+            //and set this elevator to idle if the other button on that floor wasn't pressed and there is no internal target
+            //on this way, so the elevator would reverse next. We also need to reverse the elevator in that case.
+            //now we can actually open the elevator
+            if (!isIdle && MASTER_GetInternalTargetCount(elevatorNumber) == 0)
             {
-                //if we are on floor 0 or floor 13 and not idle, handle the targets in reverse direction
-                if (currentFloor == 13 || currentFloor == 0 || MASTER_GetInternalTargetCount(elevatorNumber) == 0)
+                //time to set it idle
+                MASTER_SetElevatorIdle(elevatorNumber);
+                isIdle = true; directionUp = false;
+            }
+            //preparing to check internal targets if there are any
+            else if (!isIdle)
+            {
+                bool internalTargetAboveFound = false;
+                bool internalTargetBelowFound = false;
+                bool internalTargetOnThisLevel;
+                bool[] elevatorFloorTargets;
+                switch (elevatorNumber)
                 {
-                    MASTER_SetElevatorIdle(elevatorNumber);
-                    MASTER_HandleFloorTarget(elevatorNumber, currentFloor, directionUp, isIdle: true);
+                    case 0:
+                        elevatorFloorTargets = _elevator0FloorTargets_MASTER;
+                        break;
+                    case 1:
+                        elevatorFloorTargets = _elevator1FloorTargets_MASTER;
+                        break;
+                    default:
+                        elevatorFloorTargets = _elevator2FloorTargets_MASTER;
+                        break;
                 }
-                else if((directionUp && GetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + currentFloor)) && (!directionUp && GetSyncValue(SyncBoolReq_ElevatorCalledUp_0 + currentFloor)))
+                internalTargetOnThisLevel = elevatorFloorTargets[currentFloor];
+                if (internalTargetOnThisLevel && MASTER_GetInternalTargetCount(elevatorNumber) == 1)
                 {
-                    //TODO: solve this issue here
-                    //then the other directional button is pressed on that floor level and we should consider to handle it
-                    //and set this elevator to idle if the other button on that floor wasn't pressed and there is no internal target
-                    //on this way, so the elevator would reverse next. We also need to reverse the elevator in that case.
+                    //time to set it idle
+                    MASTER_SetElevatorIdle(elevatorNumber);
+                    isIdle = true; directionUp = false;
+                }
+                else //this means we have at least one internal target below or above
+                {
+                    //we need to check if there is an internal target below
+                    for (int i = currentFloor - 1; i >= 0; i--)
+                    {
+                        if (elevatorFloorTargets[i]) //those are internal targets called from passengers
+                        {
+                            internalTargetBelowFound = true;
+                            break;
+                        }
+                    }
+                    //we need to check if there is an internal target above
+                    for (int i = currentFloor + 1; i <= 13; i++)
+                    {
+                        if (elevatorFloorTargets[i]) //those are internal targets called from passengers
+                        {
+                            internalTargetAboveFound = true;
+                            break;
+                        }
+                    }
+                    //now check if we need to reverse
+                    if ((directionUp && !internalTargetAboveFound) || (!directionUp && !internalTargetBelowFound))
+                    {
+                        //this means we need to reverse
+                        directionUp = !directionUp;
+                        MASTER_SetElevatorDirection(elevatorNumber, directionUp);
+                        MASTER_HandleFloorTarget(elevatorNumber, currentFloor, directionUp, isIdle);
+                    }
                 }
             }
-            //now we can actually open the elevator
+            //then handle the floor targets
+            MASTER_HandleFloorTarget(elevatorNumber, currentFloor, directionUp, isIdle);
             MASTER_SetSyncValue(SyncBool_Elevator0open + elevatorNumber, true); //opening the elevator
             _elevatorIsDriving_MASTER[elevatorNumber] = false;
             _timeAtCurrentFloorElevatorOpened_MASTER[elevatorNumber] = time.GetTime();
