@@ -51,7 +51,7 @@ namespace WindowsFormsApp1
         //------------------------------------------- GUI interface ------------------------------------
         internal void SetElevatorCurrentPositionsInGui()
         {
-            panelFloor0.BackColor = Color.DarkGreen; //DarkGreen //purple
+            panelFloor0.BackColor = Color.DarkGreen;
             panelFloor1.BackColor = Color.DarkGreen;
             panelFloor2.BackColor = Color.DarkGreen;
             panelFloor3.BackColor = Color.DarkGreen;
@@ -68,26 +68,46 @@ namespace WindowsFormsApp1
             if (textBoxElevator1State.Text.Contains("OPEN"))
             {
                 SetFloorColor(positionElevator0, Color.OrangeRed);
+                textBoxElevator1State.BackColor = Color.OrangeRed;
             }
             else if (textBoxElevator1OpenReception.Text != "BROKEN")
             {
                 SetFloorColor(positionElevator0, Color.Purple);
+                textBoxElevator1State.BackColor = Color.Purple;
             }
+            else if(textBoxElevator1OpenReception.Text == "BROKEN")
+            {
+                textBoxElevator1State.BackColor = Color.Red;
+            }
+
             if (textBoxElevator2State.Text.Contains("OPEN"))
             {
                 SetFloorColor(positionElevator1, Color.OrangeRed);
+                textBoxElevator2State.BackColor = Color.OrangeRed;
             }
             else if (textBoxElevator2OpenReception.Text != "BROKEN")
             {
                 SetFloorColor(positionElevator1, Color.Purple);
+                textBoxElevator2State.BackColor = Color.Purple;
             }
+            else if (textBoxElevator2OpenReception.Text == "BROKEN")
+            {
+                textBoxElevator2State.BackColor = Color.Red;
+            }
+
             if (textBoxElevator3State.Text.Contains("OPEN"))
             {
                 SetFloorColor(positionElevator2, Color.OrangeRed);
+                textBoxElevator3State.BackColor = Color.OrangeRed;
             }
             else if (textBoxElevator3OpenReception.Text != "BROKEN")
             {
                 SetFloorColor(positionElevator2, Color.Purple);
+                textBoxElevator3State.BackColor = Color.Purple;
+            }
+            else if (textBoxElevator3OpenReception.Text == "BROKEN")
+            {
+                textBoxElevator3State.BackColor = Color.Red;
             }
         }
         private void SetFloorColor(int floor, Color color)
@@ -290,24 +310,6 @@ namespace WindowsFormsApp1
             }
         }
         /// <summary>
-        /// Closing elevators on floor 0 / reception
-        /// </summary>
-        internal void CloseElevatorReception(int elevatorNumber)
-        {
-            switch (elevatorNumber)
-            {
-                case 0:
-                    textBoxElevator1OpenReception.Text = "CLOSED";
-                    break;
-                case 1:
-                    textBoxElevator2OpenReception.Text = "CLOSED";
-                    break;
-                case 2:
-                    textBoxElevator3OpenReception.Text = "CLOSED";
-                    break;
-            }
-        }
-        /// <summary>
         /// Setting the elevator direction of an open elevator
         /// </summary>
         internal void SetElevatorDirectionDisplay(int elevatorNumber, bool isGoingUp, bool isIdle)
@@ -320,6 +322,27 @@ namespace WindowsFormsApp1
         internal void OpenElevatorReception(int elevatorNumber, bool isGoingUp, bool isIdle)
         {
             DisplayElevatorDoorState(isIdle, isGoingUp, elevatorNumber, textBoxElevator1OpenReception, textBoxElevator2OpenReception, textBoxElevator3OpenReception, true);
+        }
+        /// <summary>
+        /// Closing elevators on floor 0 / reception
+        /// </summary>
+        internal void CloseElevatorReception(int elevatorNumber)
+        {
+            switch (elevatorNumber)
+            {
+                case 0:
+                    textBoxElevator1OpenReception.Text = "CLOSED";
+                    textBoxElevator1OpenReception.BackColor = Color.Purple;
+                    break;
+                case 1:
+                    textBoxElevator2OpenReception.Text = "CLOSED";
+                    textBoxElevator2OpenReception.BackColor = Color.Purple;
+                    break;
+                case 2:
+                    textBoxElevator3OpenReception.Text = "CLOSED";
+                    textBoxElevator3OpenReception.BackColor = Color.Purple;
+                    break;
+            }
         }
         private void DisplayElevatorDoorState(bool isIdle, bool isGoingUp, int elevatorNumber, TextBox texBox1, TextBox texBox2, TextBox texBox3, bool isOpen)
         {
@@ -350,12 +373,24 @@ namespace WindowsFormsApp1
             {
                 case 0:
                     texBox1.Text = $"{state}";
+                    if (isOpen)
+                        texBox1.BackColor = Color.OrangeRed;
+                    if (!isOpen)
+                        texBox1.BackColor = Color.Purple;
                     break;
                 case 1:
                     texBox2.Text = $"{state}";
+                    if (isOpen)
+                        texBox2.BackColor = Color.OrangeRed;
+                    if (!isOpen)
+                        texBox2.BackColor = Color.Purple;
                     break;
                 case 2:
                     texBox3.Text = $"{state}";
+                    if (isOpen)
+                        texBox3.BackColor = Color.OrangeRed;
+                    if (!isOpen)
+                        texBox3.BackColor = Color.Purple;
                     break;
             }
         }
@@ -366,15 +401,23 @@ namespace WindowsFormsApp1
         {
             DisplayElevatorDoorState(isIdle, isGoingUp, elevatorNumber, textBoxElevator1State, textBoxElevator2State, textBoxElevator3State, isOpen);
         }
-
         internal void DisplayElevatorBroken(bool elevator0Working, bool elevator1Working, bool elevator2Working)
         {
             if (!elevator0Working)
+            { 
                 textBoxElevator1OpenReception.Text = "BROKEN";
+                textBoxElevator1OpenReception.BackColor = Color.Red;
+            }
             if (!elevator1Working)
+            { 
                 textBoxElevator2OpenReception.Text = "BROKEN";
+                textBoxElevator2OpenReception.BackColor = Color.Red;
+            }
             if (!elevator2Working)
+            { 
                 textBoxElevator3OpenReception.Text = "BROKEN";
+                textBoxElevator3OpenReception.BackColor = Color.Red;
+            }
         }
         /// <summary>
         /// Setting a button bg color inside the elevator
@@ -760,12 +803,12 @@ namespace WindowsFormsApp1
         #region InternalButtonsElevator1
         private void button0_1_Click(object sender, EventArgs e)
         {
-            SetElevatorButtonColor(stateCalled: true, buttonNumber: 0, 1);
+            //SetElevatorButtonColor(stateCalled: true, buttonNumber: 0, 1);
             _controller.API_LocalPlayerPressedElevatorButton(1, 0);
         }
         private void button1_1_Click(object sender, EventArgs e)
         {
-            SetElevatorButtonColor(stateCalled: true, buttonNumber: 1, 1);
+            //SetElevatorButtonColor(stateCalled: true, buttonNumber: 1, 1);
             _controller.API_LocalPlayerPressedElevatorButton(1, 1);
         }
         private void button4_1_Click(object sender, EventArgs e)
@@ -842,12 +885,12 @@ namespace WindowsFormsApp1
         #region InternalButtonsElevator2
         private void button0_2_Click(object sender, EventArgs e)
         {
-            SetElevatorButtonColor(stateCalled: true, buttonNumber: 0, 2);
+            //SetElevatorButtonColor(stateCalled: true, buttonNumber: 0, 2);
             _controller.API_LocalPlayerPressedElevatorButton(2, 0);
         }
         private void button1_2_Click(object sender, EventArgs e)
         {
-            SetElevatorButtonColor(stateCalled: true, buttonNumber: 1, 2);
+            //SetElevatorButtonColor(stateCalled: true, buttonNumber: 1, 2);
             _controller.API_LocalPlayerPressedElevatorButton(2, 1);
         }
         private void button4_2_Click(object sender, EventArgs e)
@@ -925,13 +968,45 @@ namespace WindowsFormsApp1
         private void buttonPlayPause_Click(object sender, EventArgs e)
         {
             isPause = !isPause;
-            if(isPause)
+            if (isPause)
             {
                 buttonPlayPause.BackColor = Color.Red;
             }
             else
             {
                 buttonPlayPause.BackColor = Color.LightGray;
+            }
+        }
+        internal void DisplayLocalPlayerFloor(int floor)
+        {
+            textBoxPlayerFloor.Text = floor.ToString();
+        }
+        /// <summary>
+        /// Opening elevators on floor 0 / reception
+        /// </summary>
+        internal void OpenElevatorLocalPlayerFloor(int elevatorNumber, bool isGoingUp, bool isIdle)
+        {
+            DisplayElevatorDoorState(isIdle, isGoingUp, elevatorNumber, textBoxStateFloor1, textBoxStateFloor2, textBoxStateFloor3, true);
+        }
+        /// <summary>
+        /// Closing elevators on floor 0 / reception
+        /// </summary>
+        internal void CloseElevatorLocalPlayerFloor(int elevatorNumber)
+        {
+            switch (elevatorNumber)
+            {
+                case 0:
+                    textBoxStateFloor1.Text = "CLOSED";
+                    textBoxStateFloor1.BackColor = Color.Purple;
+                    break;
+                case 1:
+                    textBoxStateFloor2.Text = "CLOSED";
+                    textBoxStateFloor2.BackColor = Color.Purple;
+                    break;
+                case 2:
+                    textBoxStateFloor3.Text = "CLOSED";
+                    textBoxStateFloor3.BackColor = Color.Purple;
+                    break;
             }
         }
     }
@@ -959,6 +1034,10 @@ namespace WindowsFormsApp1
         public ElevatorController _elevatorControllerArrivalArea;
         //public InsidePanelScriptForDesktop _insidePanelScriptElevator0Desktop;
         //public InsidePanelScriptForVR _InsidePanelScriptElevator0ForVR;
+        /// <summary>
+        /// Current floor level that localPlayer is on
+        /// </summary>
+        private int _localPlayerCurrentFloor = 7;
         /// <summary>
         /// elevator states, synced by master
         /// </summary>
@@ -1155,6 +1234,7 @@ namespace WindowsFormsApp1
             form1.DisplayElevatorState(0, GetSyncElevatorGoingUp(0), GetSyncValue(SyncBool_Elevator0idle), GetSyncValue(SyncBool_Elevator0open));
             form1.DisplayElevatorState(1, GetSyncElevatorGoingUp(1), GetSyncValue(SyncBool_Elevator1idle), GetSyncValue(SyncBool_Elevator1open));
             form1.DisplayElevatorState(2, GetSyncElevatorGoingUp(2), GetSyncValue(SyncBool_Elevator2idle), GetSyncValue(SyncBool_Elevator2open));
+            form1.DisplayLocalPlayerFloor(_localPlayerCurrentFloor);
         }
         #endregion START_UPDATE_FUNCTIONS
         //------------------------------------------------------------------------------------------------------------
@@ -1190,9 +1270,9 @@ namespace WindowsFormsApp1
             MASTER_SetSyncValue(SyncBool_Elevator0idle, true);
             MASTER_SetSyncValue(SyncBool_Elevator1idle, true);
             MASTER_SetSyncValue(SyncBool_Elevator2idle, true);
-            MASTER_SetSyncElevatorFloor(0, 4);
-            MASTER_SetSyncElevatorFloor(1, 4);
-            MASTER_SetSyncElevatorFloor(2, 4);
+            MASTER_SetSyncElevatorFloor(0, 13);
+            MASTER_SetSyncElevatorFloor(1, 8);
+            MASTER_SetSyncElevatorFloor(2, 2);
             Debug.Print("[NetworkController] FirstMasterSetupElevatorControl finished");
         }
         /// <summary>
@@ -2186,28 +2266,30 @@ namespace WindowsFormsApp1
             if (setOpen)
             {
                 Debug.Print("[NetworkController] LocalPlayer received to open elevator " + elevatorNumber + " on floor " + floorNumber);
-                if (floorNumber != 0)
+                if (floorNumber == _localPlayerCurrentFloor)
                 {
-                    Debug.Print("[NetworkController] Elevator " + elevatorNumber + " is currently at floor " + floorNumber + " so Reception won't open.");
+                    _elevatorControllerReception.OpenElevatorLocalPlayerFloor(elevatorNumber, GetSyncElevatorGoingUp(elevatorNumber), GetSyncValue(SyncBool_Elevator0idle + elevatorNumber));
+                    //Debug.Print("[NetworkController] Elevator " + elevatorNumber + " is currently at floor " + floorNumber + " so Reception won't open.");
                 }
-                else
+                else if (floorNumber == 0)
                 {
                     _elevatorControllerReception.OpenElevatorReception(elevatorNumber, GetSyncElevatorGoingUp(elevatorNumber), GetSyncValue(SyncBool_Elevator0idle + elevatorNumber));
                 }
-                //TODO: add all other floors here
+                //TODO: make sure to store the floor states for people driving to that floor later
             }
             else
             {
                 Debug.Print("[NetworkController] LocalPlayer received to close elevator " + elevatorNumber + " on floor " + floorNumber);
-                if (floorNumber != 0)
+                if (floorNumber == _localPlayerCurrentFloor)
                 {
-                    Debug.Print("[NetworkController] Elevator " + elevatorNumber + " is currently at floor " + floorNumber + " so Reception won't close.");
+                    _elevatorControllerReception.CloseElevatorLocalPlayerFloor(elevatorNumber);
+                    //Debug.Print("[NetworkController] Elevator " + elevatorNumber + " is currently at floor " + floorNumber + " so Reception won't close.");
                 }
-                else
+                else if (floorNumber == 0)
                 {
                     _elevatorControllerReception.CloseElevatorReception(elevatorNumber);
                 }
-                //TODO: add all other floors here
+                //TODO: make sure to store the floor states for people driving to that floor later
             }
         }
         /// <summary>
@@ -2893,6 +2975,19 @@ namespace WindowsFormsApp1
         internal void OpenElevatorReception(int elevatorNumber, bool isGoingUp, bool isIdle)
         {
             form1.OpenElevatorReception(elevatorNumber, isGoingUp, isIdle);
+        }
+
+        internal void DisplayLocalPlayerFloor(int floor)
+        {
+            form1.DisplayLocalPlayerFloor(floor);
+        }
+        internal void OpenElevatorLocalPlayerFloor(int elevatorNumber, bool isGoingUp, bool isIdle)
+        {
+            form1.OpenElevatorLocalPlayerFloor(elevatorNumber, isGoingUp, isIdle);
+        }
+        internal void CloseElevatorLocalPlayerFloor(int elevatorNumber)
+        {
+            form1.CloseElevatorLocalPlayerFloor(elevatorNumber);
         }
 
         internal void SetElevatorFloorButtonState(int elevatorNumber, int floorNumber, bool called)

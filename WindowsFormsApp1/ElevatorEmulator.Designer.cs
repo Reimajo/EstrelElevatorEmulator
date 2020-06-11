@@ -49,7 +49,6 @@
             this.label11 = new System.Windows.Forms.Label();
             this.label12 = new System.Windows.Forms.Label();
             this.panelFloor0 = new System.Windows.Forms.Panel();
-            this.label15 = new System.Windows.Forms.Label();
             this.textBoxElevator3State = new System.Windows.Forms.TextBox();
             this.textBoxElevator2State = new System.Windows.Forms.TextBox();
             this.textBoxElevator1State = new System.Windows.Forms.TextBox();
@@ -123,8 +122,6 @@
             this.button4 = new System.Windows.Forms.Button();
             this.button0 = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
-            this.label13 = new System.Windows.Forms.Label();
-            this.label14 = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
             this.label28 = new System.Windows.Forms.Label();
             this.button17_1 = new System.Windows.Forms.Button();
@@ -162,6 +159,14 @@
             this.button0_2 = new System.Windows.Forms.Button();
             this.button1_2 = new System.Windows.Forms.Button();
             this.buttonPlayPause = new System.Windows.Forms.Button();
+            this.textBoxPlayerFloor = new System.Windows.Forms.TextBox();
+            this.label13 = new System.Windows.Forms.Label();
+            this.label14 = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
+            this.label30 = new System.Windows.Forms.Label();
+            this.textBoxStateFloor3 = new System.Windows.Forms.TextBox();
+            this.textBoxStateFloor2 = new System.Windows.Forms.TextBox();
+            this.textBoxStateFloor1 = new System.Windows.Forms.TextBox();
             this.panelFloor0.SuspendLayout();
             this.panelFloor1.SuspendLayout();
             this.panelFloor2.SuspendLayout();
@@ -361,35 +366,25 @@
             this.panelFloor0.Size = new System.Drawing.Size(116, 116);
             this.panelFloor0.TabIndex = 24;
             // 
-            // label15
-            // 
-            this.label15.AutoSize = true;
-            this.label15.ForeColor = System.Drawing.SystemColors.ControlLight;
-            this.label15.Location = new System.Drawing.Point(69, 191);
-            this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(107, 13);
-            this.label15.TabIndex = 28;
-            this.label15.Text = "current state elevator";
-            // 
             // textBoxElevator3State
             // 
-            this.textBoxElevator3State.Location = new System.Drawing.Point(423, 207);
+            this.textBoxElevator3State.Location = new System.Drawing.Point(91, 9);
             this.textBoxElevator3State.Name = "textBoxElevator3State";
-            this.textBoxElevator3State.Size = new System.Drawing.Size(168, 20);
+            this.textBoxElevator3State.Size = new System.Drawing.Size(147, 20);
             this.textBoxElevator3State.TabIndex = 27;
             // 
             // textBoxElevator2State
             // 
-            this.textBoxElevator2State.Location = new System.Drawing.Point(226, 207);
+            this.textBoxElevator2State.Location = new System.Drawing.Point(95, 9);
             this.textBoxElevator2State.Name = "textBoxElevator2State";
-            this.textBoxElevator2State.Size = new System.Drawing.Size(177, 20);
+            this.textBoxElevator2State.Size = new System.Drawing.Size(142, 20);
             this.textBoxElevator2State.TabIndex = 26;
             // 
             // textBoxElevator1State
             // 
-            this.textBoxElevator1State.Location = new System.Drawing.Point(43, 207);
+            this.textBoxElevator1State.Location = new System.Drawing.Point(94, 9);
             this.textBoxElevator1State.Name = "textBoxElevator1State";
-            this.textBoxElevator1State.Size = new System.Drawing.Size(159, 20);
+            this.textBoxElevator1State.Size = new System.Drawing.Size(147, 20);
             this.textBoxElevator1State.TabIndex = 25;
             // 
             // panelFloor1
@@ -971,6 +966,7 @@
             this.panel1.Controls.Add(this.button4);
             this.panel1.Controls.Add(this.button0);
             this.panel1.Controls.Add(this.button1);
+            this.panel1.Controls.Add(this.textBoxElevator1State);
             this.panel1.Location = new System.Drawing.Point(639, 12);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(332, 629);
@@ -980,7 +976,7 @@
             // 
             this.label27.AutoSize = true;
             this.label27.ForeColor = System.Drawing.SystemColors.ControlLightLight;
-            this.label27.Location = new System.Drawing.Point(138, 12);
+            this.label27.Location = new System.Drawing.Point(33, 12);
             this.label27.Name = "label27";
             this.label27.Size = new System.Drawing.Size(55, 13);
             this.label27.TabIndex = 39;
@@ -1162,26 +1158,6 @@
             this.button1.UseVisualStyleBackColor = false;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
-            // label13
-            // 
-            this.label13.AutoSize = true;
-            this.label13.ForeColor = System.Drawing.SystemColors.ControlLight;
-            this.label13.Location = new System.Drawing.Point(263, 191);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(107, 13);
-            this.label13.TabIndex = 37;
-            this.label13.Text = "current state elevator";
-            // 
-            // label14
-            // 
-            this.label14.AutoSize = true;
-            this.label14.ForeColor = System.Drawing.SystemColors.ControlLight;
-            this.label14.Location = new System.Drawing.Point(453, 191);
-            this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(107, 13);
-            this.label14.TabIndex = 38;
-            this.label14.Text = "current state elevator";
-            // 
             // panel2
             // 
             this.panel2.BackColor = System.Drawing.Color.DarkSlateGray;
@@ -1202,6 +1178,7 @@
             this.panel2.Controls.Add(this.button4_1);
             this.panel2.Controls.Add(this.button0_1);
             this.panel2.Controls.Add(this.button1_1);
+            this.panel2.Controls.Add(this.textBoxElevator2State);
             this.panel2.Location = new System.Drawing.Point(977, 12);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(332, 629);
@@ -1211,7 +1188,7 @@
             // 
             this.label28.AutoSize = true;
             this.label28.ForeColor = System.Drawing.SystemColors.ControlLightLight;
-            this.label28.Location = new System.Drawing.Point(138, 12);
+            this.label28.Location = new System.Drawing.Point(34, 12);
             this.label28.Name = "label28";
             this.label28.Size = new System.Drawing.Size(55, 13);
             this.label28.TabIndex = 39;
@@ -1413,6 +1390,7 @@
             this.panel3.Controls.Add(this.button4_2);
             this.panel3.Controls.Add(this.button0_2);
             this.panel3.Controls.Add(this.button1_2);
+            this.panel3.Controls.Add(this.textBoxElevator3State);
             this.panel3.Location = new System.Drawing.Point(1315, 12);
             this.panel3.Name = "panel3";
             this.panel3.Size = new System.Drawing.Size(332, 629);
@@ -1422,7 +1400,7 @@
             // 
             this.label29.AutoSize = true;
             this.label29.ForeColor = System.Drawing.SystemColors.ControlLightLight;
-            this.label29.Location = new System.Drawing.Point(138, 12);
+            this.label29.Location = new System.Drawing.Point(30, 12);
             this.label29.Name = "label29";
             this.label29.Size = new System.Drawing.Size(55, 13);
             this.label29.TabIndex = 39;
@@ -1607,13 +1585,81 @@
             // buttonPlayPause
             // 
             this.buttonPlayPause.BackColor = System.Drawing.Color.LightGray;
-            this.buttonPlayPause.Location = new System.Drawing.Point(26, 323);
+            this.buttonPlayPause.Location = new System.Drawing.Point(26, 307);
             this.buttonPlayPause.Name = "buttonPlayPause";
-            this.buttonPlayPause.Size = new System.Drawing.Size(100, 36);
+            this.buttonPlayPause.Size = new System.Drawing.Size(100, 78);
             this.buttonPlayPause.TabIndex = 40;
             this.buttonPlayPause.Text = "Play/Pause";
             this.buttonPlayPause.UseVisualStyleBackColor = false;
             this.buttonPlayPause.Click += new System.EventHandler(this.buttonPlayPause_Click);
+            // 
+            // textBoxPlayerFloor
+            // 
+            this.textBoxPlayerFloor.Location = new System.Drawing.Point(285, 174);
+            this.textBoxPlayerFloor.Name = "textBoxPlayerFloor";
+            this.textBoxPlayerFloor.Size = new System.Drawing.Size(58, 20);
+            this.textBoxPlayerFloor.TabIndex = 42;
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.label13.Location = new System.Drawing.Point(194, 177);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(85, 13);
+            this.label13.TabIndex = 43;
+            this.label13.Text = "LocalPlayer floor";
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.ForeColor = System.Drawing.SystemColors.ControlLight;
+            this.label14.Location = new System.Drawing.Point(459, 209);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(89, 13);
+            this.label14.TabIndex = 49;
+            this.label14.Text = "current state floor";
+            // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.ForeColor = System.Drawing.SystemColors.ControlLight;
+            this.label15.Location = new System.Drawing.Point(267, 209);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(89, 13);
+            this.label15.TabIndex = 48;
+            this.label15.Text = "current state floor";
+            // 
+            // label30
+            // 
+            this.label30.AutoSize = true;
+            this.label30.ForeColor = System.Drawing.SystemColors.ControlLight;
+            this.label30.Location = new System.Drawing.Point(80, 209);
+            this.label30.Name = "label30";
+            this.label30.Size = new System.Drawing.Size(89, 13);
+            this.label30.TabIndex = 47;
+            this.label30.Text = "current state floor";
+            // 
+            // textBoxStateFloor3
+            // 
+            this.textBoxStateFloor3.Location = new System.Drawing.Point(423, 225);
+            this.textBoxStateFloor3.Name = "textBoxStateFloor3";
+            this.textBoxStateFloor3.Size = new System.Drawing.Size(168, 20);
+            this.textBoxStateFloor3.TabIndex = 46;
+            // 
+            // textBoxStateFloor2
+            // 
+            this.textBoxStateFloor2.Location = new System.Drawing.Point(226, 225);
+            this.textBoxStateFloor2.Name = "textBoxStateFloor2";
+            this.textBoxStateFloor2.Size = new System.Drawing.Size(177, 20);
+            this.textBoxStateFloor2.TabIndex = 45;
+            // 
+            // textBoxStateFloor1
+            // 
+            this.textBoxStateFloor1.Location = new System.Drawing.Point(43, 225);
+            this.textBoxStateFloor1.Name = "textBoxStateFloor1";
+            this.textBoxStateFloor1.Size = new System.Drawing.Size(159, 20);
+            this.textBoxStateFloor1.TabIndex = 44;
             // 
             // ElevatorEmulator
             // 
@@ -1621,11 +1667,17 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.DimGray;
             this.ClientSize = new System.Drawing.Size(1671, 660);
+            this.Controls.Add(this.label14);
+            this.Controls.Add(this.label15);
+            this.Controls.Add(this.label30);
+            this.Controls.Add(this.textBoxStateFloor3);
+            this.Controls.Add(this.textBoxStateFloor2);
+            this.Controls.Add(this.textBoxStateFloor1);
+            this.Controls.Add(this.label13);
+            this.Controls.Add(this.textBoxPlayerFloor);
             this.Controls.Add(this.buttonPlayPause);
             this.Controls.Add(this.panel3);
             this.Controls.Add(this.panel2);
-            this.Controls.Add(this.label14);
-            this.Controls.Add(this.label13);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.panelFloor13);
             this.Controls.Add(this.panelFloor12);
@@ -1640,10 +1692,6 @@
             this.Controls.Add(this.panelFloor3);
             this.Controls.Add(this.panelFloor2);
             this.Controls.Add(this.panelFloor1);
-            this.Controls.Add(this.label15);
-            this.Controls.Add(this.textBoxElevator3State);
-            this.Controls.Add(this.textBoxElevator2State);
-            this.Controls.Add(this.textBoxElevator1State);
             this.Controls.Add(this.panelFloor0);
             this.Controls.Add(this.label12);
             this.Controls.Add(this.label11);
@@ -1723,7 +1771,6 @@
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.Label label12;
         private System.Windows.Forms.Panel panelFloor0;
-        private System.Windows.Forms.Label label15;
         private System.Windows.Forms.TextBox textBoxElevator3State;
         private System.Windows.Forms.TextBox textBoxElevator2State;
         private System.Windows.Forms.TextBox textBoxElevator1State;
@@ -1796,8 +1843,6 @@
         private System.Windows.Forms.Button button16;
         private System.Windows.Forms.Button button15;
         private System.Windows.Forms.Button button14;
-        private System.Windows.Forms.Label label13;
-        private System.Windows.Forms.Label label14;
         private System.Windows.Forms.Label label27;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Label label28;
@@ -1836,6 +1881,14 @@
         private System.Windows.Forms.Button button0_2;
         private System.Windows.Forms.Button button1_2;
         private System.Windows.Forms.Button buttonPlayPause;
+        private System.Windows.Forms.TextBox textBoxPlayerFloor;
+        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.Label label14;
+        private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.Label label30;
+        private System.Windows.Forms.TextBox textBoxStateFloor3;
+        private System.Windows.Forms.TextBox textBoxStateFloor2;
+        private System.Windows.Forms.TextBox textBoxStateFloor1;
     }
 }
 
