@@ -2602,7 +2602,7 @@ namespace WindowsFormsApp1
         public void ELREQ_CallToChangeDoorState(int elevatorNumber, bool open)
         {
             Debug.Print("Master received CallToChangeDoorState for elevator " + elevatorNumber + " (Direction open: " + open.ToString() + ")");
-            if (open && GetSyncValue(SyncBool_Elevator0idle + elevatorNumber) || time.GetTime() - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] < 2.5f)
+            if (open && GetSyncValue(SyncBool_Elevator0idle + elevatorNumber) || time.GetTime() - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] < 2.5f && !_elevatorIsDriving_MASTER[elevatorNumber])
             {
                 MASTER_HandleFloorDoorOpening(elevatorNumber, GetSyncElevatorFloor(elevatorNumber), GetSyncValue(SyncBool_Elevator0goingUp + elevatorNumber), GetSyncValue(SyncBool_Elevator0idle + elevatorNumber));
             }
