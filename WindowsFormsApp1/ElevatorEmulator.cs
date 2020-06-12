@@ -1414,14 +1414,21 @@ namespace WindowsFormsApp1
                     return;
                 }
             }
-            else if (!_elevatorIsDriving_MASTER[elevatorNumber] && time.GetTime() - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] < TIME_TO_STAY_CLOSED)
+            else if (!_elevatorIsDriving_MASTER[elevatorNumber])
             {
-                _elevatorIsDriving_MASTER[elevatorNumber] = true;
-                //an elevator must stay closed for the duration of the closing animation
-                //however, we could still process user-requests to open it again here
-                //we can't move an elevator that isn't fully closed yet
-                return;
-            }
+                if (time.GetTime() - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] < TIME_TO_STAY_CLOSED)
+                {
+                    //an elevator must stay closed for the duration of the closing animation
+                    //however, we could still process user-requests to open it again here
+                    //we can't move an elevator that isn't fully closed yet
+                    return;
+                }
+                else
+                {
+                    //Doors closed and timeout exceeded. Set elevator to drive and block door requests
+                    _elevatorIsDriving_MASTER[elevatorNumber] = true;
+                }
+            }            
             else if (time.GetTime() - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] < TIME_TO_DRIVE_ONE_FLOOR)
             {
                 //driving a floor must take a certain amount of time
@@ -2601,8 +2608,9 @@ namespace WindowsFormsApp1
         /// </summary>
         public void ELREQ_CallToChangeDoorState(int elevatorNumber, bool open)
         {
-            Debug.Print("Master received CallToChangeDoorState for elevator " + elevatorNumber + " (Direction open: " + open.ToString() + ")");
-            if (open && GetSyncValue(SyncBool_Elevator0idle + elevatorNumber) || time.GetTime() - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] < 2.5f && !_elevatorIsDriving_MASTER[elevatorNumber])
+            float test = time.GetTime() - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber];
+            Debug.Print("Master received CallToChangeDoorState for elevator " + elevatorNumber + " (Direction open: " + open.ToString() + ") Elevator driving:" + _elevatorIsDriving_MASTER[elevatorNumber]);
+            if (open && GetSyncValue(SyncBool_Elevator0idle + elevatorNumber) || (time.GetTime() - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] < 2.5f && !_elevatorIsDriving_MASTER[elevatorNumber]))
             {
                 MASTER_HandleFloorDoorOpening(elevatorNumber, GetSyncElevatorFloor(elevatorNumber), GetSyncValue(SyncBool_Elevator0goingUp + elevatorNumber), GetSyncValue(SyncBool_Elevator0idle + elevatorNumber));
             }
