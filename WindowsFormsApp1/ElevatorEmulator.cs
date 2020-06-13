@@ -1073,9 +1073,9 @@ namespace WindowsFormsApp1
         /// <summary>
         /// "ENUM" of different bools that are synced in _syncData
         /// (ENUM isn't possible in Udon, so we use this here)
-        ///  - 55-52 variable_3 (4bits)
-        ///  - 0-51 binary bools [0-51]
-        ///  - 0-31 binary bools [52-83(?)]
+        ///  - 55-52 variable_2 (4bits)
+        ///  - 51-0 binary bools [0-51]
+        ///  - 31-0 binary bools [52-83(?)]
         /// </summary>
         /// 
         private const int SyncBool_Initialized = 0;
@@ -1182,140 +1182,117 @@ namespace WindowsFormsApp1
 
         private const int SyncBoolReq_BellOn = 83;
 
+
+
+
         #endregion ENUM_SYNCBOOL
         #region ENUM_DIRECTSYNCBOOL
         /// <summary>
-        /// Direct bit masks and addresses for the "Enum_Syncbool" bools - Remember to update both!!!
-        /// 
-        /// The GetSyncValue(*) function has been swapped to speed things up a bit.                        
-        ///                 
-        /// Accessing using mask (if true)
-        ///   -"ulongZero != (_syncData1 & (SyncBool_MaskUlong"
-        ///   - "uintZero != (_syncData2 & (SyncBool_MaskUint"
-        /// Or for "not"ed functions (if false)
-        ///   -"ulongZero == (_syncData1 & (SyncBool_MaskUlong"
-        ///   - "uintZero == (_syncData2 & (SyncBool_MaskUint"
-        /// 
-        /// Accessing using it like an array (aka address based [slower])
-        ///  Checks if true:
-        ///  - (ulongZero != (_syncData1 & ((ulong)(1) << (SyncBool_AddressUlong
-        ///  - (uintZero != (_syncData2 & ((uint)(1) << (SyncBool_AddressUint
-        ///  Checks if false:
-        ///  - (ulongZero == (_syncData1 & ((ulong)(1) << (SyncBool_AddressUlong
-        ///  - (uintZero == (_syncData2 & ((uint)(1) << (SyncBool_AddressUint
+        /// Direct bit mappings for the "Enum_Syncbool" - Remember to update both!!!
         /// </summary>
         /// 
         private const uint uintZero = 0;
         private const ulong ulongZero = 0;
-        private const ulong SyncBool_MaskUlong_Initialized = ((ulong)(1));
-        private const int SyncBool_AddressUlong_ElevatorXworking = 1;
-        private const ulong SyncBool_MaskUlong_Elevator0working = ((ulong)(1) << 1);
-        private const ulong SyncBool_MaskUlong_Elevator1working = ((ulong)(1) << 2);
-        private const ulong SyncBool_MaskUlong_Elevator2working = ((ulong)(1) << 3);
-        private const int SyncBool_AddressUlong_ElevatorXopen = 4;
-        private const ulong SyncBool_MaskUlong_Elevator0open = ((ulong)(1) << 4);
-        private const ulong SyncBool_MaskUlong_Elevator1open = ((ulong)(1) << 5);
-        private const ulong SyncBool_MaskUlong_Elevator2open = ((ulong)(1) << 6);
-        private const int SyncBool_AddressUlong_ElevatorXgoingUp = 7;
-        private const ulong SyncBool_MaskUlong_Elevator0goingUp = ((ulong)(1) << 7);
-        private const ulong SyncBool_MaskUlong_Elevator1goingUp = ((ulong)(1) << 8);
-        private const ulong SyncBool_MaskUlong_Elevator2goingUp = ((ulong)(1) << 9);
+        private const int SyncBool_DirectUlong_Initialized = 51;
+        private const int SyncBool_DirectUlong_Elevator0working = 50;
+        private const int SyncBool_DirectUlong_Elevator1working = 49;
+        private const int SyncBool_DirectUlong_Elevator2working = 48;
+        private const int SyncBool_DirectUlong_Elevator0open = 47;
+        private const int SyncBool_DirectUlong_Elevator1open = 46;
+        private const int SyncBool_DirectUlong_Elevator2open = 45;
+        private const int SyncBool_DirectUlong_Elevator0goingUp = 44;
+        private const int SyncBool_DirectUlong_Elevator1goingUp = 43;
+        private const int SyncBool_DirectUlong_Elevator2goingUp = 42;
         /// <summary>     
         /// Sync-data positions for elevator call up
-        /// </summary>            
-        private const int SyncBoolReq_AddressUlong_ElevatorCalledUp = 10;
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_0 = ((ulong)(1) << 10);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_1 = ((ulong)(1) << 11);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_2 = ((ulong)(1) << 12);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_3 = ((ulong)(1) << 13);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_4 = ((ulong)(1) << 14);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_5 = ((ulong)(1) << 15);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_6 = ((ulong)(1) << 16);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_7 = ((ulong)(1) << 17);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_8 = ((ulong)(1) << 18);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_9 = ((ulong)(1) << 19);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_10 = ((ulong)(1) << 20);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_11 = ((ulong)(1) << 21);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_12 = ((ulong)(1) << 22);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_13 = ((ulong)(1) << 23);
+        /// </summary>     
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledUp_0 = 41;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledUp_1 = 40;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledUp_2 = 39;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledUp_3 = 38;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledUp_4 = 37;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledUp_5 = 36;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledUp_6 = 35;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledUp_7 = 34;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledUp_8 = 33;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledUp_9 = 32;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledUp_10 = 31;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledUp_11 = 30;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledUp_12 = 29;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledUp_13 = 28;
         /// <summary>     
         /// Sync-data positions for elevator call down
         /// </summary>     
-        private const int SyncBoolReq_AddressUlong_ElevatorCalledDown = 24;
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_0 = ((ulong)(1) << 24);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_1 = ((ulong)(1) << 25);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_2 = ((ulong)(1) << 26);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_3 = ((ulong)(1) << 27);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_4 = ((ulong)(1) << 28);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_5 = ((ulong)(1) << 29);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_6 = ((ulong)(1) << 30);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_7 = ((ulong)(1) << 31);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_8 = ((ulong)(1) << 32);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_9 = ((ulong)(1) << 33);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_10 = ((ulong)(1) << 34);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_11 = ((ulong)(1) << 35);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_12 = ((ulong)(1) << 36);
-        private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_13 = ((ulong)(1) << 37);
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledDown_0 = 27;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledDown_1 = 26;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledDown_2 = 25;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledDown_3 = 24;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledDown_4 = 23;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledDown_5 = 22;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledDown_6 = 21;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledDown_7 = 20;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledDown_8 = 19;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledDown_9 = 18;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledDown_10 = 17;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledDown_11 = 16;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledDown_12 = 15;
+        private const int SyncBoolReq_DirectUlong_ElevatorCalledDown_13 = 14;
         /// <summary>     
         /// Sync-data positions for internal elevator 0
-        /// </summary>    
-        private const int SyncBoolReq_AddressUlong_Elevator0CalledToFloor = 38;
-        private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_0 = ((ulong)(1) << 38);
-        private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_1 = ((ulong)(1) << 39);
-        private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_2 = ((ulong)(1) << 40);
-        private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_3 = ((ulong)(1) << 41);
-        private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_4 = ((ulong)(1) << 42);
-        private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_5 = ((ulong)(1) << 43);
-        private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_6 = ((ulong)(1) << 44);
-        private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_7 = ((ulong)(1) << 45);
-        private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_8 = ((ulong)(1) << 46);
-        private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_9 = ((ulong)(1) << 47);
-        private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_10 = ((ulong)(1) << 48);
-        private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_11 = ((ulong)(1) << 49);
-        private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_12 = ((ulong)(1) << 50);
-        private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_13 = ((ulong)(1) << 51);
+        /// </summary>     
+        private const int SyncBoolReq_DirectUlong_Elevator0CalledToFloor_0 = 13;
+        private const int SyncBoolReq_DirectUlong_Elevator0CalledToFloor_1 = 12;
+        private const int SyncBoolReq_DirectUlong_Elevator0CalledToFloor_2 = 11;
+        private const int SyncBoolReq_DirectUlong_Elevator0CalledToFloor_3 = 10;
+        private const int SyncBoolReq_DirectUlong_Elevator0CalledToFloor_4 = 9;
+        private const int SyncBoolReq_DirectUlong_Elevator0CalledToFloor_5 = 8;
+        private const int SyncBoolReq_DirectUlong_Elevator0CalledToFloor_6 = 7;
+        private const int SyncBoolReq_DirectUlong_Elevator0CalledToFloor_7 = 6;
+        private const int SyncBoolReq_DirectUlong_Elevator0CalledToFloor_8 = 5;
+        private const int SyncBoolReq_DirectUlong_Elevator0CalledToFloor_9 = 4;
+        private const int SyncBoolReq_DirectUlong_Elevator0CalledToFloor_10 = 3;
+        private const int SyncBoolReq_DirectUlong_Elevator0CalledToFloor_11 = 2;
+        private const int SyncBoolReq_DirectUlong_Elevator0CalledToFloor_12 = 1;
+        private const int SyncBoolReq_DirectUlong_Elevator0CalledToFloor_13 = 0;
         /// <summary>     
         /// Sync-data positions for internal elevator 1
         /// </summary>     
-        private const int SyncBoolReq_AddressUint_Elevator1CalledToFloor = 0;
-        private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_0 = ((uint)(1));
-        private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_1 = ((uint)(1) << 1);
-        private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_2 = ((uint)(1) << 2);
-        private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_3 = ((uint)(1) << 3);
-        private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_4 = ((uint)(1) << 4);
-        private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_5 = ((uint)(1) << 5);
-        private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_6 = ((uint)(1) << 6);
-        private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_7 = ((uint)(1) << 7);
-        private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_8 = ((uint)(1) << 8);
-        private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_9 = ((uint)(1) << 9);
-        private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_10 = ((uint)(1) << 10);
-        private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_11 = ((uint)(1) << 11);
-        private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_12 = ((uint)(1) << 12);
-        private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_13 = ((uint)(1) << 13);
+        private const int SyncBoolReq_DirectUint_Elevator1CalledToFloor_0 = 31;
+        private const int SyncBoolReq_DirectUint_Elevator1CalledToFloor_1 = 30;
+        private const int SyncBoolReq_DirectUint_Elevator1CalledToFloor_2 = 29;
+        private const int SyncBoolReq_DirectUint_Elevator1CalledToFloor_3 = 28;
+        private const int SyncBoolReq_DirectUint_Elevator1CalledToFloor_4 = 27;
+        private const int SyncBoolReq_DirectUint_Elevator1CalledToFloor_5 = 26;
+        private const int SyncBoolReq_DirectUint_Elevator1CalledToFloor_6 = 25;
+        private const int SyncBoolReq_DirectUint_Elevator1CalledToFloor_7 = 24;
+        private const int SyncBoolReq_DirectUint_Elevator1CalledToFloor_8 = 23;
+        private const int SyncBoolReq_DirectUint_Elevator1CalledToFloor_9 = 22;
+        private const int SyncBoolReq_DirectUint_Elevator1CalledToFloor_10 = 21;
+        private const int SyncBoolReq_DirectUint_Elevator1CalledToFloor_11 = 20;
+        private const int SyncBoolReq_DirectUint_Elevator1CalledToFloor_12 = 19;
+        private const int SyncBoolReq_DirectUint_Elevator1CalledToFloor_13 = 18;
         /// <summary>     
         /// Sync-data positions for internal elevator 2
         /// </summary>     
-        private const int SyncBoolReq_AddressUint_Elevator2CalledToFloor = 17;
-        private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_0 = ((uint)(1) << 14);
-        private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_1 = ((uint)(1) << 15);
-        private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_2 = ((uint)(1) << 16);
-        private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_3 = ((uint)(1) << 17);
-        private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_4 = ((uint)(1) << 18);
-        private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_5 = ((uint)(1) << 19);
-        private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_6 = ((uint)(1) << 20);
-        private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_7 = ((uint)(1) << 21);
-        private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_8 = ((uint)(1) << 22);
-        private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_9 = ((uint)(1) << 23);
-        private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_10 = ((uint)(1) << 24);
-        private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_11 = ((uint)(1) << 25);
-        private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_12 = ((uint)(1) << 26);
-        private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_13 = ((uint)(1) << 27);
+        private const int SyncBoolReq_DirectUint_Elevator2CalledToFloor_0 = 17;
+        private const int SyncBoolReq_DirectUint_Elevator2CalledToFloor_1 = 16;
+        private const int SyncBoolReq_DirectUint_Elevator2CalledToFloor_2 = 15;
+        private const int SyncBoolReq_DirectUint_Elevator2CalledToFloor_3 = 14;
+        private const int SyncBoolReq_DirectUint_Elevator2CalledToFloor_4 = 13;
+        private const int SyncBoolReq_DirectUint_Elevator2CalledToFloor_5 = 12;
+        private const int SyncBoolReq_DirectUint_Elevator2CalledToFloor_6 = 11;
+        private const int SyncBoolReq_DirectUint_Elevator2CalledToFloor_7 = 10;
+        private const int SyncBoolReq_DirectUint_Elevator2CalledToFloor_8 = 9;
+        private const int SyncBoolReq_DirectUint_Elevator2CalledToFloor_9 = 8;
+        private const int SyncBoolReq_DirectUint_Elevator2CalledToFloor_10 = 7;
+        private const int SyncBoolReq_DirectUint_Elevator2CalledToFloor_11 = 6;
+        private const int SyncBoolReq_DirectUint_Elevator2CalledToFloor_12 = 5;
+        private const int SyncBoolReq_DirectUint_Elevator2CalledToFloor_13 = 4;
 
-        private const int SyncBool_AddressUint_ElevatorXidle = 28;
-        private const uint SyncBool_MaskUint_Elevator0idle = ((uint)(1) << 28);
-        private const uint SyncBool_MaskUint_Elevator1idle = ((uint)(1) << 29);
-        private const uint SyncBool_MaskUint_Elevator2idle = ((uint)(1) << 30);
-        private const uint SyncBoolReq_MaskUint_BellOn = ((uint)(1) << 31);
+        private const int SyncBool_Direct_Uint_Elevator0idle = 3;
+        private const int SyncBool_Direct_Uint_Elevator1idle = 2;
+        private const int SyncBool_Direct_Uint_Elevator2idle = 1;
+        private const int SyncBoolReq_DirectUint_BellOn = 0;
 
         #endregion ENUM_DIRECTSYNCBOOL
         //------------------------------------------------------------------------------------------------------------
@@ -1331,7 +1308,7 @@ namespace WindowsFormsApp1
             Debug.Print("[NetworkController] NetworkingController is now in Start()");
             //NOPE _localPlayer = Networking.LocalPlayer;
             //the first master has to set the constant scene settings
-            if (_localPlayerisMaster && ulongZero == (_syncData1 & (SyncBool_MaskUlong_Initialized)))
+            if (_localPlayerisMaster && !GetSyncValue(SyncBool_Initialized))
             {
                 _isMaster = true;
                 MASTER_SetConstSceneElevatorStates();
@@ -1372,9 +1349,9 @@ namespace WindowsFormsApp1
         //TODO: remove on live build
         private void TEST_DisplayElevatorStates()
         {
-            form1.DisplayElevatorState(0, GetSyncElevatorGoingUp(0), uintZero != (_syncData2 & (SyncBool_MaskUint_Elevator0idle)), ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator0open)));
-            form1.DisplayElevatorState(1, GetSyncElevatorGoingUp(1), uintZero != (_syncData2 & (SyncBool_MaskUint_Elevator1idle)), ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator1open)));
-            form1.DisplayElevatorState(2, GetSyncElevatorGoingUp(2), uintZero != (_syncData2 & (SyncBool_MaskUint_Elevator2idle)), ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator2open)));
+            form1.DisplayElevatorState(0, GetSyncElevatorGoingUp(0), GetSyncValue(SyncBool_Elevator0idle), GetSyncValue(SyncBool_Elevator0open));
+            form1.DisplayElevatorState(1, GetSyncElevatorGoingUp(1), GetSyncValue(SyncBool_Elevator1idle), GetSyncValue(SyncBool_Elevator1open));
+            form1.DisplayElevatorState(2, GetSyncElevatorGoingUp(2), GetSyncValue(SyncBool_Elevator2idle), GetSyncValue(SyncBool_Elevator2open));
             form1.DisplayLocalPlayerFloor(_localPlayerCurrentFloor);
         }
         #endregion START_UPDATE_FUNCTIONS
@@ -1439,27 +1416,27 @@ namespace WindowsFormsApp1
             //taking all content from SyncedData into local arrays
             for (int i = 0; i <= 13; i++)
             {
-                if (ulongZero != (_syncData1 & ((ulong)(1) << (SyncBoolReq_AddressUlong_Elevator0CalledToFloor + i))))
+                if (GetSyncValue(SyncBoolReq_Elevator0CalledToFloor_0 + i))
                 {
                     _elevator0FloorTargets_MASTER[i] = true;
                     _elevator0FloorTargets_MASTER_COUNT++;
                 }
-                if (uintZero != (_syncData2 & ((uint)(1) << (SyncBoolReq_AddressUint_Elevator1CalledToFloor + i))))
+                if (GetSyncValue(SyncBoolReq_Elevator1CalledToFloor_0 + i))
                 {
                     _elevator1FloorTargets_MASTER[i] = true;
                     _elevator1FloorTargets_MASTER_COUNT++;
                 }
-                if (uintZero != (_syncData2 & ((uint)(1) << (SyncBoolReq_AddressUint_Elevator2CalledToFloor + i))))
+                if (GetSyncValue(SyncBoolReq_Elevator2CalledToFloor_0 + i))
                 {
                     _elevator2FloorTargets_MASTER[i] = true;
                     _elevator2FloorTargets_MASTER_COUNT++;
                 }
-                if (ulongZero != (_syncData1 & ((ulong)(1) << (SyncBoolReq_AddressUlong_ElevatorCalledUp + i))))
+                if (GetSyncValue(SyncBoolReq_ElevatorCalledUp_0 + i))
                 {
                     _calledToFloorToGoUp_MASTER[i] = true;
                     _calledToFloorToGoUp_MASTER_COUNT++;
                 }
-                if (ulongZero != (_syncData1 & ((ulong)(1) << (SyncBoolReq_AddressUlong_ElevatorCalledDown + i))))
+                if (GetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + i))
                 {
                     _calledToFloorToGoDown_MASTER[i] = true;
                     _calledToFloorToGoDown_MASTER_COUNT++;
@@ -1480,15 +1457,15 @@ namespace WindowsFormsApp1
         {
             if (_elevator0Working && _elevatorCheckTick_MASTER == 1)
             {
-                MASTER_RunElevator(0, _elevator0FloorTargets_MASTER);
+                MASTER_RunElevator(0, SyncBool_Elevator0open, SyncBool_Elevator0idle, SyncBool_Elevator0goingUp, _elevator0FloorTargets_MASTER);
             }
             if (_elevator1Working && _elevatorCheckTick_MASTER == 2)
             {
-                MASTER_RunElevator(1, _elevator1FloorTargets_MASTER);
+                MASTER_RunElevator(1, SyncBool_Elevator1open, SyncBool_Elevator1idle, SyncBool_Elevator1goingUp, _elevator1FloorTargets_MASTER);
             }
             if (_elevator2Working && _elevatorCheckTick_MASTER == 3)
             {
-                MASTER_RunElevator(2, _elevator2FloorTargets_MASTER);
+                MASTER_RunElevator(2, SyncBool_Elevator2open, SyncBool_Elevator2idle, SyncBool_Elevator2goingUp, _elevator2FloorTargets_MASTER);
             }
             _elevatorCheckTick_MASTER++;
             //TODO: Remove before pushing live
@@ -1520,43 +1497,22 @@ namespace WindowsFormsApp1
         /// TODO: Ignore targets that generated fake-EREQs for other elevators
         /// 
         /// </summary>
-        private void MASTER_RunElevator(int elevatorNumber, bool[] elevatorFloorTargets)
+        private void MASTER_RunElevator(int elevatorNumber, int SyncBoolElevatorOpen, int SyncBoolElevatorIdle, int SyncBoolElevatorGoingUp, bool[] elevatorFloorTargets)
         {
             //Debug.Print("Elevator " + elevatorNumber + " has " + MASTER_GetInternalTargetCount(elevatorNumber) + " targets.");
             int currentFloor = GetSyncElevatorFloor(elevatorNumber);
-            bool elevatorIdle;
-            bool elevatorGoingUp;
-            bool elevatorOpen;
-
-            if(elevatorNumber == 0)
-            {
-                elevatorIdle = (uintZero != (_syncData2 & (SyncBool_MaskUint_Elevator0idle)));
-                elevatorGoingUp = (ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator0goingUp)));
-                elevatorOpen = (ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator0open)));
-            }
-            else if(elevatorNumber == 1)
-            {
-                elevatorIdle = (uintZero != (_syncData2 & (SyncBool_MaskUint_Elevator1idle)));
-                elevatorGoingUp = (ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator1goingUp)));
-                elevatorOpen = (ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator1open)));
-            }
-            else
-            {
-                elevatorIdle = (uintZero != (_syncData2 & (SyncBool_MaskUint_Elevator2idle)));
-                elevatorGoingUp = (ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator2goingUp)));
-                elevatorOpen = (ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator2open)));
-            }        
-
+            bool elevatorIdle = GetSyncValue(SyncBoolElevatorIdle);
+            bool elevatorGoingUp = GetSyncValue(SyncBoolElevatorGoingUp);
             bool targetFound = false;
             //we can't handle people blocking the elevator, so we will ignore ongoing requests and save them for later
-            if (elevatorOpen)
+            if (GetSyncValue(SyncBoolElevatorOpen))
             {
                 //an elevator must stay open for n seconds
                 if (!(currentFloor == 0) && time.GetTime() - _timeAtCurrentFloorElevatorOpened_MASTER[elevatorNumber] > TIME_TO_STAY_OPEN || currentFloor == 0 && time.GetTime() - _timeAtCurrentFloorElevatorOpened_MASTER[elevatorNumber] > TIME_TO_STAY_OPEN_RECEPTION)
                 {
                     Debug.Print("[NetworkController] Elevator " + elevatorNumber + " closing on floor " + currentFloor);
                     //time to close this elevator
-                    MASTER_SetSyncValue(SyncBool_Elevator0open + elevatorNumber, false);
+                    MASTER_SetSyncValue(SyncBoolElevatorOpen, false);
                     _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] = time.GetTime();
                     //closing it was enough for now
                     return;
@@ -1688,7 +1644,7 @@ namespace WindowsFormsApp1
                     if (targetFound)
                     {
                         // this means we are now reversing the elevator direction
-                        MASTER_SetSyncValue(SyncBool_Elevator0goingUp + elevatorNumber, true);
+                        MASTER_SetSyncValue(SyncBoolElevatorGoingUp, true);
                         // since the next loop code will handle this direction, we need to stop execution now
                         return;
                     }
@@ -1919,7 +1875,7 @@ namespace WindowsFormsApp1
         private void MASTER_SetElevatorDirection(int elevatorNumber, bool goingUp)
         {
             MASTER_SetSyncValue(SyncBool_Elevator0goingUp + elevatorNumber, goingUp);
-            if (uintZero != (_syncData2 & ((uint)(1) << (SyncBool_AddressUint_ElevatorXidle + elevatorNumber))))
+            if (GetSyncValue(SyncBool_Elevator0idle + elevatorNumber))
             {
                 MASTER_SetSyncValue(SyncBool_Elevator0idle + elevatorNumber, false);
                 _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] = time.GetTime() + TIME_TO_STAY_CLOSED - TIME_TO_STAY_CLOSED_AFTER_GOING_OUT_OF_IDLE;
@@ -2012,11 +1968,11 @@ namespace WindowsFormsApp1
         /// The ulong maps as follows:-
         ///  - 63-60 variable_1 (4bits)
         ///  - 59-56 variable_2 (4bits)
-        ///  - 55-52 variable_3 (4bits)
-        ///  - 0-51 binary bools [0-51]
+        ///  - 55-52 variable_2 (4bits)
+        ///  - 51-0 binary bools [0-51]
         ///
         /// The uint maps as follows:-
-        ///  - 0-31 binary bools [52-83(?)]
+        ///  - 31-0 binary bools [52-83(?)]
         ///  
         /// Is run every time a network packet is received by localPlayer
         /// </summary>
@@ -2387,9 +2343,9 @@ namespace WindowsFormsApp1
         private void LOCAL_ReadConstSceneElevatorStates()
         {
             Debug.Print("[NetworkController] Setting random elevator states for reception by localPlayer");
-            _elevator0Working = ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator0working));
-            _elevator1Working = ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator1working));
-            _elevator2Working = ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator2working));
+            _elevator0Working = GetSyncValue(SyncBool_Elevator0working);
+            _elevator1Working = GetSyncValue(SyncBool_Elevator1working);
+            _elevator2Working = GetSyncValue(SyncBool_Elevator2working);
             form1.DisplayElevatorBroken(_elevator0Working, _elevator1Working, _elevator2Working);
             //NOPE _elevatorControllerReception._elevator1working = _elevator0Working;
             //NOPE _elevatorControllerReception._elevator2working = _elevator1Working;
@@ -2416,7 +2372,7 @@ namespace WindowsFormsApp1
                 if (time.GetTime() < 1f) //no scene setup before at least 1 second has passed to ensure the update loop has already started
                     return;
                 Debug.Print("[NetworkController] Local setup was started");
-                if (ulongZero != (_syncData1 & (SyncBool_MaskUlong_Initialized)))
+                if (GetSyncValue(SyncBool_Initialized))
                 {
                     LOCAL_ReadConstSceneElevatorStates();
                     _finishedLocalSetup = true;
@@ -2444,12 +2400,12 @@ namespace WindowsFormsApp1
                 Debug.Print("[NetworkController] LocalPlayer received to open elevator " + elevatorNumber + " on floor " + floorNumber);
                 if (floorNumber == _localPlayerCurrentFloor)
                 {
-                    _elevatorControllerReception.OpenElevatorLocalPlayerFloor(elevatorNumber, GetSyncElevatorGoingUp(elevatorNumber), uintZero != (_syncData2 & ((uint)(1) << (SyncBool_AddressUint_ElevatorXidle + elevatorNumber))));
+                    _elevatorControllerReception.OpenElevatorLocalPlayerFloor(elevatorNumber, GetSyncElevatorGoingUp(elevatorNumber), GetSyncValue(SyncBool_Elevator0idle + elevatorNumber));
                     //Debug.Print("[NetworkController] Elevator " + elevatorNumber + " is currently at floor " + floorNumber + " so Reception won't open.");
                 }
                 else if (floorNumber == 0)
                 {
-                    _elevatorControllerReception.OpenElevatorReception(elevatorNumber, GetSyncElevatorGoingUp(elevatorNumber), uintZero != (_syncData2 & ((uint)(1) << (SyncBool_AddressUint_ElevatorXidle + elevatorNumber))));
+                    _elevatorControllerReception.OpenElevatorReception(elevatorNumber, GetSyncElevatorGoingUp(elevatorNumber), GetSyncValue(SyncBool_Elevator0idle + elevatorNumber));
                 }
                 //TODO: make sure to store the floor states for people driving to that floor later
             }
@@ -2508,7 +2464,7 @@ namespace WindowsFormsApp1
             }
             else
             {
-                _elevatorControllerReception.SetElevatorDirectionDisplay(elevatorNumber, goingUp, uintZero != (_syncData2 & ((uint)(1) << (SyncBool_AddressUint_ElevatorXidle + elevatorNumber))));
+                _elevatorControllerReception.SetElevatorDirectionDisplay(elevatorNumber, goingUp, GetSyncValue(SyncBool_Elevator0idle + elevatorNumber));
             }
         }
         //------------------------------------- external elevator calls from floor buttons ------------------------------------------------
@@ -2534,8 +2490,8 @@ namespace WindowsFormsApp1
                     {
                         _pendingCallUp_LOCAL_EXT[floor] = false;
                         _pendingCallUp_COUNT_LOCAL_EXT--;
-                        if (ulongZero == (_syncData1 & ((ulong)(1) << (SyncBoolReq_AddressUlong_ElevatorCalledUp + floor))))
-                        {                            
+                        if (!GetSyncValue(SyncBoolReq_ElevatorCalledUp_0 + floor))
+                        {
                             //TODO: link all elevator controllers here in Unity later
                             if (floor == 0)
                             {
@@ -2560,8 +2516,7 @@ namespace WindowsFormsApp1
                     {
                         _pendingCallDown_LOCAL_EXT[floor] = false;
                         _pendingCallDown_COUNT_LOCAL_EXT--;
-
-                        if (ulongZero == (_syncData1 & ((ulong)(1) << (SyncBoolReq_AddressUlong_ElevatorCalledDown + floor))))
+                        if (!GetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + floor))
                         {
                             //TODO: link all elevator controllers here in Unity later
                             if (floor == 0)
@@ -2606,8 +2561,7 @@ namespace WindowsFormsApp1
                     {
                         _pendingCallElevator1_LOCAL_INT[floor] = false;
                         _pendingCallElevator1_COUNT_LOCAL_INT--;
-                        
-                        if (uintZero == (_syncData1 & ((uint)(1) << (SyncBoolReq_AddressUint_Elevator1CalledToFloor + floor))))
+                        if (!GetSyncValue(SyncBoolReq_Elevator0CalledToFloor_0 + floor))
                         {
                             Debug.Print("Dropped request, SetElevatorInternalButtonState() button " + floor + " after " + (time.GetTime() - _pendingCallElevator1Time_LOCAL_INT[floor]).ToString() + " seconds.");
                             LOCAL_SetElevatorInternalButtonState(0, floor, called: false);
@@ -2624,7 +2578,7 @@ namespace WindowsFormsApp1
                     {
                         _pendingCallElevator0_LOCAL_INT[floor] = false;
                         _pendingCallElevator0_COUNT_LOCAL_INT--;
-                        if (ulongZero == (_syncData1 & ((ulong)(1) << (SyncBoolReq_AddressUlong_Elevator0CalledToFloor + floor))))
+                        if (!GetSyncValue(SyncBoolReq_Elevator0CalledToFloor_0 + floor))
                         {
                             Debug.Print("Dropped request, SetElevatorInternalButtonState() button " + floor + " after " + (time.GetTime() - _pendingCallElevator0Time_LOCAL_INT[floor]).ToString() + " seconds.");
                             LOCAL_SetElevatorInternalButtonState(0, floor, called: false);
@@ -2641,7 +2595,7 @@ namespace WindowsFormsApp1
                     {
                         _pendingCallElevator2_LOCAL_INT[floor] = false;
                         _pendingCallElevator2_COUNT_LOCAL_INT--;
-                        if (uintZero == (_syncData2 & ((uint)(1) << (SyncBoolReq_AddressUint_Elevator2CalledToFloor + floor))))
+                        if (!GetSyncValue(SyncBoolReq_Elevator0CalledToFloor_0 + floor))
                         {
                             Debug.Print("Dropped request, SetElevatorInternalButtonState() button " + floor + " after " + (time.GetTime() - _pendingCallElevator2Time_LOCAL_INT[floor]).ToString() + " seconds.");
                             LOCAL_SetElevatorInternalButtonState(0, floor, called: false);
@@ -2660,7 +2614,7 @@ namespace WindowsFormsApp1
             if (directionUp)
             {
                 Debug.Print("[NetworkController] Elevator called to floor " + floorNumber + " by localPlayer (Up)");
-                if (_pendingCallUp_LOCAL_EXT[floorNumber] || ulongZero != (_syncData1 & ((ulong)(1) << (SyncBoolReq_AddressUlong_ElevatorCalledUp + floorNumber))))
+                if (_pendingCallUp_LOCAL_EXT[floorNumber] || GetSyncValue(SyncBoolReq_ElevatorCalledUp_0 + floorNumber))
                     return;
                 _pendingCallUp_LOCAL_EXT[floorNumber] = true;
                 _pendingCallTimeUp_LOCAL_EXT[floorNumber] = time.GetTime();
@@ -2670,7 +2624,7 @@ namespace WindowsFormsApp1
             else
             {
                 Debug.Print("[NetworkController] Elevator called to floor " + floorNumber + " by localPlayer (Down)");
-                if (_pendingCallDown_LOCAL_EXT[floorNumber] || ulongZero != (_syncData1 & ((ulong)(1) << (SyncBoolReq_AddressUlong_ElevatorCalledDown + floorNumber))))
+                if (_pendingCallDown_LOCAL_EXT[floorNumber] || GetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + floorNumber))
                     return;
                 _pendingCallDown_LOCAL_EXT[floorNumber] = true;
                 _pendingCallTimeDown_LOCAL_EXT[floorNumber] = time.GetTime();
@@ -2750,7 +2704,7 @@ namespace WindowsFormsApp1
         public void ELREQ_CallFromFloor(bool directionUp, int floor)
         {
             Debug.Print("[NetworkingController] Master received Elevator called to floor " + floor + " by localPlayer (DirectionUp: " + directionUp.ToString() + ")");
-            if (directionUp && (ulongZero == (_syncData1 & ((ulong)(1) << (SyncBoolReq_AddressUlong_ElevatorCalledUp + floor)))))
+            if (directionUp && !GetSyncValue(SyncBoolReq_ElevatorCalledUp_0 + floor))
             {
                 if (!MASTER_ElevatorAlreadyThereAndOpen(floor, true))
                 {
@@ -2759,7 +2713,7 @@ namespace WindowsFormsApp1
                     _calledToFloorToGoUp_MASTER_COUNT++;
                 }
             }
-            else if (!directionUp && (ulongZero == (_syncData1 & ((ulong)(1) << (SyncBoolReq_AddressUlong_ElevatorCalledDown + floor)))))
+            else if (!directionUp && !GetSyncValue(SyncBoolReq_ElevatorCalledDown_0 + floor))
             {
                 if (!MASTER_ElevatorAlreadyThereAndOpen(floor, false))
                 {
@@ -2776,11 +2730,11 @@ namespace WindowsFormsApp1
         {
             float test = time.GetTime() - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber];
             Debug.Print("Master received CallToChangeDoorState for elevator " + elevatorNumber + " (Direction open: " + open.ToString() + ") Elevator driving:" + _elevatorIsDriving_MASTER[elevatorNumber]);
-            if (open && uintZero != (_syncData2 & ((uint)(1) << (SyncBool_AddressUint_ElevatorXidle + elevatorNumber))) || (time.GetTime() - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] < 2.5f && !_elevatorIsDriving_MASTER[elevatorNumber]))
+            if (open && GetSyncValue(SyncBool_Elevator0idle + elevatorNumber) || (time.GetTime() - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] < 2.5f && !_elevatorIsDriving_MASTER[elevatorNumber]))
             {
-                MASTER_HandleFloorDoorOpening(elevatorNumber, GetSyncElevatorFloor(elevatorNumber), ulongZero != (_syncData1 & ((ulong)(1) << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumber))), uintZero != (_syncData2 & ((uint)(1) << (SyncBool_AddressUint_ElevatorXidle + elevatorNumber))));
+                MASTER_HandleFloorDoorOpening(elevatorNumber, GetSyncElevatorFloor(elevatorNumber), GetSyncValue(SyncBool_Elevator0goingUp + elevatorNumber), GetSyncValue(SyncBool_Elevator0idle + elevatorNumber));
             }
-            else if (!open && ulongZero != (_syncData1 & ((ulong)(1) << (SyncBool_AddressUlong_ElevatorXopen + elevatorNumber))) && time.GetTime() - _timeAtCurrentFloorElevatorOpened_MASTER[elevatorNumber] > 6f)
+            else if (!open && GetSyncValue(SyncBool_Elevator0open + elevatorNumber) && time.GetTime() - _timeAtCurrentFloorElevatorOpened_MASTER[elevatorNumber] > 6f)
             {
                 MASTER_SetSyncValue(SyncBool_Elevator0open + elevatorNumber, false);
                 _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] = time.GetTime();
@@ -2791,9 +2745,8 @@ namespace WindowsFormsApp1
         /// </summary>
         public void ELREQ_SetInternalTarget(int elevatorNumber, int floorNumber)
         {
-            
             Debug.Print("[NetworkController] Master received client request to set target for elevator " + elevatorNumber + " to floor " + floorNumber);
-            if (elevatorNumber == 0 && (ulongZero == (_syncData1 & ((ulong)(1) << (SyncBoolReq_AddressUlong_Elevator0CalledToFloor + floorNumber)))))
+            if (elevatorNumber == 0 && !GetSyncValue(SyncBoolReq_Elevator0CalledToFloor_0 + floorNumber))
             {
                 Debug.Print("Internal target was now set.");
                 MASTER_SetSyncValue(SyncBoolReq_Elevator0CalledToFloor_0 + floorNumber, true);
@@ -2801,7 +2754,7 @@ namespace WindowsFormsApp1
                 _elevator0FloorTargets_MASTER_COUNT++;
                 return;
             }
-            else if (elevatorNumber == 1 && (uintZero == (_syncData2 & ((uint)(1) << (SyncBoolReq_AddressUint_Elevator1CalledToFloor + floorNumber)))))
+            else if (elevatorNumber == 1 && !GetSyncValue(SyncBoolReq_Elevator1CalledToFloor_0 + floorNumber))
             {
                 Debug.Print("Internal target was now set.");
                 MASTER_SetSyncValue(SyncBoolReq_Elevator1CalledToFloor_0 + floorNumber, true);
@@ -2809,7 +2762,7 @@ namespace WindowsFormsApp1
                 _elevator1FloorTargets_MASTER_COUNT++;
                 return;
             }
-            else if (elevatorNumber == 2 && (uintZero == (_syncData2 & ((uint)(1) << (SyncBoolReq_AddressUint_Elevator2CalledToFloor + floorNumber)))))
+            else if (elevatorNumber == 2 && !GetSyncValue(SyncBoolReq_Elevator2CalledToFloor_0 + floorNumber))
             {
                 Debug.Print("Internal target was now set.");
                 MASTER_SetSyncValue(SyncBoolReq_Elevator2CalledToFloor_0 + floorNumber, true);
@@ -2827,15 +2780,15 @@ namespace WindowsFormsApp1
         /// <returns></returns>
         private bool MASTER_ElevatorAlreadyThereAndOpen(int floor, bool directionUp)
         {
-            if (_elevator0Working && GetSyncElevatorFloor(0) == floor && ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator0open)) && (ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator0goingUp)) || uintZero != (_syncData2 & (SyncBool_MaskUint_Elevator0idle))))
+            if (_elevator0Working && GetSyncElevatorFloor(0) == floor && GetSyncValue(SyncBool_Elevator0open) && (GetSyncValue(SyncBool_Elevator0goingUp) || GetSyncValue(SyncBool_Elevator0idle)))
             {
                 return true;
             }
-            if (_elevator1Working && GetSyncElevatorFloor(1) == floor && ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator1open)) && (ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator1goingUp)) || uintZero != (_syncData2 & (SyncBool_MaskUint_Elevator1idle))))
+            if (_elevator1Working && GetSyncElevatorFloor(1) == floor && GetSyncValue(SyncBool_Elevator1open) && (GetSyncValue(SyncBool_Elevator1goingUp) || GetSyncValue(SyncBool_Elevator1idle)))
             {
                 return true;
             }
-            if (_elevator2Working && GetSyncElevatorFloor(2) == floor && ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator2open)) && (ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator2goingUp)) || uintZero != (_syncData2 & (SyncBool_MaskUint_Elevator2idle))))
+            if (_elevator2Working && GetSyncElevatorFloor(2) == floor && GetSyncValue(SyncBool_Elevator2open) && (GetSyncValue(SyncBool_Elevator2goingUp) || GetSyncValue(SyncBool_Elevator2idle)))
             {
                 return true;
             }
@@ -2850,15 +2803,15 @@ namespace WindowsFormsApp1
         /// Checks if that elevator is currently open
         /// </summary>
         private bool GetIfElevatorIsOpen(int elevatorNumber)
-        {            
-            return ulongZero != (_syncData1 & ((ulong)(1)<<(SyncBool_AddressUlong_ElevatorXopen + elevatorNumber)));
+        {
+            return GetSyncValue(SyncBool_Elevator0open + elevatorNumber);
         }
         /// <summary>
         /// Returns the synced elevator direction, true is up / false is down
         /// </summary>
         private bool GetSyncElevatorGoingUp(int elevatorNumber)
         {
-            return ulongZero != (_syncData1 & ((ulong)(1) << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumber)));
+            return GetSyncValue(SyncBool_Elevator0goingUp + elevatorNumber);
         }
         //------------------------------------------------------------------------------------------------------------
         //------------------------------------------ SyncBool lowlevel code ------------------------------------------
@@ -2869,18 +2822,18 @@ namespace WindowsFormsApp1
         /// The ulong maps as follows:-
         ///  - 63-60 variable_1 (4bits)
         ///  - 59-56 variable_2 (4bits)
-        ///  - 55-52 variable_3 (4bits)
-        ///  - 51-0 binary bools [51-0]
+        ///  - 55-52 variable_2 (4bits)
+        ///  - 51-0 binary bools [0-51]
         ///
         /// The uint maps as follows:-
-        ///  - 0-31 binary bools [52-83(?)]
+        ///  - 31-0 binary bools [52-83(?)]
         /// 
         /// Script by NotFish
         /// </summary>''        
         private const byte elevatorOneOffset = 60;
         private const byte elevatorTwoOffset = 56;
         private const byte elevatorThreeOffset = 52;
-        private const byte ulongBoolEndPosition = 51; //You will need to recalculate the bool array classes if you modify this
+        private const byte ulongBoolStartPosition = 51;
         private const ulong nibbleMask = 15; // ...0000 0000 1111
         private const int elevatorFloorNumberOffset = -2; //Keks floor hack offset
         /// <summary>
@@ -2906,9 +2859,10 @@ namespace WindowsFormsApp1
                 return;
             }
 
-            //Fill ulong then uint            
+            //Index the positions back to front (negative index to be stored in the uint)
+            position = ulongBoolStartPosition - position;
 
-            if (position <= ulongBoolEndPosition)
+            if (position > 0)
             {
                 //Store in the ulong
                 if (value)
@@ -2927,11 +2881,11 @@ namespace WindowsFormsApp1
                     localUlong ^= mask;
                 }
             }
-            else // position > length of ulong
+            else // position < 0
             {
                 //Store in the uint
                 //Need to shift to to a valid address first!
-                position -= ulongBoolEndPosition + 1;
+                position += 32;
 
                 if (value)
                 {
@@ -2971,9 +2925,10 @@ namespace WindowsFormsApp1
                 return false;
             }
 
-            //Read from Ulong then uint            
+            //Index the positions back to front (negative index to be stored in the uint)
+            position = ulongBoolStartPosition - position;            
 
-            if (position < ulongBoolEndPosition)
+            if (position > 0)
             {
                 //Read from the ulong
                 //Inspect using a bitwise AND and a mask.
@@ -2987,11 +2942,11 @@ namespace WindowsFormsApp1
                     return false;
                 }
             }
-            else // position < ulong length
+            else // position < 0
             {
                 //Read from the uint
                 //Need to shift to to a valid address first!
-                position -= ulongBoolEndPosition + 1;
+                position += 32;
 
                 //Inspect using a bitwise AND and a mask.
                 //Branched in an IF statment for readability.
@@ -3016,90 +2971,90 @@ namespace WindowsFormsApp1
 
             //Look no loops :'(
             //Could be optimised further if we precompute the static bit shifts
-            output[0] = (_syncData1 & (ulong)(1)) != ulongZero; 
-            output[1] = (_syncData1 & (ulong)(1) << 1) != ulongZero;
-            output[2] = (_syncData1 & (ulong)(1) << 2) != ulongZero;
-            output[3] = (_syncData1 & (ulong)(1) << 3) != ulongZero;
-            output[4] = (_syncData1 & (ulong)(1) << 4) != ulongZero;
-            output[5] = (_syncData1 & (ulong)(1) << 5) != ulongZero;
-            output[6] = (_syncData1 & (ulong)(1) << 6) != ulongZero;
-            output[7] = (_syncData1 & (ulong)(1) << 7) != ulongZero;
-            output[8] = (_syncData1 & (ulong)(1) << 8) != ulongZero;
-            output[9] = (_syncData1 & (ulong)(1) << 9) != ulongZero;
-            output[10] = (_syncData1 & (ulong)(1) << 10) != ulongZero;
-            output[11] = (_syncData1 & (ulong)(1) << 11) != ulongZero;
-            output[12] = (_syncData1 & (ulong)(1) << 12) != ulongZero;
-            output[13] = (_syncData1 & (ulong)(1) << 13) != ulongZero;
-            output[14] = (_syncData1 & (ulong)(1) << 14) != ulongZero;
-            output[15] = (_syncData1 & (ulong)(1) << 15) != ulongZero;
-            output[16] = (_syncData1 & (ulong)(1) << 16) != ulongZero;
-            output[17] = (_syncData1 & (ulong)(1) << 17) != ulongZero;
-            output[18] = (_syncData1 & (ulong)(1) << 18) != ulongZero;
-            output[19] = (_syncData1 & (ulong)(1) << 19) != ulongZero;
-            output[20] = (_syncData1 & (ulong)(1) << 20) != ulongZero;
-            output[21] = (_syncData1 & (ulong)(1) << 21) != ulongZero;
-            output[22] = (_syncData1 & (ulong)(1) << 22) != ulongZero;
-            output[23] = (_syncData1 & (ulong)(1) << 23) != ulongZero;
-            output[24] = (_syncData1 & (ulong)(1) << 24) != ulongZero;
-            output[25] = (_syncData1 & (ulong)(1) << 25) != ulongZero;
-            output[26] = (_syncData1 & (ulong)(1) << 26) != ulongZero;
-            output[27] = (_syncData1 & (ulong)(1) << 27) != ulongZero;
-            output[28] = (_syncData1 & (ulong)(1) << 28) != ulongZero;
-            output[29] = (_syncData1 & (ulong)(1) << 29) != ulongZero;
-            output[30] = (_syncData1 & (ulong)(1) << 30) != ulongZero;
-            output[31] = (_syncData1 & (ulong)(1) << 31) != ulongZero;
-            output[32] = (_syncData1 & (ulong)(1) << 32) != ulongZero;
-            output[33] = (_syncData1 & (ulong)(1) << 33) != ulongZero;
-            output[34] = (_syncData1 & (ulong)(1) << 34) != ulongZero;
-            output[35] = (_syncData1 & (ulong)(1) << 35) != ulongZero;
-            output[36] = (_syncData1 & (ulong)(1) << 36) != ulongZero;
-            output[37] = (_syncData1 & (ulong)(1) << 37) != ulongZero;
-            output[38] = (_syncData1 & (ulong)(1) << 38) != ulongZero;
-            output[39] = (_syncData1 & (ulong)(1) << 39) != ulongZero;
-            output[40] = (_syncData1 & (ulong)(1) << 40) != ulongZero;
-            output[41] = (_syncData1 & (ulong)(1) << 41) != ulongZero;
-            output[42] = (_syncData1 & (ulong)(1) << 42) != ulongZero;
-            output[43] = (_syncData1 & (ulong)(1) << 43) != ulongZero;
-            output[44] = (_syncData1 & (ulong)(1) << 44) != ulongZero;
-            output[45] = (_syncData1 & (ulong)(1) << 45) != ulongZero;
-            output[46] = (_syncData1 & (ulong)(1) << 46) != ulongZero;
-            output[47] = (_syncData1 & (ulong)(1) << 47) != ulongZero;
-            output[48] = (_syncData1 & (ulong)(1) << 48) != ulongZero;
-            output[49] = (_syncData1 & (ulong)(1) << 49) != ulongZero;
-            output[50] = (_syncData1 & (ulong)(1) << 50) != ulongZero;
-            output[51] = (_syncData1 & (ulong)(1) << 51) != ulongZero;
-            output[52] = (_syncData2 & (uint)(1)) != uintZero;
-            output[53] = (_syncData2 & (uint)(1) << 1) != uintZero;
-            output[54] = (_syncData2 & (uint)(1) << 2) != uintZero;
-            output[55] = (_syncData2 & (uint)(1) << 3) != uintZero;
-            output[56] = (_syncData2 & (uint)(1) << 4) != uintZero;
-            output[57] = (_syncData2 & (uint)(1) << 5) != uintZero;
-            output[58] = (_syncData2 & (uint)(1) << 6) != uintZero;
-            output[59] = (_syncData2 & (uint)(1) << 7) != uintZero;
-            output[60] = (_syncData2 & (uint)(1) << 8) != uintZero;
-            output[61] = (_syncData2 & (uint)(1) << 9) != uintZero;
-            output[62] = (_syncData2 & (uint)(1) << 10) != uintZero;
-            output[63] = (_syncData2 & (uint)(1) << 11) != uintZero;
-            output[64] = (_syncData2 & (uint)(1) << 12) != uintZero;
-            output[65] = (_syncData2 & (uint)(1) << 13) != uintZero;
-            output[66] = (_syncData2 & (uint)(1) << 14) != uintZero;
-            output[67] = (_syncData2 & (uint)(1) << 15) != uintZero;
-            output[68] = (_syncData2 & (uint)(1) << 16) != uintZero;
-            output[69] = (_syncData2 & (uint)(1) << 17) != uintZero;
-            output[70] = (_syncData2 & (uint)(1) << 18) != uintZero;
-            output[71] = (_syncData2 & (uint)(1) << 19) != uintZero;
-            output[72] = (_syncData2 & (uint)(1) << 20) != uintZero;
-            output[73] = (_syncData2 & (uint)(1) << 21) != uintZero;
-            output[74] = (_syncData2 & (uint)(1) << 22) != uintZero;
-            output[75] = (_syncData2 & (uint)(1) << 23) != uintZero;
-            output[76] = (_syncData2 & (uint)(1) << 24) != uintZero;
-            output[77] = (_syncData2 & (uint)(1) << 25) != uintZero;
-            output[78] = (_syncData2 & (uint)(1) << 26) != uintZero;
-            output[79] = (_syncData2 & (uint)(1) << 27) != uintZero;
-            output[80] = (_syncData2 & (uint)(1) << 28) != uintZero;
-            output[81] = (_syncData2 & (uint)(1) << 29) != uintZero;
-            output[82] = (_syncData2 & (uint)(1) << 30) != uintZero;
-            output[83] = (_syncData2 & (uint)(1) << 31) != uintZero;
+            output[0] = (_syncData1 & ((ulong)(1) << 51)) != ulongZero;
+            output[1] = (_syncData1 & ((ulong)(1) << 50)) != ulongZero;
+            output[2] = (_syncData1 & ((ulong)(1) << 49)) != ulongZero;
+            output[3] = (_syncData1 & ((ulong)(1) << 48)) != ulongZero;
+            output[4] = (_syncData1 & ((ulong)(1) << 47)) != ulongZero;
+            output[5] = (_syncData1 & ((ulong)(1) << 46)) != ulongZero;
+            output[6] = (_syncData1 & ((ulong)(1) << 45)) != ulongZero;
+            output[7] = (_syncData1 & ((ulong)(1) << 44)) != ulongZero;
+            output[8] = (_syncData1 & ((ulong)(1) << 43)) != ulongZero;
+            output[9] = (_syncData1 & ((ulong)(1) << 42)) != ulongZero;
+            output[10] = (_syncData1 & ((ulong)(1) << 41)) != ulongZero;
+            output[11] = (_syncData1 & ((ulong)(1) << 40)) != ulongZero;
+            output[12] = (_syncData1 & ((ulong)(1) << 39)) != ulongZero;
+            output[13] = (_syncData1 & ((ulong)(1) << 38)) != ulongZero;
+            output[14] = (_syncData1 & ((ulong)(1) << 37)) != ulongZero;
+            output[15] = (_syncData1 & ((ulong)(1) << 36)) != ulongZero;
+            output[16] = (_syncData1 & ((ulong)(1) << 35)) != ulongZero;
+            output[17] = (_syncData1 & ((ulong)(1) << 34)) != ulongZero;
+            output[18] = (_syncData1 & ((ulong)(1) << 33)) != ulongZero;
+            output[19] = (_syncData1 & ((ulong)(1) << 32)) != ulongZero;
+            output[20] = (_syncData1 & ((ulong)(1) << 31)) != ulongZero;
+            output[21] = (_syncData1 & ((ulong)(1) << 30)) != ulongZero;
+            output[22] = (_syncData1 & ((ulong)(1) << 29)) != ulongZero;
+            output[23] = (_syncData1 & ((ulong)(1) << 28)) != ulongZero;
+            output[24] = (_syncData1 & ((ulong)(1) << 27)) != ulongZero;
+            output[25] = (_syncData1 & ((ulong)(1) << 26)) != ulongZero;
+            output[26] = (_syncData1 & ((ulong)(1) << 25)) != ulongZero;
+            output[27] = (_syncData1 & ((ulong)(1) << 24)) != ulongZero;
+            output[28] = (_syncData1 & ((ulong)(1) << 23)) != ulongZero;
+            output[29] = (_syncData1 & ((ulong)(1) << 22)) != ulongZero;
+            output[30] = (_syncData1 & ((ulong)(1) << 21)) != ulongZero;
+            output[31] = (_syncData1 & ((ulong)(1) << 20)) != ulongZero;
+            output[32] = (_syncData1 & ((ulong)(1) << 19)) != ulongZero;
+            output[33] = (_syncData1 & ((ulong)(1) << 18)) != ulongZero;
+            output[34] = (_syncData1 & ((ulong)(1) << 17)) != ulongZero;
+            output[35] = (_syncData1 & ((ulong)(1) << 16)) != ulongZero;
+            output[36] = (_syncData1 & ((ulong)(1) << 15)) != ulongZero;
+            output[37] = (_syncData1 & ((ulong)(1) << 14)) != ulongZero;
+            output[38] = (_syncData1 & ((ulong)(1) << 13)) != ulongZero;
+            output[39] = (_syncData1 & ((ulong)(1) << 12)) != ulongZero;
+            output[40] = (_syncData1 & ((ulong)(1) << 11)) != ulongZero;
+            output[41] = (_syncData1 & ((ulong)(1) << 10)) != ulongZero;
+            output[42] = (_syncData1 & ((ulong)(1) << 9)) != ulongZero;
+            output[43] = (_syncData1 & ((ulong)(1) << 8)) != ulongZero;
+            output[44] = (_syncData1 & ((ulong)(1) << 7)) != ulongZero;
+            output[45] = (_syncData1 & ((ulong)(1) << 6)) != ulongZero;
+            output[46] = (_syncData1 & ((ulong)(1) << 5)) != ulongZero;
+            output[47] = (_syncData1 & ((ulong)(1) << 4)) != ulongZero;
+            output[48] = (_syncData1 & ((ulong)(1) << 3)) != ulongZero;
+            output[49] = (_syncData1 & ((ulong)(1) << 2)) != ulongZero;
+            output[50] = (_syncData1 & ((ulong)(1) << 1)) != ulongZero;
+            output[51] = (_syncData1 & (ulong)(1)) != ulongZero;
+            output[52] = (_syncData2 & ((uint)(1) << 31)) != uintZero;
+            output[53] = (_syncData2 & ((uint)(1) << 30)) != uintZero;
+            output[54] = (_syncData2 & ((uint)(1) << 29)) != uintZero;
+            output[55] = (_syncData2 & ((uint)(1) << 28)) != uintZero;
+            output[56] = (_syncData2 & ((uint)(1) << 27)) != uintZero;
+            output[57] = (_syncData2 & ((uint)(1) << 26)) != uintZero;
+            output[58] = (_syncData2 & ((uint)(1) << 25)) != uintZero;
+            output[59] = (_syncData2 & ((uint)(1) << 24)) != uintZero;
+            output[60] = (_syncData2 & ((uint)(1) << 23)) != uintZero;
+            output[61] = (_syncData2 & ((uint)(1) << 22)) != uintZero;
+            output[62] = (_syncData2 & ((uint)(1) << 21)) != uintZero;
+            output[63] = (_syncData2 & ((uint)(1) << 20)) != uintZero;
+            output[64] = (_syncData2 & ((uint)(1) << 19)) != uintZero;
+            output[65] = (_syncData2 & ((uint)(1) << 18)) != uintZero;
+            output[66] = (_syncData2 & ((uint)(1) << 17)) != uintZero;
+            output[67] = (_syncData2 & ((uint)(1) << 16)) != uintZero;
+            output[68] = (_syncData2 & ((uint)(1) << 15)) != uintZero;
+            output[69] = (_syncData2 & ((uint)(1) << 14)) != uintZero;
+            output[70] = (_syncData2 & ((uint)(1) << 13)) != uintZero;
+            output[71] = (_syncData2 & ((uint)(1) << 12)) != uintZero;
+            output[72] = (_syncData2 & ((uint)(1) << 11)) != uintZero;
+            output[73] = (_syncData2 & ((uint)(1) << 10)) != uintZero;
+            output[74] = (_syncData2 & ((uint)(1) << 9)) != uintZero;
+            output[75] = (_syncData2 & ((uint)(1) << 8)) != uintZero;
+            output[76] = (_syncData2 & ((uint)(1) << 7)) != uintZero;
+            output[77] = (_syncData2 & ((uint)(1) << 6)) != uintZero;
+            output[78] = (_syncData2 & ((uint)(1) << 5)) != uintZero;
+            output[79] = (_syncData2 & ((uint)(1) << 4)) != uintZero;
+            output[80] = (_syncData2 & ((uint)(1) << 3)) != uintZero;
+            output[81] = (_syncData2 & ((uint)(1) << 2)) != uintZero;
+            output[82] = (_syncData2 & ((uint)(1) << 1)) != uintZero;
+            output[83] = (_syncData2 & (uint)(1)) != uintZero;
 
             return output;
         }
@@ -3114,58 +3069,58 @@ namespace WindowsFormsApp1
 
             //Look no loops :'(
             //Could be optimised further if we precompute the static bit shifts
-            output[0] = (_syncData1 & (ulong)(1)) != ulongZero;
-            output[1] = (_syncData1 & (ulong)(1) << 1) != ulongZero;
-            output[2] = (_syncData1 & (ulong)(1) << 2) != ulongZero;
-            output[3] = (_syncData1 & (ulong)(1) << 3) != ulongZero;
-            output[4] = (_syncData1 & (ulong)(1) << 4) != ulongZero;
-            output[5] = (_syncData1 & (ulong)(1) << 5) != ulongZero;
-            output[6] = (_syncData1 & (ulong)(1) << 6) != ulongZero;
-            output[7] = (_syncData1 & (ulong)(1) << 7) != ulongZero;
-            output[8] = (_syncData1 & (ulong)(1) << 8) != ulongZero;
-            output[9] = (_syncData1 & (ulong)(1) << 9) != ulongZero;
-            output[10] = (_syncData1 & (ulong)(1) << 10) != ulongZero;
-            output[11] = (_syncData1 & (ulong)(1) << 11) != ulongZero;
-            output[12] = (_syncData1 & (ulong)(1) << 12) != ulongZero;
-            output[13] = (_syncData1 & (ulong)(1) << 13) != ulongZero;
-            output[14] = (_syncData1 & (ulong)(1) << 14) != ulongZero;
-            output[15] = (_syncData1 & (ulong)(1) << 15) != ulongZero;
-            output[16] = (_syncData1 & (ulong)(1) << 16) != ulongZero;
-            output[17] = (_syncData1 & (ulong)(1) << 17) != ulongZero;
-            output[18] = (_syncData1 & (ulong)(1) << 18) != ulongZero;
-            output[19] = (_syncData1 & (ulong)(1) << 19) != ulongZero;
-            output[20] = (_syncData1 & (ulong)(1) << 20) != ulongZero;
-            output[21] = (_syncData1 & (ulong)(1) << 21) != ulongZero;
-            output[22] = (_syncData1 & (ulong)(1) << 22) != ulongZero;
-            output[23] = (_syncData1 & (ulong)(1) << 23) != ulongZero;
-            output[24] = (_syncData1 & (ulong)(1) << 24) != ulongZero;
-            output[25] = (_syncData1 & (ulong)(1) << 25) != ulongZero;
-            output[26] = (_syncData1 & (ulong)(1) << 26) != ulongZero;
-            output[27] = (_syncData1 & (ulong)(1) << 27) != ulongZero;
-            output[28] = (_syncData1 & (ulong)(1) << 28) != ulongZero;
-            output[29] = (_syncData1 & (ulong)(1) << 29) != ulongZero;
-            output[30] = (_syncData1 & (ulong)(1) << 30) != ulongZero;
-            output[31] = (_syncData1 & (ulong)(1) << 31) != ulongZero;
-            output[32] = (_syncData1 & (ulong)(1) << 32) != ulongZero;
-            output[33] = (_syncData1 & (ulong)(1) << 33) != ulongZero;
-            output[34] = (_syncData1 & (ulong)(1) << 34) != ulongZero;
-            output[35] = (_syncData1 & (ulong)(1) << 35) != ulongZero;
-            output[36] = (_syncData1 & (ulong)(1) << 36) != ulongZero;
-            output[37] = (_syncData1 & (ulong)(1) << 37) != ulongZero;
-            output[38] = (_syncData1 & (ulong)(1) << 38) != ulongZero;
-            output[39] = (_syncData1 & (ulong)(1) << 39) != ulongZero;
-            output[40] = (_syncData1 & (ulong)(1) << 40) != ulongZero;
-            output[41] = (_syncData1 & (ulong)(1) << 41) != ulongZero;
-            output[42] = (_syncData1 & (ulong)(1) << 42) != ulongZero;
-            output[43] = (_syncData1 & (ulong)(1) << 43) != ulongZero;
-            output[44] = (_syncData1 & (ulong)(1) << 44) != ulongZero;
-            output[45] = (_syncData1 & (ulong)(1) << 45) != ulongZero;
-            output[46] = (_syncData1 & (ulong)(1) << 46) != ulongZero;
-            output[47] = (_syncData1 & (ulong)(1) << 47) != ulongZero;
-            output[48] = (_syncData1 & (ulong)(1) << 48) != ulongZero;
-            output[49] = (_syncData1 & (ulong)(1) << 49) != ulongZero;
-            output[50] = (_syncData1 & (ulong)(1) << 50) != ulongZero;
-            output[51] = (_syncData1 & (ulong)(1) << 51) != ulongZero;
+            output[0] = (_syncData1 & ((ulong)(1) << 51)) != ulongZero;
+            output[1] = (_syncData1 & ((ulong)(1) << 50)) != ulongZero;
+            output[2] = (_syncData1 & ((ulong)(1) << 49)) != ulongZero;
+            output[3] = (_syncData1 & ((ulong)(1) << 48)) != ulongZero;
+            output[4] = (_syncData1 & ((ulong)(1) << 47)) != ulongZero;
+            output[5] = (_syncData1 & ((ulong)(1) << 46)) != ulongZero;
+            output[6] = (_syncData1 & ((ulong)(1) << 45)) != ulongZero;
+            output[7] = (_syncData1 & ((ulong)(1) << 44)) != ulongZero;
+            output[8] = (_syncData1 & ((ulong)(1) << 43)) != ulongZero;
+            output[9] = (_syncData1 & ((ulong)(1) << 42)) != ulongZero;
+            output[10] = (_syncData1 & ((ulong)(1) << 41)) != ulongZero;
+            output[11] = (_syncData1 & ((ulong)(1) << 40)) != ulongZero;
+            output[12] = (_syncData1 & ((ulong)(1) << 39)) != ulongZero;
+            output[13] = (_syncData1 & ((ulong)(1) << 38)) != ulongZero;
+            output[14] = (_syncData1 & ((ulong)(1) << 37)) != ulongZero;
+            output[15] = (_syncData1 & ((ulong)(1) << 36)) != ulongZero;
+            output[16] = (_syncData1 & ((ulong)(1) << 35)) != ulongZero;
+            output[17] = (_syncData1 & ((ulong)(1) << 34)) != ulongZero;
+            output[18] = (_syncData1 & ((ulong)(1) << 33)) != ulongZero;
+            output[19] = (_syncData1 & ((ulong)(1) << 32)) != ulongZero;
+            output[20] = (_syncData1 & ((ulong)(1) << 31)) != ulongZero;
+            output[21] = (_syncData1 & ((ulong)(1) << 30)) != ulongZero;
+            output[22] = (_syncData1 & ((ulong)(1) << 29)) != ulongZero;
+            output[23] = (_syncData1 & ((ulong)(1) << 28)) != ulongZero;
+            output[24] = (_syncData1 & ((ulong)(1) << 27)) != ulongZero;
+            output[25] = (_syncData1 & ((ulong)(1) << 26)) != ulongZero;
+            output[26] = (_syncData1 & ((ulong)(1) << 25)) != ulongZero;
+            output[27] = (_syncData1 & ((ulong)(1) << 24)) != ulongZero;
+            output[28] = (_syncData1 & ((ulong)(1) << 23)) != ulongZero;
+            output[29] = (_syncData1 & ((ulong)(1) << 22)) != ulongZero;
+            output[30] = (_syncData1 & ((ulong)(1) << 21)) != ulongZero;
+            output[31] = (_syncData1 & ((ulong)(1) << 20)) != ulongZero;
+            output[32] = (_syncData1 & ((ulong)(1) << 19)) != ulongZero;
+            output[33] = (_syncData1 & ((ulong)(1) << 18)) != ulongZero;
+            output[34] = (_syncData1 & ((ulong)(1) << 17)) != ulongZero;
+            output[35] = (_syncData1 & ((ulong)(1) << 16)) != ulongZero;
+            output[36] = (_syncData1 & ((ulong)(1) << 15)) != ulongZero;
+            output[37] = (_syncData1 & ((ulong)(1) << 14)) != ulongZero;
+            output[38] = (_syncData1 & ((ulong)(1) << 13)) != ulongZero;
+            output[39] = (_syncData1 & ((ulong)(1) << 12)) != ulongZero;
+            output[40] = (_syncData1 & ((ulong)(1) << 11)) != ulongZero;
+            output[41] = (_syncData1 & ((ulong)(1) << 10)) != ulongZero;
+            output[42] = (_syncData1 & ((ulong)(1) << 9)) != ulongZero;
+            output[43] = (_syncData1 & ((ulong)(1) << 8)) != ulongZero;
+            output[44] = (_syncData1 & ((ulong)(1) << 7)) != ulongZero;
+            output[45] = (_syncData1 & ((ulong)(1) << 6)) != ulongZero;
+            output[46] = (_syncData1 & ((ulong)(1) << 5)) != ulongZero;
+            output[47] = (_syncData1 & ((ulong)(1) << 4)) != ulongZero;
+            output[48] = (_syncData1 & ((ulong)(1) << 3)) != ulongZero;
+            output[49] = (_syncData1 & ((ulong)(1) << 2)) != ulongZero;
+            output[50] = (_syncData1 & ((ulong)(1) << 1)) != ulongZero;
+            output[51] = (_syncData1 & (ulong)(1)) != ulongZero;
             return output;
         }
 
@@ -3179,38 +3134,38 @@ namespace WindowsFormsApp1
 
             //Look no loops :'(
             //Could be optimised further if we precompute the static bit shifts           
-            output[52] = (_syncData2 & (uint)(1)) != uintZero;
-            output[53] = (_syncData2 & (uint)(1) << 1) != uintZero;
-            output[54] = (_syncData2 & (uint)(1) << 2) != uintZero;
-            output[55] = (_syncData2 & (uint)(1) << 3) != uintZero;
-            output[56] = (_syncData2 & (uint)(1) << 4) != uintZero;
-            output[57] = (_syncData2 & (uint)(1) << 5) != uintZero;
-            output[58] = (_syncData2 & (uint)(1) << 6) != uintZero;
-            output[59] = (_syncData2 & (uint)(1) << 7) != uintZero;
-            output[60] = (_syncData2 & (uint)(1) << 8) != uintZero;
-            output[61] = (_syncData2 & (uint)(1) << 9) != uintZero;
-            output[62] = (_syncData2 & (uint)(1) << 10) != uintZero;
-            output[63] = (_syncData2 & (uint)(1) << 11) != uintZero;
-            output[64] = (_syncData2 & (uint)(1) << 12) != uintZero;
-            output[65] = (_syncData2 & (uint)(1) << 13) != uintZero;
-            output[66] = (_syncData2 & (uint)(1) << 14) != uintZero;
-            output[67] = (_syncData2 & (uint)(1) << 15) != uintZero;
-            output[68] = (_syncData2 & (uint)(1) << 16) != uintZero;
-            output[69] = (_syncData2 & (uint)(1) << 17) != uintZero;
-            output[70] = (_syncData2 & (uint)(1) << 18) != uintZero;
-            output[71] = (_syncData2 & (uint)(1) << 19) != uintZero;
-            output[72] = (_syncData2 & (uint)(1) << 20) != uintZero;
-            output[73] = (_syncData2 & (uint)(1) << 21) != uintZero;
-            output[74] = (_syncData2 & (uint)(1) << 22) != uintZero;
-            output[75] = (_syncData2 & (uint)(1) << 23) != uintZero;
-            output[76] = (_syncData2 & (uint)(1) << 24) != uintZero;
-            output[77] = (_syncData2 & (uint)(1) << 25) != uintZero;
-            output[78] = (_syncData2 & (uint)(1) << 26) != uintZero;
-            output[79] = (_syncData2 & (uint)(1) << 27) != uintZero;
-            output[80] = (_syncData2 & (uint)(1) << 28) != uintZero;
-            output[81] = (_syncData2 & (uint)(1) << 29) != uintZero;
-            output[82] = (_syncData2 & (uint)(1) << 30) != uintZero;
-            output[83] = (_syncData2 & (uint)(1) << 31) != uintZero;
+            output[52] = (_syncData2 & ((uint)(1) << 31)) != uintZero;
+            output[53] = (_syncData2 & ((uint)(1) << 30)) != uintZero;
+            output[54] = (_syncData2 & ((uint)(1) << 29)) != uintZero;
+            output[55] = (_syncData2 & ((uint)(1) << 28)) != uintZero;
+            output[56] = (_syncData2 & ((uint)(1) << 27)) != uintZero;
+            output[57] = (_syncData2 & ((uint)(1) << 26)) != uintZero;
+            output[58] = (_syncData2 & ((uint)(1) << 25)) != uintZero;
+            output[59] = (_syncData2 & ((uint)(1) << 24)) != uintZero;
+            output[60] = (_syncData2 & ((uint)(1) << 23)) != uintZero;
+            output[61] = (_syncData2 & ((uint)(1) << 22)) != uintZero;
+            output[62] = (_syncData2 & ((uint)(1) << 21)) != uintZero;
+            output[63] = (_syncData2 & ((uint)(1) << 20)) != uintZero;
+            output[64] = (_syncData2 & ((uint)(1) << 19)) != uintZero;
+            output[65] = (_syncData2 & ((uint)(1) << 18)) != uintZero;
+            output[66] = (_syncData2 & ((uint)(1) << 17)) != uintZero;
+            output[67] = (_syncData2 & ((uint)(1) << 16)) != uintZero;
+            output[68] = (_syncData2 & ((uint)(1) << 15)) != uintZero;
+            output[69] = (_syncData2 & ((uint)(1) << 14)) != uintZero;
+            output[70] = (_syncData2 & ((uint)(1) << 13)) != uintZero;
+            output[71] = (_syncData2 & ((uint)(1) << 12)) != uintZero;
+            output[72] = (_syncData2 & ((uint)(1) << 11)) != uintZero;
+            output[73] = (_syncData2 & ((uint)(1) << 10)) != uintZero;
+            output[74] = (_syncData2 & ((uint)(1) << 9)) != uintZero;
+            output[75] = (_syncData2 & ((uint)(1) << 8)) != uintZero;
+            output[76] = (_syncData2 & ((uint)(1) << 7)) != uintZero;
+            output[77] = (_syncData2 & ((uint)(1) << 6)) != uintZero;
+            output[78] = (_syncData2 & ((uint)(1) << 5)) != uintZero;
+            output[79] = (_syncData2 & ((uint)(1) << 4)) != uintZero;
+            output[80] = (_syncData2 & ((uint)(1) << 3)) != uintZero;
+            output[81] = (_syncData2 & ((uint)(1) << 2)) != uintZero;
+            output[82] = (_syncData2 & ((uint)(1) << 1)) != uintZero;
+            output[83] = (_syncData2 & (uint)(1)) != uintZero;
             return output;
         }
 
@@ -3238,7 +3193,6 @@ namespace WindowsFormsApp1
             int modifiedFloorNumberTempUint = (floorNumber - elevatorFloorNumberOffset);
             if (modifiedFloorNumberTempUint < 0 || modifiedFloorNumberTempUint > 15)
             {
-                //TODO: remove on live build if needed
                 Debug.Print($"uintConverter - Elevator  {elevatorNumber} number invalid");
                 return;
             }
