@@ -1215,14 +1215,14 @@ namespace WindowsFormsApp1
         private const ulong SyncBool_MaskUlong_Elevator0open = ((ulong)(1) << 4);
         private const ulong SyncBool_MaskUlong_Elevator1open = ((ulong)(1) << 5);
         private const ulong SyncBool_MaskUlong_Elevator2open = ((ulong)(1) << 6);
-        private const int SyncBool_AddressUlong_ElevatorXgoingUp = 7;
-        private const ulong SyncBool_MaskUlong_Elevator0goingUp = ((ulong)(1) << 7);
-        private const ulong SyncBool_MaskUlong_Elevator1goingUp = ((ulong)(1) << 8);
-        private const ulong SyncBool_MaskUlong_Elevator2goingUp = ((ulong)(1) << 9);
-        private const int SyncBool_AddressUlong_ElevatorXidle = 10;
-        private const ulong SyncBool_MaskUlong_Elevator0idle = ((ulong)(1) << 10);
-        private const ulong SyncBool_MaskUlong_Elevator1idle = ((ulong)(1) << 11);
-        private const ulong SyncBool_MaskUlong_Elevator2idle = ((ulong)(1) << 12);
+        private const int SyncBool_AddressUlong_ElevatorXidle = 7;
+        private const ulong SyncBool_MaskUlong_Elevator0idle = ((ulong)(1) << 7);
+        private const ulong SyncBool_MaskUlong_Elevator1idle = ((ulong)(1) << 8);
+        private const ulong SyncBool_MaskUlong_Elevator2idle = ((ulong)(1) << 9);
+        private const int SyncBool_AddressUlong_ElevatorXgoingUp = 10;
+        private const ulong SyncBool_MaskUlong_Elevator0goingUp = ((ulong)(1) << 10);
+        private const ulong SyncBool_MaskUlong_Elevator1goingUp = ((ulong)(1) << 11);
+        private const ulong SyncBool_MaskUlong_Elevator2goingUp = ((ulong)(1) << 12);
         /// <summary>     
         /// Sync-data positions for elevator call up
         /// </summary>            
