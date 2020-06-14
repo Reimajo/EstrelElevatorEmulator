@@ -1373,10 +1373,10 @@ namespace WindowsFormsApp1
         }
         //TODO: remove on live build
         private void TEST_DisplayElevatorStates()
-        {
-            form1.DisplayElevatorState(0, GetSyncElevatorGoingUp(0), ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator0idle)), ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator0open)));
-            form1.DisplayElevatorState(1, GetSyncElevatorGoingUp(1), ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator1idle)), ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator1open)));
-            form1.DisplayElevatorState(2, GetSyncElevatorGoingUp(2), ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator2idle)), ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator2open)));
+        {            
+            form1.DisplayElevatorState(0, ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator0goingUp)), ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator0idle)), ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator0open)));
+            form1.DisplayElevatorState(1, ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator1goingUp)), ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator1idle)), ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator1open)));
+            form1.DisplayElevatorState(2, ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator2goingUp)), ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator2idle)), ulongZero != (_syncData1 & (SyncBool_MaskUlong_Elevator2open)));
             form1.DisplayLocalPlayerFloor(_localPlayerCurrentFloor);
         }
         #endregion START_UPDATE_FUNCTIONS
@@ -2446,12 +2446,12 @@ namespace WindowsFormsApp1
                 Debug.Print("[NetworkController] LocalPlayer received to open elevator " + elevatorNumber + " on floor " + floorNumber);
                 if (floorNumber == _localPlayerCurrentFloor)
                 {
-                    _elevatorControllerReception.OpenElevatorLocalPlayerFloor(elevatorNumber, GetSyncElevatorGoingUp(elevatorNumber), ulongZero != (_syncData1 & ((ulong)(1) << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumber))));
+                    _elevatorControllerReception.OpenElevatorLocalPlayerFloor(elevatorNumber, ulongZero != (_syncData1 & ((ulong)(1) << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumber))), ulongZero != (_syncData1 & ((ulong)(1) << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumber))));
                     //Debug.Print("[NetworkController] Elevator " + elevatorNumber + " is currently at floor " + floorNumber + " so Reception won't open.");
                 }
                 else if (floorNumber == 0)
                 {
-                    _elevatorControllerReception.OpenElevatorReception(elevatorNumber, GetSyncElevatorGoingUp(elevatorNumber), ulongZero != (_syncData1 & ((ulong)(1) << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumber))));
+                    _elevatorControllerReception.OpenElevatorReception(elevatorNumber, ulongZero != (_syncData1 & ((ulong)(1) << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumber))), ulongZero != (_syncData1 & ((ulong)(1) << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumber))));
                 }
                 //TODO: make sure to store the floor states for people driving to that floor later
             }
@@ -2476,7 +2476,7 @@ namespace WindowsFormsApp1
         /// <param name="elevatorNumber"></param>
         private void LOCAL_SetElevatorIdle(int elevatorNumber, bool isIdle)
         {
-            if (!GetIfElevatorIsOpen(elevatorNumber))
+            if (ulongZero == (_syncData1 & ((ulong)(1) << (SyncBool_AddressUlong_ElevatorXopen + elevatorNumber)))) //If elevator not open
             {
                 Debug.Print("[NetworkController] LocalPlayer received to set elevator " + elevatorNumber + " IDLE=" + isIdle.ToString() + ", but it isn't open");
                 return;
@@ -2489,7 +2489,7 @@ namespace WindowsFormsApp1
             }
             else
             {
-                _elevatorControllerReception.SetElevatorDirectionDisplay(elevatorNumber, GetSyncElevatorGoingUp(elevatorNumber), isIdle);
+                _elevatorControllerReception.SetElevatorDirectionDisplay(elevatorNumber, ulongZero != (_syncData1 & ((ulong)(1) << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumber))), isIdle);
             }
         }
         /// <summary>
@@ -2497,7 +2497,7 @@ namespace WindowsFormsApp1
         /// </summary>
         private void LOCAL_SetElevatorDirection(int elevatorNumber, bool goingUp)
         {
-            if (!GetIfElevatorIsOpen(elevatorNumber))
+            if (ulongZero == (_syncData1 & ((ulong)(1) << (SyncBool_AddressUlong_ElevatorXopen + elevatorNumber)))) //If elevator not open
             {
                 Debug.Print("[NetworkController] LocalPlayer received to set elevator " + elevatorNumber + " GoingUp=" + goingUp.ToString() + ", but it isn't open");
                 return;
@@ -2688,7 +2688,7 @@ namespace WindowsFormsApp1
             Debug.Print($"[NetworkController] LocalPlayer pressed button {buttonNumber} in elevator {elevatorNumber}");
             if (buttonNumber == 0) //OPEN
             {
-                if (!GetIfElevatorIsOpen(elevatorNumber))
+                if (ulongZero == (_syncData1 & ((ulong)(1) << (SyncBool_AddressUlong_ElevatorXopen + elevatorNumber)))) //If elevator not open
                 {
                     _elevatorRequester.RequestElevatorDoorStateChange(elevatorNumber, true);
                 }
@@ -2696,7 +2696,7 @@ namespace WindowsFormsApp1
             }
             if (buttonNumber == 1) //CLOSE
             {
-                if (GetIfElevatorIsOpen(elevatorNumber))
+                if (ulongZero != (_syncData1 & ((ulong)(1) << (SyncBool_AddressUlong_ElevatorXopen + elevatorNumber)))) //If elevator open
                 {
                     _elevatorRequester.RequestElevatorDoorStateChange(elevatorNumber, false);
                 }
@@ -2848,20 +2848,6 @@ namespace WindowsFormsApp1
         //----------------------------------SyncBool Interface -------------------------------------------------------
         //------------------------------------------------------------------------------------------------------------
         #region SYNCBOOL_FUNCTIONS
-        /// <summary>
-        /// Checks if that elevator is currently open
-        /// </summary>
-        private bool GetIfElevatorIsOpen(int elevatorNumber)
-        {
-            return ulongZero != (_syncData1 & ((ulong)(1) << (SyncBool_AddressUlong_ElevatorXopen + elevatorNumber)));
-        }
-        /// <summary>
-        /// Returns the synced elevator direction, true is up / false is down
-        /// </summary>
-        private bool GetSyncElevatorGoingUp(int elevatorNumber)
-        {
-            return ulongZero != (_syncData1 & ((ulong)(1) << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumber)));
-        }
         //------------------------------------------------------------------------------------------------------------
         //------------------------------------------ SyncBool lowlevel code ------------------------------------------
         //------------------------------------------------------------------------------------------------------------
