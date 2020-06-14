@@ -2869,8 +2869,7 @@ namespace WindowsFormsApp1
         private const byte elevatorTwoOffset = 56;
         private const byte elevatorThreeOffset = 52;
         private const byte ulongBoolEndPosition = 51; //You will need to recalculate the bool array classes if you modify this
-        private const ulong nibbleMask = 15; // ...0000 0000 1111
-        private const int elevatorFloorNumberOffset = -2; //Keks floor hack offset
+        private const ulong nibbleMask = 15; // ...0000 0000 1111        
         /// <summary>
         /// Modifies a _syncData1 & _syncData2 on the bit level.
         /// Sets "value" to bit "position" of "input".
@@ -3215,20 +3214,19 @@ namespace WindowsFormsApp1
             //Sanitise the size of elevatorNumber
             if (elevatorNumber < 0 || elevatorNumber > 2)
             {
-                //TODO: remove on live build if needed
+                //TODO: remove on live build
                 Debug.Print($"uintConverter - 404 Elevator {elevatorNumber} does not exist");
                 return;
             }
 
-            //floorNumber needs to be betweeen 0-15, so quick hack for negative floors and sanitise
-            int modifiedFloorNumberTempUint = (floorNumber - elevatorFloorNumberOffset);
-            if (modifiedFloorNumberTempUint < 0 || modifiedFloorNumberTempUint > 15)
+            //sanitise floorNumber
+            if (floorNumber < 0 || floorNumber > 15)
             {
-                //TODO: remove on live build if needed
+                //TODO: remove on live build
                 Debug.Print($"uintConverter - Elevator  {elevatorNumber} number invalid");
                 return;
             }
-            ulong modifiedFloorNumber = (ulong)modifiedFloorNumberTempUint;
+            ulong modifiedFloorNumber = (ulong)floorNumber;
             //Not sure if Udon likes SWITCH cases, so just doing this with IF statments
             //Setting the variables using the following process        
             //1- Shift the data to the right bit section of the uint
@@ -3239,7 +3237,7 @@ namespace WindowsFormsApp1
             if (elevatorNumber == 0)
             {
                 modifiedFloorNumber = (modifiedFloorNumber << elevatorOneOffset);
-                ulong mask = (nibbleMask << elevatorOneOffset);
+                const ulong mask = (nibbleMask << elevatorOneOffset);
                 localUlong |= mask;
                 localUlong ^= mask;
                 localUlong |= modifiedFloorNumber;
@@ -3247,7 +3245,7 @@ namespace WindowsFormsApp1
             else if (elevatorNumber == 1)
             {
                 modifiedFloorNumber = (modifiedFloorNumber << elevatorTwoOffset);
-                ulong mask = (nibbleMask << elevatorTwoOffset);
+                const ulong mask = (nibbleMask << elevatorTwoOffset);
                 localUlong |= mask;
                 localUlong ^= mask;
                 localUlong |= modifiedFloorNumber;
@@ -3255,7 +3253,7 @@ namespace WindowsFormsApp1
             else  //Elevator 3
             {
                 modifiedFloorNumber = (modifiedFloorNumber << elevatorThreeOffset);
-                ulong mask = (nibbleMask << elevatorThreeOffset);
+                const ulong mask = (nibbleMask << elevatorThreeOffset);
                 localUlong |= mask;
                 localUlong ^= mask;
                 localUlong |= modifiedFloorNumber;
@@ -3284,10 +3282,7 @@ namespace WindowsFormsApp1
             if (elevatorNumber == 0)
             {
                 //No need to mask the higher bits, so a straight return.
-                int floorNumber = (int)(_syncData1 >> elevatorOneOffset);
-                floorNumber += elevatorFloorNumberOffset;
-                //Debug.Print($"SYNC DATA elevator {elevatorNumber} floor is read as {floorNumber}");
-                return floorNumber;
+                return (int)(_syncData1 >> elevatorOneOffset); ;
             }
             else if (elevatorNumber == 1)
             {
@@ -3295,19 +3290,14 @@ namespace WindowsFormsApp1
                 ulong shiftedData = (_syncData1 >> elevatorTwoOffset);
                 //Mask away the higher bits
                 shiftedData &= nibbleMask;
-                int floorNumber = (int)(shiftedData) + elevatorFloorNumberOffset;
-                //Debug.Print($"SYNC DATA elevator {elevatorNumber} floor is read as {floorNumber}");
-                return floorNumber;
+                return (int)(shiftedData & nibbleMask);
             }
             else  //Elevator 3
             {
                 //Shift data
                 ulong shiftedData = (_syncData1 >> elevatorThreeOffset);
-                //Mask away the higher bits
-                shiftedData &= nibbleMask;
-                int floorNumber = (int)(shiftedData) + elevatorFloorNumberOffset;
-                //Debug.Print($"SYNC DATA elevator {elevatorNumber} floor is read as {floorNumber}");
-                return floorNumber;
+                //Mask away the higher bits                
+                return (int)(shiftedData & nibbleMask);
             }
         }
     }
