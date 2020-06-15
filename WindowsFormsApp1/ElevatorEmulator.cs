@@ -1439,26 +1439,31 @@ namespace WindowsFormsApp1
             //taking all content from SyncedData into local arrays
             for (int i = 0; i <= 13; i++)
             {
+                //If Elevator0 called to floor i
                 if (GetSyncValue(SyncBoolReq_Elevator0CalledToFloor_0 + i))
                 {
                     _elevator0FloorTargets_MASTER[i] = true;
                     _elevator0FloorTargets_MASTER_COUNT++;
                 }
+                //If Elevator1 called to floor i
                 if (0U != (_syncData2 & (1U << (SyncBoolReq_AddressUint_Elevator1CalledToFloor + i))))
                 {
                     _elevator1FloorTargets_MASTER[i] = true;
                     _elevator1FloorTargets_MASTER_COUNT++;
                 }
+                //If Elevator2 called to floor i
                 if (0U != (_syncData2 & (1U << (SyncBoolReq_AddressUint_Elevator2CalledToFloor + i))))
                 {
                     _elevator2FloorTargets_MASTER[i] = true;
                     _elevator2FloorTargets_MASTER_COUNT++;
                 }
+                //If floor has "Called Up" pressed
                 if (0UL != (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_ElevatorCalledUp + i))))
                 {
                     _calledToFloorToGoUp_MASTER[i] = true;
                     _calledToFloorToGoUp_MASTER_COUNT++;
                 }
+                //If floor has "Called Down" pressed
                 if (0UL != (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_ElevatorCalledDown + i))))
                 {
                     _calledToFloorToGoDown_MASTER[i] = true;
@@ -1919,6 +1924,7 @@ namespace WindowsFormsApp1
         private void MASTER_SetElevatorDirection(int elevatorNumber, bool goingUp)
         {
             MASTER_SetSyncValue(SyncBool_Elevator0goingUp + elevatorNumber, goingUp);
+            //If elevator x is Idle
             if (0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumber))))
             {
                 MASTER_SetSyncValue(SyncBool_Elevator0idle + elevatorNumber, false);
@@ -2444,11 +2450,13 @@ namespace WindowsFormsApp1
                 Debug.Print("[NetworkController] LocalPlayer received to open elevator " + elevatorNumber + " on floor " + floorNumber);
                 if (floorNumber == _localPlayerCurrentFloor)
                 {
+                    //Passes elevatorNumber, (if going up), (if idle)
                     _elevatorControllerReception.OpenElevatorLocalPlayerFloor(elevatorNumber, 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumber))), 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumber))));
                     //Debug.Print("[NetworkController] Elevator " + elevatorNumber + " is currently at floor " + floorNumber + " so Reception won't open.");
                 }
                 else if (floorNumber == 0)
                 {
+                    //Passes elevatorNumber, (if going up), (if idle)
                     _elevatorControllerReception.OpenElevatorReception(elevatorNumber, 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumber))), 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumber))));
                 }
                 //TODO: make sure to store the floor states for people driving to that floor later
@@ -2487,6 +2495,7 @@ namespace WindowsFormsApp1
             }
             else
             {
+                //Passes elevatorNumber, (if going up), isIdle
                 _elevatorControllerReception.SetElevatorDirectionDisplay(elevatorNumber, 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumber))), isIdle);
             }
         }
@@ -2508,6 +2517,7 @@ namespace WindowsFormsApp1
             }
             else
             {
+                //Passes elevatorNumber, goingUp, (if idle)
                 _elevatorControllerReception.SetElevatorDirectionDisplay(elevatorNumber, goingUp, 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumber))));
             }
         }
@@ -2534,6 +2544,8 @@ namespace WindowsFormsApp1
                     {
                         _pendingCallUp_LOCAL_EXT[floor] = false;
                         _pendingCallUp_COUNT_LOCAL_EXT--;
+                        
+                        //if NOT called up to floor X
                         if (0UL == (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_ElevatorCalledUp + floor))))
                         {
                             //TODO: link all elevator controllers here in Unity later
@@ -2561,6 +2573,7 @@ namespace WindowsFormsApp1
                         _pendingCallDown_LOCAL_EXT[floor] = false;
                         _pendingCallDown_COUNT_LOCAL_EXT--;
 
+                        //if NOT called down to floor X
                         if (0UL == (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_ElevatorCalledDown + floor))))
                         {
                             //TODO: link all elevator controllers here in Unity later
@@ -2607,6 +2620,7 @@ namespace WindowsFormsApp1
                         _pendingCallElevator1_LOCAL_INT[floor] = false;
                         _pendingCallElevator1_COUNT_LOCAL_INT--;
 
+                        //if NOT elevator1 called to floor X
                         if (0U == (_syncData1 & (1U << (SyncBoolReq_AddressUint_Elevator1CalledToFloor + floor))))
                         {
                             Debug.Print("Dropped request, SetElevatorInternalButtonState() button " + floor + " after " + (time.GetTime() - _pendingCallElevator1Time_LOCAL_INT[floor]).ToString() + " seconds.");
@@ -2641,6 +2655,7 @@ namespace WindowsFormsApp1
                     {
                         _pendingCallElevator2_LOCAL_INT[floor] = false;
                         _pendingCallElevator2_COUNT_LOCAL_INT--;
+                        //if NOT elevator0 called to floor X
                         if (0U == (_syncData2 & (1U << (SyncBoolReq_AddressUint_Elevator2CalledToFloor + floor))))
                         {
                             Debug.Print("Dropped request, SetElevatorInternalButtonState() button " + floor + " after " + (time.GetTime() - _pendingCallElevator2Time_LOCAL_INT[floor]).ToString() + " seconds.");
@@ -2660,6 +2675,7 @@ namespace WindowsFormsApp1
             if (directionUp)
             {
                 Debug.Print("[NetworkController] Elevator called to floor " + floorNumber + " by localPlayer (Up)");
+                //if something with an array OR Elevator called up on floor X
                 if (_pendingCallUp_LOCAL_EXT[floorNumber] || 0UL != (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_ElevatorCalledUp + floorNumber))))
                     return;
                 _pendingCallUp_LOCAL_EXT[floorNumber] = true;
@@ -2670,6 +2686,7 @@ namespace WindowsFormsApp1
             else
             {
                 Debug.Print("[NetworkController] Elevator called to floor " + floorNumber + " by localPlayer (Down)");
+                //if something with an array OR Elevator called down on floor X
                 if (_pendingCallDown_LOCAL_EXT[floorNumber] || 0UL != (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_ElevatorCalledDown + floorNumber))))
                     return;
                 _pendingCallDown_LOCAL_EXT[floorNumber] = true;
@@ -2686,7 +2703,8 @@ namespace WindowsFormsApp1
             Debug.Print($"[NetworkController] LocalPlayer pressed button {buttonNumber} in elevator {elevatorNumber}");
             if (buttonNumber == 0) //OPEN
             {
-                if (0UL == (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXopen + elevatorNumber)))) //If elevator not open
+                //If NOT elevator X open
+                if (0UL == (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXopen + elevatorNumber))))
                 {
                     _elevatorRequester.RequestElevatorDoorStateChange(elevatorNumber, true);
                 }
@@ -2694,7 +2712,8 @@ namespace WindowsFormsApp1
             }
             if (buttonNumber == 1) //CLOSE
             {
-                if (0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXopen + elevatorNumber)))) //If elevator open
+                //If elevator X open
+                if (0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXopen + elevatorNumber))))
                 {
                     _elevatorRequester.RequestElevatorDoorStateChange(elevatorNumber, false);
                 }
@@ -2750,6 +2769,7 @@ namespace WindowsFormsApp1
         public void ELREQ_CallFromFloor(bool directionUp, int floor)
         {
             Debug.Print("[NetworkingController] Master received Elevator called to floor " + floor + " by localPlayer (DirectionUp: " + directionUp.ToString() + ")");
+            //if direction up AND NOT elevator called up to floor x
             if (directionUp && (0UL == (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_ElevatorCalledUp + floor)))))
             {
                 if (!MASTER_ElevatorAlreadyThereAndOpen(floor, true))
@@ -2759,6 +2779,7 @@ namespace WindowsFormsApp1
                     _calledToFloorToGoUp_MASTER_COUNT++;
                 }
             }
+            //if NOT direction up AND NOT elevator called down to floor x
             else if (!directionUp && (0UL == (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_ElevatorCalledDown + floor)))))
             {
                 if (!MASTER_ElevatorAlreadyThereAndOpen(floor, false))
@@ -2776,10 +2797,13 @@ namespace WindowsFormsApp1
         {
             float test = time.GetTime() - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber];
             Debug.Print("Master received CallToChangeDoorState for elevator " + elevatorNumber + " (Direction open: " + open.ToString() + ") Elevator driving:" + _elevatorIsDriving_MASTER[elevatorNumber]);
+            
+            //if (open AND elevator X idle) OR (some timing stuff AND NOT driving)
             if (open && 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumber))) || (time.GetTime() - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] < 2.5f && !_elevatorIsDriving_MASTER[elevatorNumber]))
             {
                 MASTER_HandleFloorDoorOpening(elevatorNumber, GetSyncElevatorFloor(elevatorNumber), 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumber))), 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumber))));
             }
+            //if NOT open AND elevator X idle AND some timing stuff
             else if (!open && 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXopen + elevatorNumber))) && time.GetTime() - _timeAtCurrentFloorElevatorOpened_MASTER[elevatorNumber] > 6f)
             {
                 MASTER_SetSyncValue(SyncBool_Elevator0open + elevatorNumber, false);
@@ -2801,6 +2825,7 @@ namespace WindowsFormsApp1
                 _elevator0FloorTargets_MASTER_COUNT++;
                 return;
             }
+            //if elevatorNumber1 AND NOT elevator1 called to floor X
             else if (elevatorNumber == 1 && (0U == (_syncData2 & (1U << (SyncBoolReq_AddressUint_Elevator1CalledToFloor + floorNumber)))))
             {
                 Debug.Print("Internal target was now set.");
@@ -2809,6 +2834,7 @@ namespace WindowsFormsApp1
                 _elevator1FloorTargets_MASTER_COUNT++;
                 return;
             }
+            //if elevatorNumber2 AND NOT elevator2 called to floor X
             else if (elevatorNumber == 2 && (0U == (_syncData2 & (1U << (SyncBoolReq_AddressUint_Elevator2CalledToFloor + floorNumber)))))
             {
                 Debug.Print("Internal target was now set.");
