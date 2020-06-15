@@ -2482,7 +2482,8 @@ namespace WindowsFormsApp1
         /// <param name="elevatorNumber"></param>
         private void LOCAL_SetElevatorIdle(int elevatorNumber, bool isIdle)
         {
-            if (0UL == (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXopen + elevatorNumber)))) //If elevator not open
+            //If elevator NOT open
+            if (0UL == (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXopen + elevatorNumber))))
             {
                 Debug.Print("[NetworkController] LocalPlayer received to set elevator " + elevatorNumber + " IDLE=" + isIdle.ToString() + ", but it isn't open");
                 return;
@@ -2504,7 +2505,8 @@ namespace WindowsFormsApp1
         /// </summary>
         private void LOCAL_SetElevatorDirection(int elevatorNumber, bool goingUp)
         {
-            if (0UL == (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXopen + elevatorNumber)))) //If elevator not open
+            //If elevator NOT open
+            if (0UL == (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXopen + elevatorNumber))))
             {
                 Debug.Print("[NetworkController] LocalPlayer received to set elevator " + elevatorNumber + " GoingUp=" + goingUp.ToString() + ", but it isn't open");
                 return;
