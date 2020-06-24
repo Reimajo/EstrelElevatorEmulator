@@ -7,6 +7,9 @@ using System;
 public class NetworkingController : UdonSharpBehaviour
 {
     #region variables
+    public Transform _currentSpawn;
+    public Transform _readonlyReceptionSpawn;
+    public Transform _readonlyFloorSpawn;
     public ElevatorRequester _elevatorRequester;
     public ElevatorController _elevatorControllerReception;
     public ElevatorController _elevatorControllerArrivalArea;
@@ -22,6 +25,14 @@ public class NetworkingController : UdonSharpBehaviour
     public InsidePanelScriptForVR _InsidePanelFloorScriptElevatorForVR_1;
     public InsidePanelScriptForDesktop _insidePanelFloorScriptElevatorDesktop_2;
     public InsidePanelScriptForVR _InsidePanelFloorScriptElevatorForVR_2;
+    /// <summary>
+    /// Floor-dependent number sign where _Index needs to be set to floor number-1
+    /// </summary>
+    public GameObject _floorNumberSign;
+    public GameObject _floorRoomNumberSign;
+    private Renderer _floorNumberSignRenderer;
+    private Renderer _floorRoomNumberSignRenderer;
+    public Transform _moveArrivalFloorHere;
     ///<summary> animation-timing-parameters </summary>
     private const float TIME_TO_STAY_CLOSED_AFTER_GOING_OUT_OF_IDLE = 3f;
     private const float TIME_TO_STAY_OPEN = 10f; // 10f is normal
@@ -44,7 +55,14 @@ public class NetworkingController : UdonSharpBehaviour
     /// <summary>
     /// Current floor level that localPlayer is on
     /// </summary>
-    private int _localPlayerCurrentFloor = 7;
+    private int _localPlayerCurrentFloor = 0;
+    /// <summary>
+    /// Current elevator that the player is in
+    /// </summary>
+    [HideInInspector]
+    public int _playerIsInElevatorNumber = -1;
+    [HideInInspector]
+    public bool _playerIsInReceptionElevator;
     /// <summary>
     /// other public variables
     /// </summary>
@@ -323,6 +341,8 @@ public class NetworkingController : UdonSharpBehaviour
     public void Start()
     {
         Debug.Log("[NetworkController] NetworkingController is now in Start()");
+        _floorNumberSignRenderer = _floorNumberSign.GetComponent<Renderer>();
+        _floorRoomNumberSignRenderer = _floorRoomNumberSign.GetComponent<Renderer>();
         _localPlayer = Networking.LocalPlayer;
         _userIsInVR = _localPlayer.IsUserInVR();
         //the first master has to set the constant scene settings
@@ -335,19 +355,25 @@ public class NetworkingController : UdonSharpBehaviour
         _elevatorControllerReception.CustomStart();
         _elevatorControllerArrivalArea.CustomStart();
         //for reception level
-        _insidePanelScriptElevatorDesktop_0.CustomStart();
-        _InsidePanelScriptElevatorForVR_0.CustomStart();
-        _insidePanelScriptElevatorDesktop_1.CustomStart();
-        _InsidePanelScriptElevatorForVR_1.CustomStart();
-        _insidePanelScriptElevatorDesktop_2.CustomStart();
-        _InsidePanelScriptElevatorForVR_2.CustomStart();
-        //for the floor elevators as well
-        _insidePanelFloorScriptElevatorDesktop_0.CustomStart();
-        _InsidePanelFloorScriptElevatorForVR_0.CustomStart();
-        _insidePanelFloorScriptElevatorDesktop_1.CustomStart();
-        _InsidePanelFloorScriptElevatorForVR_1.CustomStart();
-        _insidePanelFloorScriptElevatorDesktop_2.CustomStart();
-        _InsidePanelFloorScriptElevatorForVR_2.CustomStart();
+        if (_userIsInVR)
+        {
+            _InsidePanelScriptElevatorForVR_0.CustomStart();
+            _InsidePanelScriptElevatorForVR_1.CustomStart();
+            _InsidePanelScriptElevatorForVR_2.CustomStart();
+            _InsidePanelFloorScriptElevatorForVR_0.CustomStart();
+            _InsidePanelFloorScriptElevatorForVR_1.CustomStart();
+            _InsidePanelFloorScriptElevatorForVR_2.CustomStart();
+            Debug.Log("[NetworkController] Fired CustomStart for Inside Button Panels");
+        }
+        else
+        {
+            _insidePanelScriptElevatorDesktop_0.CustomStart();
+            _insidePanelScriptElevatorDesktop_1.CustomStart();
+            _insidePanelScriptElevatorDesktop_2.CustomStart();
+            _insidePanelFloorScriptElevatorDesktop_0.CustomStart();
+            _insidePanelFloorScriptElevatorDesktop_1.CustomStart();
+            _insidePanelFloorScriptElevatorDesktop_2.CustomStart();
+        }
         Debug.Log("[NetworkController] Elevator NetworkingController is now loaded");
         _worldIsLoaded = true;
     }
@@ -372,7 +398,7 @@ public class NetworkingController : UdonSharpBehaviour
             if (_syncData1 != _syncData1LocalCopyForSyncCheck)
             {
                 Debug.Log("[NetworkController] Master has set _syncData1");
-                _syncData1forReal = (long)_syncData1; //send to clients
+                _syncData1forReal = CastAwayAnyHopeToLong(_syncData1); //send to clients
                 _syncData1LocalCopyForSyncCheck = _syncData1;
             }
         }
@@ -1347,7 +1373,7 @@ public class NetworkingController : UdonSharpBehaviour
         {
             int floorNumber = GetSyncElevatorFloor(1);
             _elevatorControllerReception.SetElevatorLevelOnDisplay(floorNumber, 1);
-            _elevatorControllerArrivalArea.SetElevatorLevelOnDisplay(floorNumber,1);
+            _elevatorControllerArrivalArea.SetElevatorLevelOnDisplay(floorNumber, 1);
             _localElevator1Level = floorNumber;
         }
         if (_elevator2Working && _localElevator2Level != GetSyncElevatorFloor(2))
@@ -1363,18 +1389,21 @@ public class NetworkingController : UdonSharpBehaviour
     /// </summary>
     private void LOCAL_SetElevatorInternalButtonState(int elevatorNumber, int buttonNumber, bool called)
     {
-        if(_userIsInVR)
-        { 
-            switch(elevatorNumber)
+        if (_userIsInVR)
+        {
+            switch (elevatorNumber)
             {
                 case 0:
                     _InsidePanelScriptElevatorForVR_0.SetElevatorInternalButtonState(buttonNumber, called);
+                    _InsidePanelFloorScriptElevatorForVR_0.SetElevatorInternalButtonState(buttonNumber, called);
                     break;
                 case 1:
                     _InsidePanelScriptElevatorForVR_1.SetElevatorInternalButtonState(buttonNumber, called);
+                    _InsidePanelFloorScriptElevatorForVR_1.SetElevatorInternalButtonState(buttonNumber, called);
                     break;
                 case 2:
                     _InsidePanelScriptElevatorForVR_2.SetElevatorInternalButtonState(buttonNumber, called);
+                    _InsidePanelFloorScriptElevatorForVR_2.SetElevatorInternalButtonState(buttonNumber, called);
                     break;
             }
         }
@@ -1384,12 +1413,15 @@ public class NetworkingController : UdonSharpBehaviour
             {
                 case 0:
                     _insidePanelScriptElevatorDesktop_0.SetElevatorInternalButtonState(buttonNumber, called);
+                    _insidePanelFloorScriptElevatorDesktop_0.SetElevatorInternalButtonState(buttonNumber, called);
                     break;
                 case 1:
                     _insidePanelScriptElevatorDesktop_1.SetElevatorInternalButtonState(buttonNumber, called);
+                    _insidePanelFloorScriptElevatorDesktop_1.SetElevatorInternalButtonState(buttonNumber, called);
                     break;
                 case 2:
                     _insidePanelScriptElevatorDesktop_2.SetElevatorInternalButtonState(buttonNumber, called);
+                    _insidePanelFloorScriptElevatorDesktop_2.SetElevatorInternalButtonState(buttonNumber, called);
                     break;
             }
         }
@@ -1465,7 +1497,7 @@ public class NetworkingController : UdonSharpBehaviour
             if (_syncData1forReal != _syncData1forRealLocalCopyForSyncCheck)
             {
                 Debug.Log("[NetworkController] _syncData1forReal has changed!");
-                _syncData1 = (ulong)_syncData1forReal; //received from master
+                _syncData1 = CastAwayAnyHopeToUlong(_syncData1forReal); //received from master
                 _syncData1forRealLocalCopyForSyncCheck = _syncData1forReal;
             }
             LOCAL_CheckSyncData();
@@ -1480,16 +1512,24 @@ public class NetworkingController : UdonSharpBehaviour
         int floorNumber = GetSyncElevatorFloor(elevatorNumber);
         if (setOpen)
         {
-            Debug.Log("[NetworkController] LocalPlayer received to open elevator " + elevatorNumber + " on floor " + floorNumber);
-            if (floorNumber == 0)
+            Debug.Log($"[NetworkController] LocalPlayer received to open elevator {elevatorNumber} on floor {floorNumber} while localPlayer is on floor {_localPlayerCurrentFloor}");
+            bool thisElevatorWasAlreadyOpened = false;
+            if (_playerIsInElevatorNumber == elevatorNumber)
             {
-                //Passes elevatorNumber, (if going up), (if idle)
-                _elevatorControllerReception.OpenElevator(elevatorNumber, 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumber))), 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumber))));
+                thisElevatorWasAlreadyOpened = PrepareFloorForArrival(floorNumber, elevatorNumber);
             }
-            else if (floorNumber == _localPlayerCurrentFloor)
+            if(!thisElevatorWasAlreadyOpened)
             {
-                //Passes elevatorNumber, (if going up), (if idle)
-                _elevatorControllerArrivalArea.OpenElevator(elevatorNumber, 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumber))), 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumber))));
+                if (floorNumber == 0)
+                {
+                    //Passes elevatorNumber, (if going up), (if idle)
+                    _elevatorControllerReception.OpenElevator(elevatorNumber, 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumber))), 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumber))));
+                }
+                else if (floorNumber == _localPlayerCurrentFloor)
+                {
+                    //Passes elevatorNumber, (if going up), (if idle)
+                    _elevatorControllerArrivalArea.OpenElevator(elevatorNumber, 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumber))), 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumber))));
+                }
             }
         }
         else
@@ -1672,7 +1712,7 @@ public class NetworkingController : UdonSharpBehaviour
                     if (0U == (_syncData2 & (1U << (SyncBoolReq_AddressUint_Elevator1CalledToFloor + floor))))
                     {
                         Debug.Log("Dropped request, SetElevatorInternalButtonState() button " + floor + " after " + (Time.time - _pendingCallElevator1Time_LOCAL_INT[floor]).ToString() + " seconds.");
-                        LOCAL_SetElevatorInternalButtonState(0, floor+4, called: false);
+                        LOCAL_SetElevatorInternalButtonState(0, floor + 4, called: false);
                     }
                 }
             }
@@ -1690,11 +1730,213 @@ public class NetworkingController : UdonSharpBehaviour
                     if (0U == (_syncData2 & (1U << (SyncBoolReq_AddressUint_Elevator2CalledToFloor + floor))))
                     {
                         Debug.Log("Dropped request, SetElevatorInternalButtonState() button " + floor + " after " + (Time.time - _pendingCallElevator2Time_LOCAL_INT[floor]).ToString() + " seconds.");
-                        LOCAL_SetElevatorInternalButtonState(0, floor+4, called: false);
+                        LOCAL_SetElevatorInternalButtonState(0, floor + 4, called: false);
                     }
                 }
             }
         }
+    }
+    /// <summary>
+    /// To check if a player is inside a certain elevator
+    /// </summary>
+    public BoxCollider _playerInsideElevator0DetectorReception;
+    public BoxCollider _playerInsideElevator1DetectorReception;
+    public BoxCollider _playerInsideElevator2DetectorReception;
+    public BoxCollider _playerInsideElevator0DetectorFloor;
+    public BoxCollider _playerInsideElevator1DetectorFloor;
+    public BoxCollider _playerInsideElevator2DetectorFloor;
+    public Transform _elevator0PositionReception;
+    public Transform _elevator1PositionReception;
+    public Transform _elevator2PositionReception;
+    public Transform _elevator0PositionFloor;
+    public Transform _elevator1PositionFloor;
+    public Transform _elevator2PositionFloor;
+    /// <summary>
+    /// Setting the floor up for the moment of arrival
+    /// x:100 Z: 50, 100....
+    /// </summary>
+    private bool PrepareFloorForArrival(int floorNumber, int elevatorNumberWithPlayerInside)
+    {
+        Debug.Log($"[Prepare] Preparing floor {floorNumber} for arrival (player in elevator {elevatorNumberWithPlayerInside})");
+        //checking if the player is still inside that elevator
+        BoxCollider inElevatorCollider;
+        Vector3 _currentElevatorPosition;
+        if (_playerIsInReceptionElevator)
+        {
+            switch (elevatorNumberWithPlayerInside)
+            {
+                case 0:
+                    inElevatorCollider = _playerInsideElevator0DetectorReception;
+                    _currentElevatorPosition = _elevator0PositionReception.position;
+                    break;
+                case 1:
+                    inElevatorCollider = _playerInsideElevator1DetectorReception;
+                    _currentElevatorPosition = _elevator1PositionReception.position;
+                    break;
+                case 2:
+                    inElevatorCollider = _playerInsideElevator2DetectorReception;
+                    _currentElevatorPosition = _elevator2PositionReception.position;
+                    break;
+                default:
+                    Debug.Log("[Prepare] ERROR: Unknown elevator number in PrepareFloorForArrival()");
+                    return false;
+            }
+        }
+        else
+        {
+            switch (elevatorNumberWithPlayerInside)
+            {
+                case 0:
+                    inElevatorCollider = _playerInsideElevator0DetectorFloor;
+                    _currentElevatorPosition = _elevator0PositionFloor.position;
+                    break;
+                case 1:
+                    inElevatorCollider = _playerInsideElevator1DetectorFloor;
+                    _currentElevatorPosition = _elevator1PositionFloor.position;
+                    break;
+                case 2:
+                    inElevatorCollider = _playerInsideElevator2DetectorFloor;
+                    _currentElevatorPosition = _elevator2PositionFloor.position;
+                    break;
+                default:
+                    Debug.Log("[Prepare] ERROR: Unknown elevator number in PrepareFloorForArrival()");
+                    return false;
+            }
+        }
+        //Check if player is really inside the current elevator, else return
+        if (!inElevatorCollider.bounds.Contains(_localPlayer.GetBonePosition(HumanBodyBones.Head)))
+        {
+            _playerIsInElevatorNumber = -1;
+            Debug.Log($"[Prepare] Player wasn't inside elevator {elevatorNumberWithPlayerInside} for real, returning.");
+            return false;
+        }
+        //calculate the offset of player to current elevator
+        Vector3 playerPosition = _localPlayer.GetPosition();
+        Debug.Log($"[Prepare] playerPosition x:{playerPosition.x},y:{playerPosition.y},z:{playerPosition.z}");
+        Vector3 teleportOffset = playerPosition - _currentElevatorPosition;
+        Debug.Log($"[Prepare] teleportOffset x:{teleportOffset.x},y:{teleportOffset.y},z:{teleportOffset.z}");
+        //get the floor height from where the player is currently standing on
+        float arrivalFloorOldHeight = 0;
+        if(!_playerIsInReceptionElevator)
+            arrivalFloorOldHeight = _moveArrivalFloorHere.position.y;
+        //move the whole floor to that new floor position
+        float floorLevelHeight = (100 + (50 * floorNumber));
+        if (floorNumber != 0)
+            _moveArrivalFloorHere.position = new Vector3(-32.6f, floorLevelHeight, 5.9f);//new Vector3(150, 0, (50 * floorNumber) - 300);
+        //read the new target position
+        Vector3 _targetElevatorPosition;
+        if (floorNumber == 0)
+        {
+            switch (elevatorNumberWithPlayerInside)
+            {
+                case 0:
+                    _targetElevatorPosition = _elevator0PositionReception.position;
+                    break;
+                case 1:
+                    _targetElevatorPosition = _elevator1PositionReception.position;
+                    break;
+                case 2:
+                    _targetElevatorPosition = _elevator2PositionReception.position;
+                    break;
+                default:
+                    Debug.Log("[Prepare] ERROR: Unknown elevator number in PrepareFloorForArrival()");
+                    return false;
+            }
+        }
+        else
+        {
+            switch (elevatorNumberWithPlayerInside)
+            {
+                case 0:
+                    _targetElevatorPosition = _elevator0PositionFloor.position;
+                    break;
+                case 1:
+                    _targetElevatorPosition = _elevator1PositionFloor.position;
+                    break;
+                case 2:
+                    _targetElevatorPosition = _elevator2PositionFloor.position;
+                    break;
+                default:
+                    Debug.Log("[Prepare] ERROR: Unknown elevator number in PrepareFloorForArrival()");
+                    return false;
+            }
+        }
+        Vector3 teleportTarget;
+        if (floorNumber == 0)
+        {
+            //floor is zero here
+            teleportTarget = new Vector3(playerPosition.x, playerPosition.y - arrivalFloorOldHeight, playerPosition.z);
+        }
+        else
+        {
+            teleportTarget = new Vector3(playerPosition.x, playerPosition.y + floorLevelHeight - arrivalFloorOldHeight, playerPosition.z);
+        }
+        ////teleport player to the new target
+        //teleportTarget = _targetElevatorPosition + teleportOffset;
+        ////setting the spawn a bit higher to avoid falling down
+        //teleportTarget.y = _targetElevatorPosition.y + 0.2f; // + 0.04f;
+        Debug.Log($"[Prepare] teleportTarget x:{teleportTarget.x},y:{teleportTarget.y},z:{teleportTarget.z}");
+        if (floorNumber != 0)
+        {
+            //move the spawn as well
+            _currentSpawn.position = _readonlyFloorSpawn.position;
+            _currentSpawn.rotation = _readonlyFloorSpawn.rotation;
+        }
+        else
+        {
+            _currentSpawn.position = _readonlyReceptionSpawn.position;
+            _currentSpawn.rotation = _readonlyReceptionSpawn.rotation;
+        }
+        //saving the floor the player is now on
+        _localPlayerCurrentFloor = floorNumber;
+        //no need to setup reception currently, since this level is always synced
+        if (floorNumber == 0)
+        {
+            Debug.Log("[Prepare] Floor is 0 so we'll open reception elevator and teleport there.");
+            //open just the reception elevator where the player is inside
+            _elevatorControllerReception.OpenElevator(elevatorNumberWithPlayerInside, 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumberWithPlayerInside))), 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumberWithPlayerInside))));
+            //teleport to reception
+            _localPlayer.TeleportTo(teleportTarget, _localPlayer.GetRotation());
+            return true;
+        }
+        //setup the floor to the networked state of that level
+        _floorNumberSignRenderer.materials[2].SetInt("_Index", floorNumber - 1);
+        _floorRoomNumberSignRenderer.materials[0].SetInt("_Index", floorNumber - 1);
+        Debug.Log("[Prepare] Setting the Callbutton-States on the arrival floor");
+        //setting the callbutton-states
+        _elevatorControllerArrivalArea.SetCallButtonState(buttonUp: false, isCalled: (0UL != (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_ElevatorCalledDown + floorNumber)))));
+        _elevatorControllerArrivalArea.SetCallButtonState(buttonUp: true, isCalled: (0UL != (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_ElevatorCalledUp + floorNumber)))));
+        Debug.Log("[Prepare] Setting the Elevatordoor-States on the arrival floor");
+        //setting the elevators-open/closed states
+        for (int elevatorNumber = 0; elevatorNumber < 3; elevatorNumber++)
+        {
+            bool setOpen = (0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXopen + elevatorNumber))));
+            if (setOpen)
+            {
+                Debug.Log($"[Prepare] Opening elevator {elevatorNumber}");
+                //Passes elevatorNumber, (if going up), (if idle)
+                _elevatorControllerArrivalArea.OpenElevator(elevatorNumber, 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumber))), 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumber))));
+            }
+            else
+            {
+                Debug.Log($"[Prepare] Closing elevator {elevatorNumber}");
+                _elevatorControllerArrivalArea.CloseElevator(elevatorNumber);
+            }
+        }
+        //finally, teleport the player
+        if (floorNumber != 0)
+        {
+            Debug.Log($"[Prepare] Teleporting player to floor {floorNumber}");
+            Debug.Log($"[Prepare] TeleportTarget is x:{teleportTarget.x},y:{teleportTarget.y},z:{teleportTarget.z}");
+            _localPlayer.TeleportTo(teleportTarget, _localPlayer.GetRotation());
+            Debug.Log($"[Prepare] Teleported.");
+        }
+        else
+        {
+            Debug.Log($"[Prepare] Error: Reached last line in function despite floor being " + floorNumber);
+        }  
+        Debug.Log($"[Prepare] Finished.");
+        return true;
     }
     #endregion LOCAL_FUNCTIONS
     //------------------------------------------------------------------------------------------------------------
@@ -1934,14 +2176,14 @@ public class NetworkingController : UdonSharpBehaviour
     private const byte elevatorThreeOffset = 52;
     private const byte ulongBoolEndPosition = 51; //You will need to recalculate the bool array classes if you modify this
     private const ulong nibbleMask = 15; // ...0000 0000 1111        
-                                         /// <summary>
-                                         /// Modifies a _syncData1 & _syncData2 on the bit level.
-                                         /// Sets "value" to bit "position" of "input".
-                                         /// </summary>       
-                                         /// <param name="input">uint to modify</param>
-                                         /// <param name="position">Bit position to modify (0-83)</param>
-                                         /// <param name="value">Value to set the bit</param>        
-                                         /// <returns>Returns the modified uint</returns>
+    /// <summary>
+    /// Modifies a _syncData1 & _syncData2 on the bit level.
+    /// Sets "value" to bit "position" of "input".
+    /// </summary>       
+    /// <param name="input">uint to modify</param>
+    /// <param name="position">Bit position to modify (0-83)</param>
+    /// <param name="value">Value to set the bit</param>        
+    /// <returns>Returns the modified uint</returns>
     private void MASTER_SetSyncValue(int position, bool value)
     {
         Debug.Log($"SYNC DATA bool {position} set to {value.ToString()}");
@@ -2364,6 +2606,39 @@ public class NetworkingController : UdonSharpBehaviour
         }
     }
     #endregion SYNCBOOL_FUNCTIONS
+
+
+    public ulong CastAwayAnyHopeToUlong(long input)
+    {
+        ulong output = 0UL;
+
+        for (int i = 0; i < 64; i++)
+        {
+            //if long has bit
+            if ((input & (1L << i)) != 0L)
+            {
+                //set ulong bit to true
+                output |= (1UL << i);
+            }
+        }
+        return output;
+    }
+
+    public long CastAwayAnyHopeToLong(ulong input)
+    {
+        long output = 0L;
+
+        for (int i = 0; i < 64; i++)
+        {
+            //if long has bit
+            if ((input & (1UL << i)) != 0UL)
+            {
+                //set ulong bit to true
+                output |= (1L << i);
+            }
+        }
+        return output;
+    }
 }
 
 
