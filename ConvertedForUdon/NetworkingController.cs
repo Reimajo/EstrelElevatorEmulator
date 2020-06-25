@@ -26,6 +26,13 @@ public class NetworkingController : UdonSharpBehaviour
     public InsidePanelScriptForDesktop _insidePanelFloorScriptElevatorDesktop_2;
     public InsidePanelScriptForVR _InsidePanelFloorScriptElevatorForVR_2;
     /// <summary>
+    /// The callbutton panel for the elevator
+    /// </summary>
+    public CallButtonDesktopFloor _floorElevatorCallPanelDesktop_1;
+    public CallButtonDesktopFloor _floorElevatorCallPanelDesktop_2;
+    public ElevatorCallButton _floorElevatorCallPanelForVR_1;
+    public ElevatorCallButton _floorElevatorCallPanelForVR_2;
+    /// <summary>
     /// Floor-dependent number sign where _Index needs to be set to floor number-1
     /// </summary>
     public GameObject _floorNumberSign;
@@ -382,6 +389,9 @@ public class NetworkingController : UdonSharpBehaviour
     /// </summary>
     public void Update()
     {
+        //first checking if there is a pending teleport request
+        CheckTeleportCounter();
+        //master needs to run a different routine
         if (_localPlayer.isMaster)
         {
             if (!_isMaster)
@@ -1752,6 +1762,11 @@ public class NetworkingController : UdonSharpBehaviour
     public Transform _elevator1PositionFloor;
     public Transform _elevator2PositionFloor;
     /// <summary>
+    /// variables for teleporting the player
+    /// </summary>
+    private int _teleportCounter = 0;
+    private Vector3 _teleportTarget;
+    /// <summary>
     /// Setting the floor up for the moment of arrival
     /// x:100 Z: 50, 100....
     /// </summary>
@@ -1861,34 +1876,23 @@ public class NetworkingController : UdonSharpBehaviour
                     return false;
             }
         }
-        Vector3 teleportTarget;
+        //Vector3 teleportTarget;
         if (floorNumber == 0)
         {
             //floor is zero here
-            teleportTarget = new Vector3(playerPosition.x, playerPosition.y - arrivalFloorOldHeight, playerPosition.z);
+            _teleportTarget = new Vector3(playerPosition.x, playerPosition.y - arrivalFloorOldHeight, playerPosition.z);
         }
         else
         {
-            teleportTarget = new Vector3(playerPosition.x, playerPosition.y + floorLevelHeight - arrivalFloorOldHeight, playerPosition.z);
+            _teleportTarget = new Vector3(playerPosition.x, playerPosition.y + floorLevelHeight - arrivalFloorOldHeight, playerPosition.z);
         }
         ////teleport player to the new target
         //teleportTarget = _targetElevatorPosition + teleportOffset;
         ////setting the spawn a bit higher to avoid falling down
         //teleportTarget.y = _targetElevatorPosition.y + 0.2f; // + 0.04f;
-        Debug.Log($"[Prepare] teleportTarget x:{teleportTarget.x},y:{teleportTarget.y},z:{teleportTarget.z}");
-        if (floorNumber != 0)
-        {
-            //move the spawn as well
-            _currentSpawn.position = _readonlyFloorSpawn.position;
-            _currentSpawn.rotation = _readonlyFloorSpawn.rotation;
-        }
-        else
-        {
-            _currentSpawn.position = _readonlyReceptionSpawn.position;
-            _currentSpawn.rotation = _readonlyReceptionSpawn.rotation;
-        }
+        Debug.Log($"[Prepare] new teleportTarget is x:{_teleportTarget.x},y:{_teleportTarget.y},z:{_teleportTarget.z}");
         //saving the floor the player is now on
-        _localPlayerCurrentFloor = floorNumber;
+        SetPlayerFloorLevel(floorNumber);
         //no need to setup reception currently, since this level is always synced
         if (floorNumber == 0)
         {
@@ -1896,12 +1900,10 @@ public class NetworkingController : UdonSharpBehaviour
             //open just the reception elevator where the player is inside
             _elevatorControllerReception.OpenElevator(elevatorNumberWithPlayerInside, 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumberWithPlayerInside))), 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumberWithPlayerInside))));
             //teleport to reception
-            _localPlayer.TeleportTo(teleportTarget, _localPlayer.GetRotation());
+            //_localPlayer.TeleportTo(_teleportTarget, _localPlayer.GetRotation());
+            _teleportCounter = 4;
             return true;
         }
-        //setup the floor to the networked state of that level
-        _floorNumberSignRenderer.materials[2].SetInt("_Index", floorNumber - 1);
-        _floorRoomNumberSignRenderer.materials[0].SetInt("_Index", floorNumber - 1);
         Debug.Log("[Prepare] Setting the Callbutton-States on the arrival floor");
         //setting the callbutton-states
         _elevatorControllerArrivalArea.SetCallButtonState(buttonUp: false, isCalled: (0UL != (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_ElevatorCalledDown + floorNumber)))));
@@ -1927,9 +1929,10 @@ public class NetworkingController : UdonSharpBehaviour
         if (floorNumber != 0)
         {
             Debug.Log($"[Prepare] Teleporting player to floor {floorNumber}");
-            Debug.Log($"[Prepare] TeleportTarget is x:{teleportTarget.x},y:{teleportTarget.y},z:{teleportTarget.z}");
-            _localPlayer.TeleportTo(teleportTarget, _localPlayer.GetRotation());
-            Debug.Log($"[Prepare] Teleported.");
+            Debug.Log($"[Prepare] TeleportTarget is x:{_teleportTarget.x},y:{_teleportTarget.y},z:{_teleportTarget.z}");
+            //_localPlayer.TeleportTo(_teleportTarget, _localPlayer.GetRotation());
+            _teleportCounter = 4;
+            //Debug.Log($"[Prepare] Teleported.");
         }
         else
         {
@@ -1937,6 +1940,53 @@ public class NetworkingController : UdonSharpBehaviour
         }  
         Debug.Log($"[Prepare] Finished.");
         return true;
+    }
+    /// <summary>
+    /// Checking if there is a pending teleport waiting for us
+    /// </summary>
+    private void CheckTeleportCounter()
+    {
+        if (_teleportCounter == 0)
+            return;
+        Debug.Log($"[Prepare] TeleportTarget is x:{_teleportTarget.x},y:{_teleportTarget.y},z:{_teleportTarget.z}");
+        _localPlayer.TeleportTo(_teleportTarget, _localPlayer.GetRotation());
+        Debug.Log($"[Prepare] Teleported.");
+        _teleportCounter--;
+    }
+    /// <summary>
+    /// Setting a new floor level where the player is currently on
+    /// </summary>
+    /// <param name="floorNumber"></param>
+    private void SetPlayerFloorLevel(int floorNumber)
+    {
+        if(_userIsInVR)
+        {
+            _floorElevatorCallPanelForVR_1._floorNumber = floorNumber;
+            _floorElevatorCallPanelForVR_2._floorNumber = floorNumber;
+        }
+        else
+        {
+            _floorElevatorCallPanelDesktop_1._floorNumber = floorNumber;
+            _floorElevatorCallPanelDesktop_2._floorNumber = floorNumber;
+        }
+        _localPlayerCurrentFloor = floorNumber;
+        //move the spawn as well
+        if (floorNumber != 0)
+        {
+            _currentSpawn.position = _readonlyFloorSpawn.position;
+            _currentSpawn.rotation = _readonlyFloorSpawn.rotation;
+        }
+        else
+        {
+            _currentSpawn.position = _readonlyReceptionSpawn.position;
+            _currentSpawn.rotation = _readonlyReceptionSpawn.rotation;
+        }
+        //when the floor is reception-level, we don't change the number signs
+        if (floorNumber == 0)
+            return;
+        //setup the floor to the networked state of that level
+        _floorNumberSignRenderer.materials[2].SetInt("_Index", floorNumber - 1);
+        _floorRoomNumberSignRenderer.materials[0].SetInt("_Index", floorNumber - 1);
     }
     #endregion LOCAL_FUNCTIONS
     //------------------------------------------------------------------------------------------------------------
