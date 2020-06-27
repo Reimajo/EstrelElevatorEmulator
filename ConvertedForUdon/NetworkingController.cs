@@ -7,6 +7,7 @@ using System;
 public class NetworkingController : UdonSharpBehaviour
 {
     #region variables
+    public PlayerModCheck _playerModCheck;
     public Transform _currentSpawn;
     public Transform _readonlyReceptionSpawn;
     public Transform _readonlyFloorSpawn;
@@ -43,9 +44,9 @@ public class NetworkingController : UdonSharpBehaviour
     ///<summary> animation-timing-parameters </summary>
     private const float TIME_TO_STAY_CLOSED_AFTER_GOING_OUT_OF_IDLE = 3f;
     private const float TIME_TO_STAY_OPEN = 10f; // 10f is normal
-    private const float TIME_TO_STAY_OPEN_RECEPTION = 10f; //30f is normal
+    private const float TIME_TO_STAY_OPEN_RECEPTION = 15f; //was 10f
     private const float TIME_TO_STAY_CLOSED = 4f; //MUST BE 4f IN UNITY! Because of the closing animation
-    private const float TIME_TO_DRIVE_ONE_FLOOR = 2f;
+    private const float TIME_TO_DRIVE_ONE_FLOOR = 3f; //was 2f
     /// <summary>
     /// elevator states, synced by master
     /// </summary>
@@ -1528,7 +1529,7 @@ public class NetworkingController : UdonSharpBehaviour
             {
                 thisElevatorWasAlreadyOpened = PrepareFloorForArrival(floorNumber, elevatorNumber);
             }
-            if(!thisElevatorWasAlreadyOpened)
+            if (!thisElevatorWasAlreadyOpened)
             {
                 if (floorNumber == 0)
                 {
@@ -1747,6 +1748,11 @@ public class NetworkingController : UdonSharpBehaviour
         }
     }
     /// <summary>
+    /// Storing the current state of some elevator functions
+    /// </summary>
+    private bool[] _elevatorLoliStairsAreEnabled = new bool[3];
+    private bool[] _elevatorMirrorIsEnabled = new bool[3];
+    /// <summary>
     /// To check if a player is inside a certain elevator
     /// </summary>
     public BoxCollider _playerInsideElevator0DetectorReception;
@@ -1773,6 +1779,14 @@ public class NetworkingController : UdonSharpBehaviour
     private bool PrepareFloorForArrival(int floorNumber, int elevatorNumberWithPlayerInside)
     {
         Debug.Log($"[Prepare] Preparing floor {floorNumber} for arrival (player in elevator {elevatorNumberWithPlayerInside})");
+        //first disable loli stairs when they are still enabled, since they block the door
+        if (_elevatorLoliStairsAreEnabled[elevatorNumberWithPlayerInside])
+        {
+            _elevatorControllerReception.ToggleLoliStairs(elevatorNumberWithPlayerInside);
+            _elevatorControllerArrivalArea.ToggleLoliStairs(elevatorNumberWithPlayerInside);
+            _elevatorLoliStairsAreEnabled[elevatorNumberWithPlayerInside] = false;
+            LOCAL_SetElevatorInternalButtonState(elevatorNumberWithPlayerInside, buttonNumber: 2, called: false);
+        }
         //checking if the player is still inside that elevator
         BoxCollider inElevatorCollider;
         Vector3 _currentElevatorPosition;
@@ -1832,12 +1846,12 @@ public class NetworkingController : UdonSharpBehaviour
         Debug.Log($"[Prepare] teleportOffset x:{teleportOffset.x},y:{teleportOffset.y},z:{teleportOffset.z}");
         //get the floor height from where the player is currently standing on
         float arrivalFloorOldHeight = 0;
-        if(!_playerIsInReceptionElevator)
+        if (!_playerIsInReceptionElevator)
             arrivalFloorOldHeight = _moveArrivalFloorHere.position.y;
         //move the whole floor to that new floor position
-        float floorLevelHeight = (100 + (50 * floorNumber));
+        float floorLevelHeight = (50 * floorNumber);
         if (floorNumber != 0)
-            _moveArrivalFloorHere.position = new Vector3(-32.6f, floorLevelHeight, 5.9f);//new Vector3(150, 0, (50 * floorNumber) - 300);
+            _moveArrivalFloorHere.position = new Vector3(-32.6f, floorLevelHeight, 10.55f);//new Vector3(150, 0, (50 * floorNumber) - 300);
         //read the new target position
         Vector3 _targetElevatorPosition;
         if (floorNumber == 0)
@@ -1901,7 +1915,7 @@ public class NetworkingController : UdonSharpBehaviour
             _elevatorControllerReception.OpenElevator(elevatorNumberWithPlayerInside, 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumberWithPlayerInside))), 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumberWithPlayerInside))));
             //teleport to reception
             //_localPlayer.TeleportTo(_teleportTarget, _localPlayer.GetRotation());
-            _teleportCounter = 4;
+            _teleportCounter = 3;
             return true;
         }
         Debug.Log("[Prepare] Setting the Callbutton-States on the arrival floor");
@@ -1913,7 +1927,7 @@ public class NetworkingController : UdonSharpBehaviour
         for (int elevatorNumber = 0; elevatorNumber < 3; elevatorNumber++)
         {
             bool setOpen = (0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXopen + elevatorNumber))));
-            if (setOpen)
+            if (setOpen && GetSyncElevatorFloor(elevatorNumber) == floorNumber)
             {
                 Debug.Log($"[Prepare] Opening elevator {elevatorNumber}");
                 //Passes elevatorNumber, (if going up), (if idle)
@@ -1931,18 +1945,19 @@ public class NetworkingController : UdonSharpBehaviour
             Debug.Log($"[Prepare] Teleporting player to floor {floorNumber}");
             Debug.Log($"[Prepare] TeleportTarget is x:{_teleportTarget.x},y:{_teleportTarget.y},z:{_teleportTarget.z}");
             //_localPlayer.TeleportTo(_teleportTarget, _localPlayer.GetRotation());
-            _teleportCounter = 4;
+            _teleportCounter = 3;
             //Debug.Log($"[Prepare] Teleported.");
         }
         else
         {
             Debug.Log($"[Prepare] Error: Reached last line in function despite floor being " + floorNumber);
-        }  
+        }
         Debug.Log($"[Prepare] Finished.");
         return true;
     }
     /// <summary>
-    /// Checking if there is a pending teleport waiting for us
+    /// Checking if there is a pending teleport waiting for us. 
+    /// Successful teleport should be followed by 2x teleport for extra safety
     /// </summary>
     private void CheckTeleportCounter()
     {
@@ -1952,6 +1967,10 @@ public class NetworkingController : UdonSharpBehaviour
         _localPlayer.TeleportTo(_teleportTarget, _localPlayer.GetRotation());
         Debug.Log($"[Prepare] Teleported.");
         _teleportCounter--;
+        if (_teleportCounter == 2 && Vector3.Distance(_localPlayer.GetPosition(), _teleportTarget) > 5f)
+        {
+            _teleportCounter = 3; // reset counter since teleport failed
+        }
     }
     /// <summary>
     /// Setting a new floor level where the player is currently on
@@ -1959,7 +1978,10 @@ public class NetworkingController : UdonSharpBehaviour
     /// <param name="floorNumber"></param>
     private void SetPlayerFloorLevel(int floorNumber)
     {
-        if(_userIsInVR)
+        _localPlayerCurrentFloor = floorNumber;
+        _elevatorControllerArrivalArea._floorLevel = floorNumber;
+        _playerModCheck._currentFloorLocalPlayer = floorNumber;
+        if (_userIsInVR)
         {
             _floorElevatorCallPanelForVR_1._floorNumber = floorNumber;
             _floorElevatorCallPanelForVR_2._floorNumber = floorNumber;
@@ -1969,7 +1991,6 @@ public class NetworkingController : UdonSharpBehaviour
             _floorElevatorCallPanelDesktop_1._floorNumber = floorNumber;
             _floorElevatorCallPanelDesktop_2._floorNumber = floorNumber;
         }
-        _localPlayerCurrentFloor = floorNumber;
         //move the spawn as well
         if (floorNumber != 0)
         {
@@ -2018,8 +2039,6 @@ public class NetworkingController : UdonSharpBehaviour
             _elevatorRequester.RequestElevatorFloorButton(directionUp, floorNumber);
         }
     }
-    private bool _elevatorLoliStairsAreEnabled = false;
-    private bool _elevatorMirrorIsEnabled = false;
     /// <summary>
     /// When localPlayer pressed a button INSIDE the elevator
     /// </summary>
@@ -2049,8 +2068,8 @@ public class NetworkingController : UdonSharpBehaviour
             //toggle loli stairs locally in both ElevatorControllers
             _elevatorControllerReception.ToggleLoliStairs(elevatorNumber);
             _elevatorControllerArrivalArea.ToggleLoliStairs(elevatorNumber);
-            _elevatorLoliStairsAreEnabled = !_elevatorLoliStairsAreEnabled;
-            LOCAL_SetElevatorInternalButtonState(elevatorNumber, buttonNumber, called: _elevatorLoliStairsAreEnabled);
+            _elevatorLoliStairsAreEnabled[elevatorNumber] = !_elevatorLoliStairsAreEnabled[elevatorNumber];
+            LOCAL_SetElevatorInternalButtonState(elevatorNumber, buttonNumber, called: _elevatorLoliStairsAreEnabled[elevatorNumber]);
             return;
         }
         if (buttonNumber == 3) // (m1) loli-stairs button
@@ -2058,8 +2077,8 @@ public class NetworkingController : UdonSharpBehaviour
             //toggle mirror locally in both ElevatorControllers
             _elevatorControllerReception.ToggleMirror(elevatorNumber);
             _elevatorControllerArrivalArea.ToggleMirror(elevatorNumber);
-            _elevatorMirrorIsEnabled = !_elevatorMirrorIsEnabled;
-            LOCAL_SetElevatorInternalButtonState(elevatorNumber, buttonNumber, called: _elevatorMirrorIsEnabled);
+            _elevatorMirrorIsEnabled[elevatorNumber] = !_elevatorMirrorIsEnabled[elevatorNumber];
+            LOCAL_SetElevatorInternalButtonState(elevatorNumber, buttonNumber, called: _elevatorMirrorIsEnabled[elevatorNumber]);
             return;
         }
         if (buttonNumber == 18) // RING-button
