@@ -79,9 +79,7 @@ namespace WindowsFormsApp1
         /// <summary>
         /// "ENUM" of different bools that are synced in _syncData
         /// (ENUM isn't possible in Udon, so we use this here)
-        ///  - 55-52 variable_3 (4bits)
-        ///  - 0-51 binary bools [0-51]
-        ///  - 0-31 binary bools [52-83(?)]
+        ///  0-115 binary bools
         /// </summary>
         /// 
         private const int SyncBoolReq_BellOn = 0;
