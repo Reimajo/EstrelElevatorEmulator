@@ -186,6 +186,9 @@ namespace WindowsFormsApp1
         private const int SyncBool_Elevator0working = 81;
         private const int SyncBool_Elevator1working = 82;
         private const int SyncBool_Elevator2working = 83;
+        private const int SyncBool_Elevator0IsDriving = 84;
+        private const int SyncBool_Elevator1IsDriving = 85;
+        private const int SyncBool_Elevator2IsDriving = 86;
 
         #endregion ENUM_SYNCBOOL
         #region ENUM_DIRECTSYNCBOOL
@@ -210,118 +213,122 @@ namespace WindowsFormsApp1
         ///  - (0L == (_syncData2 & (1L << (SyncBool_AddressUint
         /// </summary>
         ///         
-        private const long SyncBoolReq_Masklong1_BellOn = (1L);
-        private const int SyncBool_Addresslong1_ElevatorXopen = 1;
-        private const long SyncBool_Masklong1_Elevator0open = (1L << 1);
-        private const long SyncBool_Masklong1_Elevator1open = (1L << 2);
-        private const long SyncBool_Masklong1_Elevator2open = (1L << 3);
-        private const int SyncBool_Addresslong1_ElevatorXidle = 4;
-        private const long SyncBool_Masklong1_Elevator0idle = (1L << 4);
-        private const long SyncBool_Masklong1_Elevator1idle = (1L << 5);
-        private const long SyncBool_Masklong1_Elevator2idle = (1L << 6);
-        private const int SyncBool_Addresslong1_ElevatorXgoingUp = 7;
-        private const long SyncBool_Masklong1_Elevator0goingUp = (1L << 7);
-        private const long SyncBool_Masklong1_Elevator1goingUp = (1L << 8);
-        private const long SyncBool_Masklong1_Elevator2goingUp = (1L << 9);
+        private const long SyncBoolReq_MaskLong1_BellOn = (1L);
+        private const int SyncBool_AddressLong1_ElevatorXopen = 1;
+        private const long SyncBool_MaskLong1_Elevator0open = (1L << 1);
+        private const long SyncBool_MaskLong1_Elevator1open = (1L << 2);
+        private const long SyncBool_MaskLong1_Elevator2open = (1L << 3);
+        private const int SyncBool_AddressLong1_ElevatorXidle = 4;
+        private const long SyncBool_MaskLong1_Elevator0idle = (1L << 4);
+        private const long SyncBool_MaskLong1_Elevator1idle = (1L << 5);
+        private const long SyncBool_MaskLong1_Elevator2idle = (1L << 6);
+        private const int SyncBool_AddressLong1_ElevatorXgoingUp = 7;
+        private const long SyncBool_MaskLong1_Elevator0goingUp = (1L << 7);
+        private const long SyncBool_MaskLong1_Elevator1goingUp = (1L << 8);
+        private const long SyncBool_MaskLong1_Elevator2goingUp = (1L << 9);
         /// <summary>     
         /// Sync-data positions for elevator call up
         /// </summary>            
-        private const int SyncBoolReq_Addresslong1_ElevatorCalledUp = 10;
-        /*private const long SyncBoolReq_Masklong1_ElevatorCalledUp_0 = (1L << 10);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledUp_1 = (1L << 11);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledUp_2 = (1L << 12);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledUp_3 = (1L << 13);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledUp_4 = (1L << 14);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledUp_5 = (1L << 15);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledUp_6 = (1L << 16);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledUp_7 = (1L 17);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledUp_8 = (1L << 18);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledUp_9 = (1L << 19);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledUp_10 = (1L << 20);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledUp_11 = (1L << 21);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledUp_12 = (1L << 22);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledUp_13 = (1L << 23);*/
+        private const int SyncBoolReq_AddressLong1_ElevatorCalledUp = 10;
+        /*private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_0 = (1L << 10);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_1 = (1L << 11);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_2 = (1L << 12);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_3 = (1L << 13);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_4 = (1L << 14);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_5 = (1L << 15);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_6 = (1L << 16);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_7 = (1L 17);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_8 = (1L << 18);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_9 = (1L << 19);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_10 = (1L << 20);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_11 = (1L << 21);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_12 = (1L << 22);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_13 = (1L << 23);*/
         
         /// <summary>     
         /// Sync-data positions for elevator call down
         /// </summary>     
-        private const int SyncBoolReq_Addresslong1_ElevatorCalledDown = 24;
-        /*private const long SyncBoolReq_Masklong1_ElevatorCalledDown_0 = (1L << 24);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledDown_1 = (1L << 25);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledDown_2 = (1L << 26);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledDown_3 = (1L << 27);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledDown_4 = (1L << 28);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledDown_5 = (1L << 29);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledDown_6 = (1L << 30);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledDown_7 = (1L << 31);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledDown_8 = (1L << 32);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledDown_9 = (1L << 33);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledDown_10 = (1L << 34);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledDown_11 = (1L << 35);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledDown_12 = (1L << 36);
-        private const long SyncBoolReq_Masklong1_ElevatorCalledDown_13 = (1L << 37);*/
+        private const int SyncBoolReq_AddressLong1_ElevatorCalledDown = 24;
+        /*private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_0 = (1L << 24);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_1 = (1L << 25);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_2 = (1L << 26);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_3 = (1L << 27);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_4 = (1L << 28);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_5 = (1L << 29);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_6 = (1L << 30);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_7 = (1L << 31);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_8 = (1L << 32);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_9 = (1L << 33);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_10 = (1L << 34);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_11 = (1L << 35);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_12 = (1L << 36);
+        private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_13 = (1L << 37);*/
 
         /// <summary>     
         /// Sync-data positions for internal elevator 0
         /// ******THIS CANNOT BE USED****** It spans both the long and Uint, use getSyncValues instead
         /// </summary>    
-        private const int SyncBoolReq_Addresslong1_Elevator0CalledToFloor = 38;
-        /*private const long SyncBoolReq_Masklong1_Elevator0CalledToFloor_0 = (1L << 38);
-        private const long SyncBoolReq_Masklong1_Elevator0CalledToFloor_1 = (1L << 39);
-        private const long SyncBoolReq_Masklong1_Elevator0CalledToFloor_2 = (1L << 40);
-        private const long SyncBoolReq_Masklong1_Elevator0CalledToFloor_3 = (1L << 41);
-        private const long SyncBoolReq_Masklong1_Elevator0CalledToFloor_4 = (1L << 42);
-        private const long SyncBoolReq_Masklong1_Elevator0CalledToFloor_5 = (1L << 43);
-        private const long SyncBoolReq_Masklong1_Elevator0CalledToFloor_6 = (1L << 44);
-        private const long SyncBoolReq_Masklong1_Elevator0CalledToFloor_7 = (1L << 45);
-        private const long SyncBoolReq_Masklong1_Elevator0CalledToFloor_8 = (1L << 46);
-        private const long SyncBoolReq_Masklong1_Elevator0CalledToFloor_9 = (1L << 47);
-        private const long SyncBoolReq_Masklong1_Elevator0CalledToFloor_10 = (1L << 48);
-        private const long SyncBoolReq_Masklong1_Elevator0CalledToFloor_11 = (1L << 49);
-        private const long SyncBoolReq_Masklong1_Elevator0CalledToFloor_12 = (1L << 50);
-        private const long SyncBoolReq_Masklong1_Elevator0CalledToFloor_13 = (1L << 51);*/
+        private const int SyncBoolReq_AddressLong1_Elevator0CalledToFloor = 38;
+        /*private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_0 = (1L << 38);
+        private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_1 = (1L << 39);
+        private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_2 = (1L << 40);
+        private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_3 = (1L << 41);
+        private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_4 = (1L << 42);
+        private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_5 = (1L << 43);
+        private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_6 = (1L << 44);
+        private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_7 = (1L << 45);
+        private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_8 = (1L << 46);
+        private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_9 = (1L << 47);
+        private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_10 = (1L << 48);
+        private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_11 = (1L << 49);
+        private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_12 = (1L << 50);
+        private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_13 = (1L << 51);*/
         /// <summary>     
         /// Sync-data positions for internal elevator 1
         /// </summary>     
-        private const int SyncBoolReq_Addresslong2_Elevator1CalledToFloor = 0;
-        /*private const long SyncBoolReq_Masklong2_Elevator1CalledToFloor_0 = (1L << 0);
-        private const long SyncBoolReq_Masklong2_Elevator1CalledToFloor_1 = (1L << 1);
-        private const long SyncBoolReq_Masklong2_Elevator1CalledToFloor_2 = (1L << 2);
-        private const long SyncBoolReq_Masklong2_Elevator1CalledToFloor_3 = (1L << 3);
-        private const long SyncBoolReq_Masklong2_Elevator1CalledToFloor_4 = (1L << 4);
-        private const long SyncBoolReq_Masklong2_Elevator1CalledToFloor_5 = (1L << 5);
-        private const long SyncBoolReq_Masklong2_Elevator1CalledToFloor_6 = (1L << 6);
-        private const long SyncBoolReq_Masklong2_Elevator1CalledToFloor_7 = (1L << 7);
-        private const long SyncBoolReq_Masklong2_Elevator1CalledToFloor_8 = (1L << 8);
-        private const long SyncBoolReq_Masklong2_Elevator1CalledToFloor_9 = (1L << 9);
-        private const long SyncBoolReq_Masklong2_Elevator1CalledToFloor_10 = (1L << 10);
-        private const long SyncBoolReq_Masklong2_Elevator1CalledToFloor_11 = (1L << 11);
-        private const long SyncBoolReq_Masklong2_Elevator1CalledToFloor_12 = (1L << 12);
-        private const long SyncBoolReq_Masklong2_Elevator1CalledToFloor_13 = (1L << 13);*/
+        private const int SyncBoolReq_AddressLong2_Elevator1CalledToFloor = 0;
+        /*private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_0 = (1L << 0);
+        private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_1 = (1L << 1);
+        private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_2 = (1L << 2);
+        private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_3 = (1L << 3);
+        private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_4 = (1L << 4);
+        private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_5 = (1L << 5);
+        private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_6 = (1L << 6);
+        private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_7 = (1L << 7);
+        private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_8 = (1L << 8);
+        private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_9 = (1L << 9);
+        private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_10 = (1L << 10);
+        private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_11 = (1L << 11);
+        private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_12 = (1L << 12);
+        private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_13 = (1L << 13);*/
         /// <summary>     
         /// Sync-data positions for internal elevator 2
         /// </summary>     
-        private const int SyncBoolReq_Addresslong2_Elevator2CalledToFloor = 14;
-        /*private const long SyncBoolReq_Masklong2_Elevator2CalledToFloor_0 = (1L << 14);
-        private const long SyncBoolReq_Masklong2_Elevator2CalledToFloor_1 = (1L << 15);
-        private const long SyncBoolReq_Masklong2_Elevator2CalledToFloor_2 = (1L << 16);
-        private const long SyncBoolReq_Masklong2_Elevator2CalledToFloor_3 = (1L << 17);
-        private const long SyncBoolReq_Masklong2_Elevator2CalledToFloor_4 = (1L << 18);
-        private const long SyncBoolReq_Masklong2_Elevator2CalledToFloor_5 = (1L << 19);
-        private const long SyncBoolReq_Masklong2_Elevator2CalledToFloor_6 = (1L << 20);
-        private const long SyncBoolReq_Masklong2_Elevator2CalledToFloor_7 = (1L << 21);
-        private const long SyncBoolReq_Masklong2_Elevator2CalledToFloor_8 = (1L << 22);
-        private const long SyncBoolReq_Masklong2_Elevator2CalledToFloor_9 = (1L << 23);
-        private const long SyncBoolReq_Masklong2_Elevator2CalledToFloor_10 = (1L << 24);
-        private const long SyncBoolReq_Masklong2_Elevator2CalledToFloor_11 = (1L << 25);
-        private const long SyncBoolReq_Masklong2_Elevator2CalledToFloor_12 = (1L << 26);
-        private const long SyncBoolReq_Masklong2_Elevator2CalledToFloor_13 = (1L << 27);*/
+        private const int SyncBoolReq_AddressLong2_Elevator2CalledToFloor = 14;
+        /*private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_0 = (1L << 14);
+        private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_1 = (1L << 15);
+        private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_2 = (1L << 16);
+        private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_3 = (1L << 17);
+        private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_4 = (1L << 18);
+        private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_5 = (1L << 19);
+        private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_6 = (1L << 20);
+        private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_7 = (1L << 21);
+        private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_8 = (1L << 22);
+        private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_9 = (1L << 23);
+        private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_10 = (1L << 24);
+        private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_11 = (1L << 25);
+        private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_12 = (1L << 26);
+        private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_13 = (1L << 27);*/
         
-        private const long SyncBool_Masklong2_Initialized = (1L << 28);
-        private const long SyncBool_Addresslong2_ElevatorXworking = 29;
-        private const long SyncBool_Masklong2_Elevator0working = (1L << 29);
-        private const long SyncBool_Masklong2_Elevator1working = (1L << 30);
-        private const long SyncBool_Masklong2_Elevator2working = (1L << 31);
+        private const long SyncBool_MaskLong2_Initialized = (1L << 28);
+        private const int SyncBool_AddressLong2_ElevatorXworking = 29;
+        private const long SyncBool_MaskLong2_Elevator0working = (1L << 29);
+        private const long SyncBool_MaskLong2_Elevator1working = (1L << 30);
+        private const long SyncBool_MaskLong2_Elevator2working = (1L << 31);
+        private const int SyncBool_AddressLong2_ElevatorXIsDriving = 32;
+        private const long SyncBool_MaskLong2_Elevator0IsDriving = (1L << 32);
+        private const long SyncBool_MaskLong2_Elevator1IsDriving = (1L << 33);
+        private const long SyncBool_MaskLong2_Elevator2IsDriving = (1L << 34);
 
         #endregion ENUM_DIRECTSYNCBOOL
         //------------------------------------------------------------------------------------------------------------
@@ -337,7 +344,7 @@ namespace WindowsFormsApp1
             Debug.Print("[NetworkController] NetworkingController is now in Start()");
             //NOPE _localPlayer = Networking.LocalPlayer;
             //the first master has to set the constant scene settings
-            if (_localPlayerisMaster && 0L == (_syncData2 & (SyncBool_Masklong2_Initialized)))
+            if (_localPlayerisMaster && 0L == (_syncData2 & (SyncBool_MaskLong2_Initialized)))
             {
                 _isMaster = true;
                 MASTER_SetConstSceneElevatorStates();
@@ -378,9 +385,9 @@ namespace WindowsFormsApp1
         //TODO: remove on live build
         private void TEST_DisplayElevatorStates()
         {            
-            form1.DisplayElevatorState(0, 0L != (_syncData1 & (SyncBool_Masklong1_Elevator0goingUp)), 0L != (_syncData1 & (SyncBool_Masklong1_Elevator0idle)), 0L != (_syncData1 & (SyncBool_Masklong1_Elevator0open)));
-            form1.DisplayElevatorState(1, 0L != (_syncData1 & (SyncBool_Masklong1_Elevator1goingUp)), 0L != (_syncData1 & (SyncBool_Masklong1_Elevator1idle)), 0L != (_syncData1 & (SyncBool_Masklong1_Elevator1open)));
-            form1.DisplayElevatorState(2, 0L != (_syncData1 & (SyncBool_Masklong1_Elevator2goingUp)), 0L != (_syncData1 & (SyncBool_Masklong1_Elevator2idle)), 0L != (_syncData1 & (SyncBool_Masklong1_Elevator2open)));
+            form1.DisplayElevatorState(0, 0L != (_syncData1 & (SyncBool_MaskLong1_Elevator0goingUp)), 0L != (_syncData1 & (SyncBool_MaskLong1_Elevator0idle)), 0L != (_syncData1 & (SyncBool_MaskLong1_Elevator0open)));
+            form1.DisplayElevatorState(1, 0L != (_syncData1 & (SyncBool_MaskLong1_Elevator1goingUp)), 0L != (_syncData1 & (SyncBool_MaskLong1_Elevator1idle)), 0L != (_syncData1 & (SyncBool_MaskLong1_Elevator1open)));
+            form1.DisplayElevatorState(2, 0L != (_syncData1 & (SyncBool_MaskLong1_Elevator2goingUp)), 0L != (_syncData1 & (SyncBool_MaskLong1_Elevator2idle)), 0L != (_syncData1 & (SyncBool_MaskLong1_Elevator2open)));
             form1.DisplayLocalPlayerFloor(_localPlayerCurrentFloor);
         }
         #endregion START_UPDATE_FUNCTIONS
@@ -390,8 +397,7 @@ namespace WindowsFormsApp1
         #region MASTER_FUNCTIONS
         /// <summary>
         /// locally storing where each elevator is and has to go, these need to be checked against SyncBool states 
-        /// </summary>
-        private bool[] _elevatorIsDriving_MASTER = new bool[3]; //this array is local only and not synced
+        /// </summary>        
         private bool[] _calledToFloorToGoUp_MASTER = new bool[14];
         private int _calledToFloorToGoUp_MASTER_COUNT = 0;
         private bool[] _calledToFloorToGoDown_MASTER = new bool[14];
@@ -420,7 +426,7 @@ namespace WindowsFormsApp1
             MASTER_SetSyncValue(SyncBool_Elevator2idle, true);
             MASTER_SetSyncElevatorFloor(0, 13);
             MASTER_SetSyncElevatorFloor(1, 8);
-            MASTER_SetSyncElevatorFloor(2, 2);
+            MASTER_SetSyncElevatorFloor(2, 2);            
             Debug.Print("[NetworkController] FirstMasterSetupElevatorControl finished");
         }
         /// <summary>
@@ -429,8 +435,7 @@ namespace WindowsFormsApp1
         /// </summary>
         private void MASTER_OnMasterChanged()
         {
-            //resetting arrays and counters
-            _elevatorIsDriving_MASTER = new bool[3];
+            //resetting arrays and counters            
             _elevator0FloorTargets_MASTER = new bool[14];
             _elevator0FloorTargets_MASTER_COUNT = 0;
             _elevator1FloorTargets_MASTER = new bool[14];
@@ -446,31 +451,31 @@ namespace WindowsFormsApp1
             for (int i = 0; i <= 13; i++)
             {
                 //If Elevator0 called to floor i
-                if (0L != (_syncData1 & (1L << (SyncBoolReq_Addresslong1_Elevator0CalledToFloor + i))))
+                if (0L != (_syncData1 & (1L << (SyncBoolReq_AddressLong1_Elevator0CalledToFloor + i))))
                 {
                     _elevator0FloorTargets_MASTER[i] = true;
                     _elevator0FloorTargets_MASTER_COUNT++;
                 }
                 //If Elevator1 called to floor i
-                if (0L != (_syncData2 & (1L << (SyncBoolReq_Addresslong2_Elevator1CalledToFloor + i))))
+                if (0L != (_syncData2 & (1L << (SyncBoolReq_AddressLong2_Elevator1CalledToFloor + i))))
                 {
                     _elevator1FloorTargets_MASTER[i] = true;
                     _elevator1FloorTargets_MASTER_COUNT++;
                 }
                 //If Elevator2 called to floor i
-                if (0L != (_syncData2 & (1L << (SyncBoolReq_Addresslong2_Elevator2CalledToFloor + i))))
+                if (0L != (_syncData2 & (1L << (SyncBoolReq_AddressLong2_Elevator2CalledToFloor + i))))
                 {
                     _elevator2FloorTargets_MASTER[i] = true;
                     _elevator2FloorTargets_MASTER_COUNT++;
                 }
                 //If floor has "Called Up" pressed
-                if (0L != (_syncData1 & (1L << (SyncBoolReq_Addresslong1_ElevatorCalledUp + i))))
+                if (0L != (_syncData1 & (1L << (SyncBoolReq_AddressLong1_ElevatorCalledUp + i))))
                 {
                     _calledToFloorToGoUp_MASTER[i] = true;
                     _calledToFloorToGoUp_MASTER_COUNT++;
                 }
                 //If floor has "Called Down" pressed
-                if (0L != (_syncData1 & (1L << (SyncBoolReq_Addresslong1_ElevatorCalledDown + i))))
+                if (0L != (_syncData1 & (1L << (SyncBoolReq_AddressLong1_ElevatorCalledDown + i))))
                 {
                     _calledToFloorToGoDown_MASTER[i] = true;
                     _calledToFloorToGoDown_MASTER_COUNT++;
@@ -541,21 +546,21 @@ namespace WindowsFormsApp1
 
             if (elevatorNumber == 0)
             {
-                elevatorIdle = (0L != (_syncData1 & (SyncBool_Masklong1_Elevator0idle)));
-                elevatorGoingUp = (0L != (_syncData1 & (SyncBool_Masklong1_Elevator0goingUp)));
-                elevatorOpen = (0L != (_syncData1 & (SyncBool_Masklong1_Elevator0open)));
+                elevatorIdle = (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator0idle)));
+                elevatorGoingUp = (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator0goingUp)));
+                elevatorOpen = (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator0open)));
             }
             else if (elevatorNumber == 1)
             {
-                elevatorIdle = (0L != (_syncData1 & (SyncBool_Masklong1_Elevator1idle)));
-                elevatorGoingUp = (0L != (_syncData1 & (SyncBool_Masklong1_Elevator1goingUp)));
-                elevatorOpen = (0L != (_syncData1 & (SyncBool_Masklong1_Elevator1open)));
+                elevatorIdle = (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator1idle)));
+                elevatorGoingUp = (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator1goingUp)));
+                elevatorOpen = (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator1open)));
             }
             else
             {
-                elevatorIdle = (0L != (_syncData1 & (SyncBool_Masklong1_Elevator2idle)));
-                elevatorGoingUp = (0L != (_syncData1 & (SyncBool_Masklong1_Elevator2goingUp)));
-                elevatorOpen = (0L != (_syncData1 & (SyncBool_Masklong1_Elevator2open)));
+                elevatorIdle = (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator2idle)));
+                elevatorGoingUp = (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator2goingUp)));
+                elevatorOpen = (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator2open)));
             }
 
             bool targetFound = false;
@@ -587,7 +592,7 @@ namespace WindowsFormsApp1
                     return;
                 }
             }
-            else if (!_elevatorIsDriving_MASTER[elevatorNumber])
+            else if (0L == (_syncData2 & (1L << (SyncBool_AddressLong2_ElevatorXIsDriving + elevatorNumber))))
             {
                 if (time.GetTime() - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] < TIME_TO_STAY_CLOSED)
                 {
@@ -599,7 +604,7 @@ namespace WindowsFormsApp1
                 else
                 {
                     //Doors closed and timeout exceeded. Set elevator to drive and block door requests
-                    _elevatorIsDriving_MASTER[elevatorNumber] = true;
+                    MASTER_SetSyncValue(SyncBool_Elevator0IsDriving + elevatorNumber, true);
                 }
             }
             else if (time.GetTime() - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] < TIME_TO_DRIVE_ONE_FLOOR)
@@ -882,8 +887,8 @@ namespace WindowsFormsApp1
             }
             //then handle the floor targets
             MASTER_HandleFloorTarget(elevatorNumber, currentFloor, directionUp, isIdle);
-            MASTER_SetSyncValue(SyncBool_Elevator0open + elevatorNumber, true); //opening the elevator
-            _elevatorIsDriving_MASTER[elevatorNumber] = false;
+            MASTER_SetSyncValue(SyncBool_Elevator0open + elevatorNumber, true); //opening the elevator            
+            MASTER_SetSyncValue(SyncBool_Elevator0IsDriving + elevatorNumber, false);
             _timeAtCurrentFloorElevatorOpened_MASTER[elevatorNumber] = time.GetTime();
         }
         /// <summary>
@@ -931,7 +936,7 @@ namespace WindowsFormsApp1
         {
             MASTER_SetSyncValue(SyncBool_Elevator0goingUp + elevatorNumber, goingUp);
             //If elevator x is Idle
-            if (0L != (_syncData1 & (1L << (SyncBool_Addresslong1_ElevatorXidle + elevatorNumber))))
+            if (0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumber))))
             {
                 MASTER_SetSyncValue(SyncBool_Elevator0idle + elevatorNumber, false);
                 _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] = time.GetTime() + TIME_TO_STAY_CLOSED - TIME_TO_STAY_CLOSED_AFTER_GOING_OUT_OF_IDLE;
@@ -1399,9 +1404,9 @@ namespace WindowsFormsApp1
         private void LOCAL_ReadConstSceneElevatorStates()
         {
             Debug.Print("[NetworkController] Setting random elevator states for reception by localPlayer");
-            _elevator0Working = 0L != (_syncData2 & (SyncBool_Masklong2_Elevator0working));
-            _elevator1Working = 0L != (_syncData2 & (SyncBool_Masklong2_Elevator1working));
-            _elevator2Working = 0L != (_syncData2 & (SyncBool_Masklong2_Elevator2working));
+            _elevator0Working = 0L != (_syncData2 & (SyncBool_MaskLong2_Elevator0working));
+            _elevator1Working = 0L != (_syncData2 & (SyncBool_MaskLong2_Elevator1working));
+            _elevator2Working = 0L != (_syncData2 & (SyncBool_MaskLong2_Elevator2working));
             form1.DisplayElevatorBroken(_elevator0Working, _elevator1Working, _elevator2Working);
             //NOPE _elevatorControllerReception._elevator1working = _elevator0Working;
             //NOPE _elevatorControllerReception._elevator2working = _elevator1Working;
@@ -1428,7 +1433,7 @@ namespace WindowsFormsApp1
                 if (time.GetTime() < 1f) //no scene setup before at least 1 second has passed to ensure the update loop has already started
                     return;
                 Debug.Print("[NetworkController] Local setup was started");
-                if (0L != (_syncData2 & (SyncBool_Masklong2_Initialized)))
+                if (0L != (_syncData2 & (SyncBool_MaskLong2_Initialized)))
                 {
                     LOCAL_ReadConstSceneElevatorStates();
                     _finishedLocalSetup = true;
@@ -1457,13 +1462,13 @@ namespace WindowsFormsApp1
                 if (floorNumber == _localPlayerCurrentFloor)
                 {
                     //Passes elevatorNumber, (if going up), (if idle)
-                    _elevatorControllerReception.OpenElevatorLocalPlayerFloor(elevatorNumber, 0L != (_syncData1 & (1L << (SyncBool_Addresslong1_ElevatorXgoingUp + elevatorNumber))), 0L != (_syncData1 & (1L << (SyncBool_Addresslong1_ElevatorXidle + elevatorNumber))));
+                    _elevatorControllerReception.OpenElevatorLocalPlayerFloor(elevatorNumber, 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXgoingUp + elevatorNumber))), 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumber))));
                     //Debug.Print("[NetworkController] Elevator " + elevatorNumber + " is currently at floor " + floorNumber + " so Reception won't open.");
                 }
                 else if (floorNumber == 0)
                 {
                     //Passes elevatorNumber, (if going up), (if idle)
-                    _elevatorControllerReception.OpenElevatorReception(elevatorNumber, 0L != (_syncData1 & (1L << (SyncBool_Addresslong1_ElevatorXgoingUp + elevatorNumber))), 0L != (_syncData1 & (1L << (SyncBool_Addresslong1_ElevatorXidle + elevatorNumber))));
+                    _elevatorControllerReception.OpenElevatorReception(elevatorNumber, 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXgoingUp + elevatorNumber))), 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumber))));
                 }
                 //TODO: make sure to store the floor states for people driving to that floor later
             }
@@ -1489,7 +1494,7 @@ namespace WindowsFormsApp1
         private void LOCAL_SetElevatorIdle(int elevatorNumber, bool isIdle)
         {
             //If elevator NOT open
-            if (0L == (_syncData1 & (1L << (SyncBool_Addresslong1_ElevatorXopen + elevatorNumber))))
+            if (0L == (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXopen + elevatorNumber))))
             {
                 Debug.Print("[NetworkController] LocalPlayer received to set elevator " + elevatorNumber + " IDLE=" + isIdle.ToString() + ", but it isn't open");
                 return;
@@ -1503,7 +1508,7 @@ namespace WindowsFormsApp1
             else
             {
                 //Passes elevatorNumber, (if going up), isIdle
-                _elevatorControllerReception.SetElevatorDirectionDisplay(elevatorNumber, 0L != (_syncData1 & (1L << (SyncBool_Addresslong1_ElevatorXgoingUp + elevatorNumber))), isIdle);
+                _elevatorControllerReception.SetElevatorDirectionDisplay(elevatorNumber, 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXgoingUp + elevatorNumber))), isIdle);
             }
         }
         /// <summary>
@@ -1512,7 +1517,7 @@ namespace WindowsFormsApp1
         private void LOCAL_SetElevatorDirection(int elevatorNumber, bool goingUp)
         {
             //If elevator NOT open
-            if (0L == (_syncData1 & (1L << (SyncBool_Addresslong1_ElevatorXopen + elevatorNumber))))
+            if (0L == (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXopen + elevatorNumber))))
             {
                 Debug.Print("[NetworkController] LocalPlayer received to set elevator " + elevatorNumber + " GoingUp=" + goingUp.ToString() + ", but it isn't open");
                 return;
@@ -1526,7 +1531,7 @@ namespace WindowsFormsApp1
             else
             {
                 //Passes elevatorNumber, goingUp, (if idle)
-                _elevatorControllerReception.SetElevatorDirectionDisplay(elevatorNumber, goingUp, 0L != (_syncData1 & (1L << (SyncBool_Addresslong1_ElevatorXidle + elevatorNumber))));
+                _elevatorControllerReception.SetElevatorDirectionDisplay(elevatorNumber, goingUp, 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumber))));
             }
         }
         //------------------------------------- external elevator calls from floor buttons ------------------------------------------------
@@ -1554,7 +1559,7 @@ namespace WindowsFormsApp1
                         _pendingCallUp_COUNT_LOCAL_EXT--;
                         
                         //if NOT called up to floor X
-                        if (0L == (_syncData1 & (1L << (SyncBoolReq_Addresslong1_ElevatorCalledUp + floor))))
+                        if (0L == (_syncData1 & (1L << (SyncBoolReq_AddressLong1_ElevatorCalledUp + floor))))
                         {
                             //TODO: link all elevator controllers here in Unity later
                             if (floor == 0)
@@ -1582,7 +1587,7 @@ namespace WindowsFormsApp1
                         _pendingCallDown_COUNT_LOCAL_EXT--;
 
                         //if NOT called down to floor X
-                        if (0L == (_syncData1 & (1L << (SyncBoolReq_Addresslong1_ElevatorCalledDown + floor))))
+                        if (0L == (_syncData1 & (1L << (SyncBoolReq_AddressLong1_ElevatorCalledDown + floor))))
                         {
                             //TODO: link all elevator controllers here in Unity later
                             if (floor == 0)
@@ -1629,7 +1634,7 @@ namespace WindowsFormsApp1
                         _pendingCallElevator1_COUNT_LOCAL_INT--;
 
                         //if NOT elevator1 called to floor X
-                        if (0L == (_syncData2 & (1L << (SyncBoolReq_Addresslong2_Elevator1CalledToFloor + floor))))
+                        if (0L == (_syncData2 & (1L << (SyncBoolReq_AddressLong2_Elevator1CalledToFloor + floor))))
                         {
                             Debug.Print("Dropped request, SetElevatorInternalButtonState() button " + floor + " after " + (time.GetTime() - _pendingCallElevator1Time_LOCAL_INT[floor]).ToString() + " seconds.");
                             LOCAL_SetElevatorInternalButtonState(0, floor, called: false);
@@ -1646,7 +1651,7 @@ namespace WindowsFormsApp1
                     {
                         _pendingCallElevator0_LOCAL_INT[floor] = false;
                         _pendingCallElevator0_COUNT_LOCAL_INT--;
-                        if (0L == (_syncData1 & (1L << (SyncBoolReq_Addresslong1_Elevator0CalledToFloor + floor))))
+                        if (0L == (_syncData1 & (1L << (SyncBoolReq_AddressLong1_Elevator0CalledToFloor + floor))))
                         {
                             Debug.Print("Dropped request, SetElevatorInternalButtonState() button " + floor + " after " + (time.GetTime() - _pendingCallElevator0Time_LOCAL_INT[floor]).ToString() + " seconds.");
                             LOCAL_SetElevatorInternalButtonState(0, floor, called: false);
@@ -1664,7 +1669,7 @@ namespace WindowsFormsApp1
                         _pendingCallElevator2_LOCAL_INT[floor] = false;
                         _pendingCallElevator2_COUNT_LOCAL_INT--;
                         //if NOT elevator0 called to floor X
-                        if (0L == (_syncData2 & (1L << (SyncBoolReq_Addresslong2_Elevator2CalledToFloor + floor))))
+                        if (0L == (_syncData2 & (1L << (SyncBoolReq_AddressLong2_Elevator2CalledToFloor + floor))))
                         {
                             Debug.Print("Dropped request, SetElevatorInternalButtonState() button " + floor + " after " + (time.GetTime() - _pendingCallElevator2Time_LOCAL_INT[floor]).ToString() + " seconds.");
                             LOCAL_SetElevatorInternalButtonState(0, floor, called: false);
@@ -1684,7 +1689,7 @@ namespace WindowsFormsApp1
             {
                 Debug.Print("[NetworkController] Elevator called to floor " + floorNumber + " by localPlayer (Up)");
                 //if something with an array OR Elevator called up on floor X
-                if (_pendingCallUp_LOCAL_EXT[floorNumber] || 0L != (_syncData1 & (1L << (SyncBoolReq_Addresslong1_ElevatorCalledUp + floorNumber))))
+                if (_pendingCallUp_LOCAL_EXT[floorNumber] || 0L != (_syncData1 & (1L << (SyncBoolReq_AddressLong1_ElevatorCalledUp + floorNumber))))
                     return;
                 _pendingCallUp_LOCAL_EXT[floorNumber] = true;
                 _pendingCallTimeUp_LOCAL_EXT[floorNumber] = time.GetTime();
@@ -1695,7 +1700,7 @@ namespace WindowsFormsApp1
             {
                 Debug.Print("[NetworkController] Elevator called to floor " + floorNumber + " by localPlayer (Down)");
                 //if something with an array OR Elevator called down on floor X
-                if (_pendingCallDown_LOCAL_EXT[floorNumber] || 0L != (_syncData1 & (1L << (SyncBoolReq_Addresslong1_ElevatorCalledDown + floorNumber))))
+                if (_pendingCallDown_LOCAL_EXT[floorNumber] || 0L != (_syncData1 & (1L << (SyncBoolReq_AddressLong1_ElevatorCalledDown + floorNumber))))
                     return;
                 _pendingCallDown_LOCAL_EXT[floorNumber] = true;
                 _pendingCallTimeDown_LOCAL_EXT[floorNumber] = time.GetTime();
@@ -1712,7 +1717,7 @@ namespace WindowsFormsApp1
             if (buttonNumber == 0) //OPEN
             {
                 //If NOT elevator X open
-                if (0L == (_syncData1 & (1L << (SyncBool_Addresslong1_ElevatorXopen + elevatorNumber))))
+                if (0L == (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXopen + elevatorNumber))))
                 {
                     _elevatorRequester.RequestElevatorDoorStateChange(elevatorNumber, true);
                 }
@@ -1721,7 +1726,7 @@ namespace WindowsFormsApp1
             if (buttonNumber == 1) //CLOSE
             {
                 //If elevator X open
-                if (0L != (_syncData1 & (1L << (SyncBool_Addresslong1_ElevatorXopen + elevatorNumber))))
+                if (0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXopen + elevatorNumber))))
                 {
                     _elevatorRequester.RequestElevatorDoorStateChange(elevatorNumber, false);
                 }
@@ -1778,7 +1783,7 @@ namespace WindowsFormsApp1
         {
             Debug.Print("[NetworkingController] Master received Elevator called to floor " + floor + " by localPlayer (DirectionUp: " + directionUp.ToString() + ")");
             //if direction up AND NOT elevator called up to floor x
-            if (directionUp && (0L == (_syncData1 & (1L << (SyncBoolReq_Addresslong1_ElevatorCalledUp + floor)))))
+            if (directionUp && (0L == (_syncData1 & (1L << (SyncBoolReq_AddressLong1_ElevatorCalledUp + floor)))))
             {
                 if (!MASTER_ElevatorAlreadyThereAndOpen(floor, true))
                 {
@@ -1788,7 +1793,7 @@ namespace WindowsFormsApp1
                 }
             }
             //if NOT direction up AND NOT elevator called down to floor x
-            else if (!directionUp && (0L == (_syncData1 & (1L << (SyncBoolReq_Addresslong1_ElevatorCalledDown + floor)))))
+            else if (!directionUp && (0L == (_syncData1 & (1L << (SyncBoolReq_AddressLong1_ElevatorCalledDown + floor)))))
             {
                 if (!MASTER_ElevatorAlreadyThereAndOpen(floor, false))
                 {
@@ -1804,15 +1809,15 @@ namespace WindowsFormsApp1
         public void ELREQ_CallToChangeDoorState(int elevatorNumber, bool open)
         {
             float test = time.GetTime() - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber];
-            Debug.Print("Master received CallToChangeDoorState for elevator " + elevatorNumber + " (Direction open: " + open.ToString() + ") Elevator driving:" + _elevatorIsDriving_MASTER[elevatorNumber]);
+            Debug.Print("Master received CallToChangeDoorState for elevator " + elevatorNumber + " (Direction open: " + open.ToString() + ") Elevator driving:" + (0L != (_syncData2 & (1L << (SyncBool_AddressLong2_ElevatorXIsDriving + elevatorNumber)))));
             
             //if (open AND elevator X idle) OR (some timing stuff AND NOT driving)
-            if (open && 0L != (_syncData1 & (1L << (SyncBool_Addresslong1_ElevatorXidle + elevatorNumber))) || (time.GetTime() - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] < 2.5f && !_elevatorIsDriving_MASTER[elevatorNumber]))
+            if (open && 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumber))) || (time.GetTime() - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] < 2.5f && (0L == (_syncData2 & (1L << (SyncBool_AddressLong2_ElevatorXIsDriving + elevatorNumber))))))
             {
-                MASTER_HandleFloorDoorOpening(elevatorNumber, GetSyncElevatorFloor(elevatorNumber), 0L != (_syncData1 & (1L << (SyncBool_Addresslong1_ElevatorXgoingUp + elevatorNumber))), 0L != (_syncData1 & (1L << (SyncBool_Addresslong1_ElevatorXidle + elevatorNumber))));
+                MASTER_HandleFloorDoorOpening(elevatorNumber, GetSyncElevatorFloor(elevatorNumber), 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXgoingUp + elevatorNumber))), 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumber))));
             }
             //if NOT open AND elevator X idle AND some timing stuff
-            else if (!open && 0L != (_syncData1 & (1L << (SyncBool_Addresslong1_ElevatorXopen + elevatorNumber))) && time.GetTime() - _timeAtCurrentFloorElevatorOpened_MASTER[elevatorNumber] > 6f)
+            else if (!open && 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXopen + elevatorNumber))) && time.GetTime() - _timeAtCurrentFloorElevatorOpened_MASTER[elevatorNumber] > 6f)
             {
                 MASTER_SetSyncValue(SyncBool_Elevator0open + elevatorNumber, false);
                 _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] = time.GetTime();
@@ -1826,7 +1831,7 @@ namespace WindowsFormsApp1
 
             Debug.Print("[NetworkController] Master received client request to set target for elevator " + elevatorNumber + " to floor " + floorNumber);
             //if elevatorNumber0 AND NOT elevator0 called to floor X
-            if (elevatorNumber == 0 && (0L == (_syncData1 & (1L << (SyncBoolReq_Addresslong1_Elevator0CalledToFloor + floorNumber)))))
+            if (elevatorNumber == 0 && (0L == (_syncData1 & (1L << (SyncBoolReq_AddressLong1_Elevator0CalledToFloor + floorNumber)))))
             {
                 Debug.Print("Internal target was now set.");
                 MASTER_SetSyncValue(SyncBoolReq_Elevator0CalledToFloor_0 + floorNumber, true);
@@ -1835,7 +1840,7 @@ namespace WindowsFormsApp1
                 return;
             }
             //if elevatorNumber1 AND NOT elevator1 called to floor X
-            else if (elevatorNumber == 1 && (0L == (_syncData2 & (1L << (SyncBoolReq_Addresslong2_Elevator1CalledToFloor + floorNumber)))))
+            else if (elevatorNumber == 1 && (0L == (_syncData2 & (1L << (SyncBoolReq_AddressLong2_Elevator1CalledToFloor + floorNumber)))))
             {
                 Debug.Print("Internal target was now set.");
                 MASTER_SetSyncValue(SyncBoolReq_Elevator1CalledToFloor_0 + floorNumber, true);
@@ -1844,7 +1849,7 @@ namespace WindowsFormsApp1
                 return;
             }
             //if elevatorNumber2 AND NOT elevator2 called to floor X
-            else if (elevatorNumber == 2 && (0L == (_syncData2 & (1L << (SyncBoolReq_Addresslong2_Elevator2CalledToFloor + floorNumber)))))
+            else if (elevatorNumber == 2 && (0L == (_syncData2 & (1L << (SyncBoolReq_AddressLong2_Elevator2CalledToFloor + floorNumber)))))
             {
                 Debug.Print("Internal target was now set.");
                 MASTER_SetSyncValue(SyncBoolReq_Elevator2CalledToFloor_0 + floorNumber, true);
@@ -1862,15 +1867,15 @@ namespace WindowsFormsApp1
         /// <returns></returns>
         private bool MASTER_ElevatorAlreadyThereAndOpen(int floor, bool directionUp)
         {
-            if (_elevator0Working && GetSyncElevatorFloor(0) == floor && 0L != (_syncData1 & (SyncBool_Masklong1_Elevator0open)) && (0L != (_syncData1 & (SyncBool_Masklong1_Elevator0goingUp)) || 0L != (_syncData1 & (SyncBool_Masklong1_Elevator0idle))))
+            if (_elevator0Working && GetSyncElevatorFloor(0) == floor && 0L != (_syncData1 & (SyncBool_MaskLong1_Elevator0open)) && (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator0goingUp)) || 0L != (_syncData1 & (SyncBool_MaskLong1_Elevator0idle))))
             {
                 return true;
             }
-            if (_elevator1Working && GetSyncElevatorFloor(1) == floor && 0L != (_syncData1 & (SyncBool_Masklong1_Elevator1open)) && (0L != (_syncData1 & (SyncBool_Masklong1_Elevator1goingUp)) || 0L != (_syncData1 & (SyncBool_Masklong1_Elevator1idle))))
+            if (_elevator1Working && GetSyncElevatorFloor(1) == floor && 0L != (_syncData1 & (SyncBool_MaskLong1_Elevator1open)) && (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator1goingUp)) || 0L != (_syncData1 & (SyncBool_MaskLong1_Elevator1idle))))
             {
                 return true;
             }
-            if (_elevator2Working && GetSyncElevatorFloor(2) == floor && 0L != (_syncData1 & (SyncBool_Masklong1_Elevator2open)) && (0L != (_syncData1 & (SyncBool_Masklong1_Elevator2goingUp)) || 0L != (_syncData1 & (SyncBool_Masklong1_Elevator2idle))))
+            if (_elevator2Working && GetSyncElevatorFloor(2) == floor && 0L != (_syncData1 & (SyncBool_MaskLong1_Elevator2open)) && (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator2goingUp)) || 0L != (_syncData1 & (SyncBool_MaskLong1_Elevator2idle))))
             {
                 return true;
             }
