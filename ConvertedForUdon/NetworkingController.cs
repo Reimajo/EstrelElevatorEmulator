@@ -50,16 +50,13 @@ public class NetworkingController : UdonSharpBehaviour
     /// <summary>
     /// elevator states, synced by master
     /// </summary>
-    [HideInInspector, UdonSynced(UdonSyncMode.None)]
-    public long _syncData1forReal = 0;
-    private long _syncData1forRealLocalCopyForSyncCheck = 0;
-    private ulong _syncData1 = 0;
-    private ulong _syncData1LocalCopyForSyncCheck = 0;
+    [HideInInspector, UdonSynced(UdonSyncMode.None)]    
+    private long _syncData1 = 0;
     /// <summary>
     /// elevator request states, synced by master
     /// </summary>
     [HideInInspector, UdonSynced(UdonSyncMode.None)]
-    public uint _syncData2 = 0;
+    public long _syncData2 = 0;
     /// <summary>
     /// Current floor level that localPlayer is on
     /// </summary>
@@ -95,9 +92,7 @@ public class NetworkingController : UdonSharpBehaviour
     /// <summary>
     /// "ENUM" of different bools that are synced in _syncData
     /// (ENUM isn't possible in Udon, so we use this here)
-    ///  - 55-52 variable_3 (4bits)
-    ///  - 0-51 binary bools [0-51]
-    ///  - 0-31 binary bools [52-83(?)]
+    ///  0-115 binary bools
     /// </summary>
     /// 
     private const int SyncBoolReq_BellOn = 0;
@@ -202,6 +197,9 @@ public class NetworkingController : UdonSharpBehaviour
     private const int SyncBool_Elevator0working = 81;
     private const int SyncBool_Elevator1working = 82;
     private const int SyncBool_Elevator2working = 83;
+    private const int SyncBool_Elevator0IsDriving = 84;
+    private const int SyncBool_Elevator1IsDriving = 85;
+    private const int SyncBool_Elevator2IsDriving = 86;
     #endregion ENUM_SYNCBOOL
     #region ENUM_DIRECTSYNCBOOL
     /// <summary>
@@ -210,133 +208,137 @@ public class NetworkingController : UdonSharpBehaviour
     /// The GetSyncValue(*) function has been swapped to speed things up a bit.                        
     ///                 
     /// Accessing using mask (if true)
-    ///   -"0UL != (_syncData1 & (SyncBool_MaskUlong"
-    ///   - "0U != (_syncData2 & (SyncBool_MaskUint"
+    ///   -"0L != (_syncData1 & (SyncBool_MaskLong1"
+    ///   - "0L != (_syncData2 & (SyncBool_MaskLong"
     /// Or for "not"ed functions (if false)
-    ///   -"0UL == (_syncData1 & (SyncBool_MaskUlong"
-    ///   - "0U == (_syncData2 & (SyncBool_MaskUint"
+    ///   -"0L == (_syncData1 & (SyncBool_MaskLong1"
+    ///   - "0L == (_syncData2 & (SyncBool_MaskLong"
     /// 
     /// Accessing using it like an array (aka address based [slower])
-    ///  Checks if true:
-    ///  - (0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong
-    ///  - (0U != (_syncData2 & (1U << (SyncBool_AddressUint
+    ///  Checks if true:  
+    ///  - (0L != (_syncData1 & (1L << (SyncBool_AddressLong1
+    ///  - (0L != (_syncData2 & (1L << (SyncBool_AddressUint
     ///  Checks if false:
-    ///  - (0UL == (_syncData1 & (1UL << (SyncBool_AddressUlong
-    ///  - (0U == (_syncData2 & (1U << (SyncBool_AddressUint
+    ///  - (0L == (_syncData1 & (1L << (SyncBool_AddressLong1
+    ///  - (0L == (_syncData2 & (1L << (SyncBool_AddressUint
     /// </summary>
     ///         
-    private const ulong SyncBoolReq_MaskUlong_BellOn = (1UL);
-    private const int SyncBool_AddressUlong_ElevatorXopen = 1;
-    private const ulong SyncBool_MaskUlong_Elevator0open = (1UL << 1);
-    private const ulong SyncBool_MaskUlong_Elevator1open = (1UL << 2);
-    private const ulong SyncBool_MaskUlong_Elevator2open = (1UL << 3);
-    private const int SyncBool_AddressUlong_ElevatorXidle = 4;
-    private const ulong SyncBool_MaskUlong_Elevator0idle = (1UL << 4);
-    private const ulong SyncBool_MaskUlong_Elevator1idle = (1UL << 5);
-    private const ulong SyncBool_MaskUlong_Elevator2idle = (1UL << 6);
-    private const int SyncBool_AddressUlong_ElevatorXgoingUp = 7;
-    private const ulong SyncBool_MaskUlong_Elevator0goingUp = (1UL << 7);
-    private const ulong SyncBool_MaskUlong_Elevator1goingUp = (1UL << 8);
-    private const ulong SyncBool_MaskUlong_Elevator2goingUp = (1UL << 9);
+    private const long SyncBoolReq_MaskLong1_BellOn = (1L);
+    private const int SyncBool_AddressLong1_ElevatorXopen = 1;
+    private const long SyncBool_MaskLong1_Elevator0open = (1L << 1);
+    private const long SyncBool_MaskLong1_Elevator1open = (1L << 2);
+    private const long SyncBool_MaskLong1_Elevator2open = (1L << 3);
+    private const int SyncBool_AddressLong1_ElevatorXidle = 4;
+    private const long SyncBool_MaskLong1_Elevator0idle = (1L << 4);
+    private const long SyncBool_MaskLong1_Elevator1idle = (1L << 5);
+    private const long SyncBool_MaskLong1_Elevator2idle = (1L << 6);
+    private const int SyncBool_AddressLong1_ElevatorXgoingUp = 7;
+    private const long SyncBool_MaskLong1_Elevator0goingUp = (1L << 7);
+    private const long SyncBool_MaskLong1_Elevator1goingUp = (1L << 8);
+    private const long SyncBool_MaskLong1_Elevator2goingUp = (1L << 9);
     /// <summary>     
     /// Sync-data positions for elevator call up
     /// </summary>            
-    private const int SyncBoolReq_AddressUlong_ElevatorCalledUp = 10;
-    /*private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_0 = (1UL << 10);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_1 = (1UL << 11);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_2 = (1UL << 12);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_3 = (1UL << 13);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_4 = (1UL << 14);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_5 = (1UL << 15);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_6 = (1UL << 16);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_7 = (1UL 17);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_8 = (1UL << 18);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_9 = (1UL << 19);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_10 = (1UL << 20);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_11 = (1UL << 21);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_12 = (1UL << 22);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledUp_13 = (1UL << 23);*/
+    private const int SyncBoolReq_AddressLong1_ElevatorCalledUp = 10;
+    /*private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_0 = (1L << 10);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_1 = (1L << 11);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_2 = (1L << 12);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_3 = (1L << 13);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_4 = (1L << 14);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_5 = (1L << 15);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_6 = (1L << 16);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_7 = (1L 17);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_8 = (1L << 18);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_9 = (1L << 19);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_10 = (1L << 20);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_11 = (1L << 21);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_12 = (1L << 22);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledUp_13 = (1L << 23);*/
 
     /// <summary>     
     /// Sync-data positions for elevator call down
     /// </summary>     
-    private const int SyncBoolReq_AddressUlong_ElevatorCalledDown = 24;
-    /*private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_0 = (1UL << 24);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_1 = (1UL << 25);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_2 = (1UL << 26);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_3 = (1UL << 27);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_4 = (1UL << 28);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_5 = (1UL << 29);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_6 = (1UL << 30);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_7 = (1UL << 31);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_8 = (1UL << 32);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_9 = (1UL << 33);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_10 = (1UL << 34);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_11 = (1UL << 35);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_12 = (1UL << 36);
-    private const ulong SyncBoolReq_MaskUlong_ElevatorCalledDown_13 = (1UL << 37);*/
+    private const int SyncBoolReq_AddressLong1_ElevatorCalledDown = 24;
+    /*private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_0 = (1L << 24);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_1 = (1L << 25);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_2 = (1L << 26);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_3 = (1L << 27);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_4 = (1L << 28);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_5 = (1L << 29);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_6 = (1L << 30);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_7 = (1L << 31);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_8 = (1L << 32);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_9 = (1L << 33);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_10 = (1L << 34);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_11 = (1L << 35);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_12 = (1L << 36);
+    private const long SyncBoolReq_MaskLong1_ElevatorCalledDown_13 = (1L << 37);*/
 
     /// <summary>     
     /// Sync-data positions for internal elevator 0
-    /// ******THIS CANNOT BE USED****** It spans both the Ulong and Uint, use getSyncValues instead
+    /// ******THIS CANNOT BE USED****** It spans both the Long and Uint, use getSyncValues instead
     /// </summary>    
-    private const int SyncBoolReq_AddressUlong_Elevator0CalledToFloor = 38;
-    /*private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_0 = (1UL << 38);
-    private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_1 = (1UL << 39);
-    private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_2 = (1UL << 40);
-    private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_3 = (1UL << 41);
-    private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_4 = (1UL << 42);
-    private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_5 = (1UL << 43);
-    private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_6 = (1UL << 44);
-    private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_7 = (1UL << 45);
-    private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_8 = (1UL << 46);
-    private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_9 = (1UL << 47);
-    private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_10 = (1UL << 48);
-    private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_11 = (1UL << 49);
-    private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_12 = (1UL << 50);
-    private const ulong SyncBoolReq_MaskUlong_Elevator0CalledToFloor_13 = (1UL << 51);*/
+    private const int SyncBoolReq_AddressLong1_Elevator0CalledToFloor = 38;
+    /*private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_0 = (1L << 38);
+    private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_1 = (1L << 39);
+    private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_2 = (1L << 40);
+    private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_3 = (1L << 41);
+    private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_4 = (1L << 42);
+    private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_5 = (1L << 43);
+    private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_6 = (1L << 44);
+    private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_7 = (1L << 45);
+    private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_8 = (1L << 46);
+    private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_9 = (1L << 47);
+    private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_10 = (1L << 48);
+    private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_11 = (1L << 49);
+    private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_12 = (1L << 50);
+    private const long SyncBoolReq_MaskLong1_Elevator0CalledToFloor_13 = (1L << 51);*/
     /// <summary>     
     /// Sync-data positions for internal elevator 1
     /// </summary>     
-    private const int SyncBoolReq_AddressUint_Elevator1CalledToFloor = 0;
-    /*private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_0 = (1U << 0);
-    private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_1 = (1U << 1);
-    private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_2 = (1U << 2);
-    private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_3 = (1U << 3);
-    private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_4 = (1U << 4);
-    private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_5 = (1U << 5);
-    private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_6 = (1U << 6);
-    private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_7 = (1U << 7);
-    private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_8 = (1U << 8);
-    private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_9 = (1U << 9);
-    private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_10 = (1U << 10);
-    private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_11 = (1U << 11);
-    private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_12 = (1U << 12);
-    private const uint SyncBoolReq_MaskUint_Elevator1CalledToFloor_13 = (1U << 13);*/
+    private const int SyncBoolReq_AddressLong2_Elevator1CalledToFloor = 0;
+    /*private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_0 = (1L << 0);
+    private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_1 = (1L << 1);
+    private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_2 = (1L << 2);
+    private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_3 = (1L << 3);
+    private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_4 = (1L << 4);
+    private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_5 = (1L << 5);
+    private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_6 = (1L << 6);
+    private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_7 = (1L << 7);
+    private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_8 = (1L << 8);
+    private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_9 = (1L << 9);
+    private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_10 = (1L << 10);
+    private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_11 = (1L << 11);
+    private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_12 = (1L << 12);
+    private const long SyncBoolReq_MaskLong2_Elevator1CalledToFloor_13 = (1L << 13);*/
     /// <summary>     
     /// Sync-data positions for internal elevator 2
     /// </summary>     
-    private const int SyncBoolReq_AddressUint_Elevator2CalledToFloor = 14;
-    /*private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_0 = (1U << 14);
-    private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_1 = (1U << 15);
-    private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_2 = (1U << 16);
-    private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_3 = (1U << 17);
-    private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_4 = (1U << 18);
-    private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_5 = (1U << 19);
-    private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_6 = (1U << 20);
-    private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_7 = (1U << 21);
-    private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_8 = (1U << 22);
-    private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_9 = (1U << 23);
-    private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_10 = (1U << 24);
-    private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_11 = (1U << 25);
-    private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_12 = (1U << 26);
-    private const uint SyncBoolReq_MaskUint_Elevator2CalledToFloor_13 = (1U << 27);*/
+    private const int SyncBoolReq_AddressLong2_Elevator2CalledToFloor = 14;
+    /*private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_0 = (1L << 14);
+    private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_1 = (1L << 15);
+    private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_2 = (1L << 16);
+    private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_3 = (1L << 17);
+    private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_4 = (1L << 18);
+    private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_5 = (1L << 19);
+    private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_6 = (1L << 20);
+    private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_7 = (1L << 21);
+    private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_8 = (1L << 22);
+    private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_9 = (1L << 23);
+    private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_10 = (1L << 24);
+    private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_11 = (1L << 25);
+    private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_12 = (1L << 26);
+    private const long SyncBoolReq_MaskLong2_Elevator2CalledToFloor_13 = (1L << 27);*/
 
-    private const uint SyncBool_MaskUint_Initialized = (1U << 28);
-    private const int SyncBool_AddressUlong_ElevatorXworking = 29;
-    private const uint SyncBool_MaskUint_Elevator0working = (1U << 29);
-    private const uint SyncBool_MaskUint_Elevator1working = (1U << 30);
-    private const uint SyncBool_MaskUint_Elevator2working = (1U << 31);
+    private const long SyncBool_MaskLong2_Initialized = (1L << 28);
+    private const int SyncBool_AddressLong2_ElevatorXworking = 29;
+    private const long SyncBool_MaskLong2_Elevator0working = (1L << 29);
+    private const long SyncBool_MaskLong2_Elevator1working = (1L << 30);
+    private const long SyncBool_MaskLong2_Elevator2working = (1L << 31);
+    private const int SyncBool_AddressLong2_ElevatorXIsDriving = 32;
+    private const long SyncBool_MaskLong2_Elevator0IsDriving = (1L << 32);
+    private const long SyncBool_MaskLong2_Elevator1IsDriving = (1L << 33);
+    private const long SyncBool_MaskLong2_Elevator2IsDriving = (1L << 34);
 
     #endregion ENUM_DIRECTSYNCBOOL
     //------------------------------------------------------------------------------------------------------------
@@ -354,7 +356,7 @@ public class NetworkingController : UdonSharpBehaviour
         _localPlayer = Networking.LocalPlayer;
         _userIsInVR = _localPlayer.IsUserInVR();
         //the first master has to set the constant scene settings
-        if (_localPlayer.isMaster && 0U == (_syncData2 & (SyncBool_MaskUint_Initialized)))
+        if (_localPlayer.isMaster && 0L == (_syncData2 & (SyncBool_MaskLong2_Initialized)))
         {
             _isMaster = true;
             MASTER_SetConstSceneElevatorStates();
@@ -405,13 +407,6 @@ public class NetworkingController : UdonSharpBehaviour
             LOCAL_OnDeserialization();
             //only the current master does this
             MASTER_RunElevatorControl();
-            //WORKAROUND for UInt64 not working
-            if (_syncData1 != _syncData1LocalCopyForSyncCheck)
-            {
-                Debug.Log("[NetworkController] Master has set _syncData1");
-                _syncData1forReal = CastAwayAnyHopeToLong(_syncData1); //send to clients
-                _syncData1LocalCopyForSyncCheck = _syncData1;
-            }
         }
         //Checking if local external call was handled or dropped
         LOCAL_CheckIfElevatorExternalCallWasReceived();
@@ -425,8 +420,7 @@ public class NetworkingController : UdonSharpBehaviour
     #region MASTER_FUNCTIONS
     /// <summary>
     /// locally storing where each elevator is and has to go, these need to be checked against SyncBool states 
-    /// </summary>
-    private bool[] _elevatorIsDriving_MASTER = new bool[3]; //this array is local only and not synced
+    /// </summary>    
     private bool[] _calledToFloorToGoUp_MASTER = new bool[14];
     private int _calledToFloorToGoUp_MASTER_COUNT = 0;
     private bool[] _calledToFloorToGoDown_MASTER = new bool[14];
@@ -464,8 +458,7 @@ public class NetworkingController : UdonSharpBehaviour
     /// </summary>
     private void MASTER_OnMasterChanged()
     {
-        //resetting arrays and counters
-        _elevatorIsDriving_MASTER = new bool[3];
+        //resetting arrays and counters        
         _elevator0FloorTargets_MASTER = new bool[14];
         _elevator0FloorTargets_MASTER_COUNT = 0;
         _elevator1FloorTargets_MASTER = new bool[14];
@@ -481,31 +474,31 @@ public class NetworkingController : UdonSharpBehaviour
         for (int i = 0; i <= 13; i++)
         {
             //If Elevator0 called to floor i
-            if (0UL != (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_Elevator0CalledToFloor + i))))
+            if (0L != (_syncData1 & (1L << (SyncBoolReq_AddressLong1_Elevator0CalledToFloor + i))))
             {
                 _elevator0FloorTargets_MASTER[i] = true;
                 _elevator0FloorTargets_MASTER_COUNT++;
             }
             //If Elevator1 called to floor i
-            if (0U != (_syncData2 & (1U << (SyncBoolReq_AddressUint_Elevator1CalledToFloor + i))))
+            if (0L != (_syncData2 & (1L << (SyncBoolReq_AddressLong2_Elevator1CalledToFloor + i))))
             {
                 _elevator1FloorTargets_MASTER[i] = true;
                 _elevator1FloorTargets_MASTER_COUNT++;
             }
             //If Elevator2 called to floor i
-            if (0U != (_syncData2 & (1U << (SyncBoolReq_AddressUint_Elevator2CalledToFloor + i))))
+            if (0L != (_syncData2 & (1L << (SyncBoolReq_AddressLong2_Elevator2CalledToFloor + i))))
             {
                 _elevator2FloorTargets_MASTER[i] = true;
                 _elevator2FloorTargets_MASTER_COUNT++;
             }
             //If floor has "Called Up" pressed
-            if (0UL != (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_ElevatorCalledUp + i))))
+            if (0L != (_syncData1 & (1L << (SyncBoolReq_AddressLong1_ElevatorCalledUp + i))))
             {
                 _calledToFloorToGoUp_MASTER[i] = true;
                 _calledToFloorToGoUp_MASTER_COUNT++;
             }
             //If floor has "Called Down" pressed
-            if (0UL != (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_ElevatorCalledDown + i))))
+            if (0L != (_syncData1 & (1L << (SyncBoolReq_AddressLong1_ElevatorCalledDown + i))))
             {
                 _calledToFloorToGoDown_MASTER[i] = true;
                 _calledToFloorToGoDown_MASTER_COUNT++;
@@ -571,21 +564,21 @@ public class NetworkingController : UdonSharpBehaviour
 
         if (elevatorNumber == 0)
         {
-            elevatorIdle = (0UL != (_syncData1 & (SyncBool_MaskUlong_Elevator0idle)));
-            elevatorGoingUp = (0UL != (_syncData1 & (SyncBool_MaskUlong_Elevator0goingUp)));
-            elevatorOpen = (0UL != (_syncData1 & (SyncBool_MaskUlong_Elevator0open)));
+            elevatorIdle = (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator0idle)));
+            elevatorGoingUp = (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator0goingUp)));
+            elevatorOpen = (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator0open)));
         }
         else if (elevatorNumber == 1)
         {
-            elevatorIdle = (0UL != (_syncData1 & (SyncBool_MaskUlong_Elevator1idle)));
-            elevatorGoingUp = (0UL != (_syncData1 & (SyncBool_MaskUlong_Elevator1goingUp)));
-            elevatorOpen = (0UL != (_syncData1 & (SyncBool_MaskUlong_Elevator1open)));
+            elevatorIdle = (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator1idle)));
+            elevatorGoingUp = (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator1goingUp)));
+            elevatorOpen = (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator1open)));
         }
         else
         {
-            elevatorIdle = (0UL != (_syncData1 & (SyncBool_MaskUlong_Elevator2idle)));
-            elevatorGoingUp = (0UL != (_syncData1 & (SyncBool_MaskUlong_Elevator2goingUp)));
-            elevatorOpen = (0UL != (_syncData1 & (SyncBool_MaskUlong_Elevator2open)));
+            elevatorIdle = (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator2idle)));
+            elevatorGoingUp = (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator2goingUp)));
+            elevatorOpen = (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator2open)));
         }
 
         bool targetFound = false;
@@ -617,7 +610,7 @@ public class NetworkingController : UdonSharpBehaviour
                 return;
             }
         }
-        else if (!_elevatorIsDriving_MASTER[elevatorNumber])
+        else if (0L == (_syncData2 & (1L << (SyncBool_AddressLong2_ElevatorXIsDriving + elevatorNumber))))
         {
             if (Time.time - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] < TIME_TO_STAY_CLOSED)
             {
@@ -629,7 +622,7 @@ public class NetworkingController : UdonSharpBehaviour
             else
             {
                 //Doors closed and timeout exceeded. Set elevator to drive and block door requests
-                _elevatorIsDriving_MASTER[elevatorNumber] = true;
+                MASTER_SetSyncValue(SyncBool_Elevator0IsDriving + elevatorNumber, true);
             }
         }
         else if (Time.time - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] < TIME_TO_DRIVE_ONE_FLOOR)
@@ -913,7 +906,7 @@ public class NetworkingController : UdonSharpBehaviour
         //then handle the floor targets
         MASTER_HandleFloorTarget(elevatorNumber, currentFloor, directionUp, isIdle);
         MASTER_SetSyncValue(SyncBool_Elevator0open + elevatorNumber, true); //opening the elevator
-        _elevatorIsDriving_MASTER[elevatorNumber] = false;
+        MASTER_SetSyncValue(SyncBool_Elevator0IsDriving + elevatorNumber, false);
         _timeAtCurrentFloorElevatorOpened_MASTER[elevatorNumber] = Time.time;
     }
     /// <summary>
@@ -961,7 +954,7 @@ public class NetworkingController : UdonSharpBehaviour
     {
         MASTER_SetSyncValue(SyncBool_Elevator0goingUp + elevatorNumber, goingUp);
         //If elevator x is Idle
-        if (0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumber))))
+        if (0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumber))))
         {
             MASTER_SetSyncValue(SyncBool_Elevator0idle + elevatorNumber, false);
             _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] = Time.time + TIME_TO_STAY_CLOSED - TIME_TO_STAY_CLOSED_AFTER_GOING_OUT_OF_IDLE;
@@ -1047,11 +1040,11 @@ public class NetworkingController : UdonSharpBehaviour
     /// <summary>
     /// elevator request states, synced by master
     /// </summary>
-    private ulong _localSyncData1 = 0;
-    private uint _localSyncData2 = 0;
-    private bool[] _localSyncDataBools = new bool[84];
+    private long _localSyncData1 = 0;
+    private long _localSyncData2 = 0;
+    private bool[] _localSyncDataBools = new bool[116];
     /// <summary>
-    /// The ulong maps as follows:-
+    /// The long maps as follows:-
     ///  - 63-60 variable_1 (4bits)
     ///  - 59-56 variable_2 (4bits)
     ///  - 55-52 variable_3 (4bits)
@@ -1069,7 +1062,7 @@ public class NetworkingController : UdonSharpBehaviour
         {
             //position 52 to position 63 are floor levels that might have changed
             LOCAL_CheckElevatorLevels();
-            bool[] cachedSync1Bools = GetBoolArrayUlongONLY();
+            bool[] cachedSync1Bools = GetBoolArrayLong1ONLY();
             //the positions 0-51 are binary bools that might have changed
             for (int i = 0; i < 52; i++) //no need to check bool 0
             {
@@ -1084,9 +1077,9 @@ public class NetworkingController : UdonSharpBehaviour
         //check if something from this synced var has changed
         if (_syncData2 != _localSyncData2)
         {
-            bool[] cachedSync2Bools = GetBoolArrayUintONLY();
+            bool[] cachedSync2Bools = GetBoolArrayLong2ONLY();
             //the positions 0-31 are binary bools that might have changed (position 52-83)
-            for (int i = 52; i < 84; i++)
+            for (int i = 52; i < 116; i++)
             {
                 if (cachedSync2Bools[i] != _localSyncDataBools[i])
                 {
@@ -1458,9 +1451,9 @@ public class NetworkingController : UdonSharpBehaviour
     private void LOCAL_ReadConstSceneElevatorStates()
     {
         Debug.Log("[NetworkController] Setting random elevator states for reception by localPlayer");
-        _elevator0Working = 0U != (_syncData2 & (SyncBool_MaskUint_Elevator0working));
-        _elevator1Working = 0U != (_syncData2 & (SyncBool_MaskUint_Elevator1working));
-        _elevator2Working = 0U != (_syncData2 & (SyncBool_MaskUint_Elevator2working));
+        _elevator0Working = 0L != (_syncData2 & (SyncBool_MaskLong2_Elevator0working));
+        _elevator1Working = 0L != (_syncData2 & (SyncBool_MaskLong2_Elevator1working));
+        _elevator2Working = 0L != (_syncData2 & (SyncBool_MaskLong2_Elevator2working));
         _elevatorControllerReception._elevator1working = _elevator0Working;
         _elevatorControllerReception._elevator2working = _elevator1Working;
         _elevatorControllerReception._elevator3working = _elevator2Working;
@@ -1491,7 +1484,7 @@ public class NetworkingController : UdonSharpBehaviour
             if (Time.time < 1f) //no scene setup before at least 1 second has passed to ensure the update loop has already started
                 return;
             Debug.Log("[NetworkController] Local setup was started");
-            if (0U != (_syncData2 & (SyncBool_MaskUint_Initialized)))
+            if (0L != (_syncData2 & (SyncBool_MaskLong2_Initialized)))
             {
                 LOCAL_ReadConstSceneElevatorStates();
                 _finishedLocalSetup = true;
@@ -1504,13 +1497,6 @@ public class NetworkingController : UdonSharpBehaviour
         }
         else
         {
-            //WORKAROUND for UInt64 not working
-            if (_syncData1forReal != _syncData1forRealLocalCopyForSyncCheck)
-            {
-                Debug.Log("[NetworkController] _syncData1forReal has changed!");
-                _syncData1 = CastAwayAnyHopeToUlong(_syncData1forReal); //received from master
-                _syncData1forRealLocalCopyForSyncCheck = _syncData1forReal;
-            }
             LOCAL_CheckSyncData();
         }
     }
@@ -1534,12 +1520,12 @@ public class NetworkingController : UdonSharpBehaviour
                 if (floorNumber == 0)
                 {
                     //Passes elevatorNumber, (if going up), (if idle)
-                    _elevatorControllerReception.OpenElevator(elevatorNumber, 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumber))), 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumber))));
+                    _elevatorControllerReception.OpenElevator(elevatorNumber, 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXgoingUp + elevatorNumber))), 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumber))));
                 }
                 else if (floorNumber == _localPlayerCurrentFloor)
                 {
                     //Passes elevatorNumber, (if going up), (if idle)
-                    _elevatorControllerArrivalArea.OpenElevator(elevatorNumber, 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumber))), 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumber))));
+                    _elevatorControllerArrivalArea.OpenElevator(elevatorNumber, 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXgoingUp + elevatorNumber))), 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumber))));
                 }
             }
         }
@@ -1563,7 +1549,7 @@ public class NetworkingController : UdonSharpBehaviour
     private void LOCAL_SetElevatorIdle(int elevatorNumber, bool isIdle)
     {
         //If elevator NOT open
-        if (0UL == (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXopen + elevatorNumber))))
+        if (0L == (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXopen + elevatorNumber))))
         {
             Debug.Log("[NetworkController] LocalPlayer received to set elevator " + elevatorNumber + " IDLE=" + isIdle.ToString() + ", but it isn't open");
             return;
@@ -1573,12 +1559,12 @@ public class NetworkingController : UdonSharpBehaviour
         if (floor == 0)
         {
             //Passes elevatorNumber, isGoingUp, isIdle
-            _elevatorControllerReception.SetElevatorDirectionDisplay(elevatorNumber, 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumber))), isIdle);
+            _elevatorControllerReception.SetElevatorDirectionDisplay(elevatorNumber, 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXgoingUp + elevatorNumber))), isIdle);
         }
         else if (floor == _localPlayerCurrentFloor)
         {
             //Passes elevatorNumber, isGoingUp, isIdle
-            _elevatorControllerArrivalArea.SetElevatorDirectionDisplay(elevatorNumber, 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumber))), isIdle);
+            _elevatorControllerArrivalArea.SetElevatorDirectionDisplay(elevatorNumber, 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXgoingUp + elevatorNumber))), isIdle);
         }
     }
     /// <summary>
@@ -1587,7 +1573,7 @@ public class NetworkingController : UdonSharpBehaviour
     private void LOCAL_SetElevatorDirection(int elevatorNumber, bool goingUp)
     {
         //If elevator NOT open
-        if (0UL == (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXopen + elevatorNumber))))
+        if (0L == (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXopen + elevatorNumber))))
         {
             Debug.Log("[NetworkController] LocalPlayer received to set elevator " + elevatorNumber + " GoingUp=" + goingUp.ToString() + ", but it isn't open");
             return;
@@ -1597,12 +1583,12 @@ public class NetworkingController : UdonSharpBehaviour
         if (floor == 0)
         {
             //Passes elevatorNumber, goingUp, (if idle)
-            _elevatorControllerReception.SetElevatorDirectionDisplay(elevatorNumber, goingUp, 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumber))));
+            _elevatorControllerReception.SetElevatorDirectionDisplay(elevatorNumber, goingUp, 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumber))));
         }
         else if (floor == _localPlayerCurrentFloor)
         {
             //Passes elevatorNumber, goingUp, (if idle)
-            _elevatorControllerArrivalArea.SetElevatorDirectionDisplay(elevatorNumber, goingUp, 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumber))));
+            _elevatorControllerArrivalArea.SetElevatorDirectionDisplay(elevatorNumber, goingUp, 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumber))));
         }
     }
     //------------------------------------- external elevator calls from floor buttons ------------------------------------------------
@@ -1629,7 +1615,7 @@ public class NetworkingController : UdonSharpBehaviour
                     _pendingCallUp_LOCAL_EXT[floor] = false;
                     _pendingCallUp_COUNT_LOCAL_EXT--;
                     //if NOT called up to floor X
-                    if (0UL == (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_ElevatorCalledUp + floor))))
+                    if (0L == (_syncData1 & (1L << (SyncBoolReq_AddressLong1_ElevatorCalledUp + floor))))
                     {
                         //TODO: link all elevator controllers here in Unity later
                         if (floor == 0)
@@ -1656,7 +1642,7 @@ public class NetworkingController : UdonSharpBehaviour
                     _pendingCallDown_LOCAL_EXT[floor] = false;
                     _pendingCallDown_COUNT_LOCAL_EXT--;
                     //if NOT called down to floor X
-                    if (0UL == (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_ElevatorCalledDown + floor))))
+                    if (0L == (_syncData1 & (1L << (SyncBoolReq_AddressLong1_ElevatorCalledDown + floor))))
                     {
                         //TODO: link all elevator controllers here in Unity later
                         if (floor == 0)
@@ -1701,7 +1687,7 @@ public class NetworkingController : UdonSharpBehaviour
                 {
                     _pendingCallElevator0_LOCAL_INT[floor] = false;
                     _pendingCallElevator0_COUNT_LOCAL_INT--;
-                    if (0UL == (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_Elevator0CalledToFloor + floor))))
+                    if (0L == (_syncData1 & (1L << (SyncBoolReq_AddressLong1_Elevator0CalledToFloor + floor))))
                     {
                         Debug.Log("Dropped request, SetElevatorInternalButtonState() button " + floor + " after " + (Time.time - _pendingCallElevator0Time_LOCAL_INT[floor]).ToString() + " seconds.");
                         LOCAL_SetElevatorInternalButtonState(0, floor + 4, called: false);
@@ -1720,7 +1706,7 @@ public class NetworkingController : UdonSharpBehaviour
                     _pendingCallElevator1_COUNT_LOCAL_INT--;
 
                     //if NOT elevator1 called to floor X
-                    if (0U == (_syncData2 & (1U << (SyncBoolReq_AddressUint_Elevator1CalledToFloor + floor))))
+                    if (0L == (_syncData2 & (1L << (SyncBoolReq_AddressLong2_Elevator1CalledToFloor + floor))))
                     {
                         Debug.Log("Dropped request, SetElevatorInternalButtonState() button " + floor + " after " + (Time.time - _pendingCallElevator1Time_LOCAL_INT[floor]).ToString() + " seconds.");
                         LOCAL_SetElevatorInternalButtonState(0, floor + 4, called: false);
@@ -1738,7 +1724,7 @@ public class NetworkingController : UdonSharpBehaviour
                     _pendingCallElevator2_LOCAL_INT[floor] = false;
                     _pendingCallElevator2_COUNT_LOCAL_INT--;
                     //if NOT elevator0 called to floor X
-                    if (0U == (_syncData2 & (1U << (SyncBoolReq_AddressUint_Elevator2CalledToFloor + floor))))
+                    if (0L == (_syncData2 & (1L << (SyncBoolReq_AddressLong2_Elevator2CalledToFloor + floor))))
                     {
                         Debug.Log("Dropped request, SetElevatorInternalButtonState() button " + floor + " after " + (Time.time - _pendingCallElevator2Time_LOCAL_INT[floor]).ToString() + " seconds.");
                         LOCAL_SetElevatorInternalButtonState(0, floor + 4, called: false);
@@ -1912,7 +1898,7 @@ public class NetworkingController : UdonSharpBehaviour
         {
             Debug.Log("[Prepare] Floor is 0 so we'll open reception elevator and teleport there.");
             //open just the reception elevator where the player is inside
-            _elevatorControllerReception.OpenElevator(elevatorNumberWithPlayerInside, 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumberWithPlayerInside))), 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumberWithPlayerInside))));
+            _elevatorControllerReception.OpenElevator(elevatorNumberWithPlayerInside, 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXgoingUp + elevatorNumberWithPlayerInside))), 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumberWithPlayerInside))));
             //teleport to reception
             //_localPlayer.TeleportTo(_teleportTarget, _localPlayer.GetRotation());
             _teleportCounter = 3;
@@ -1920,18 +1906,18 @@ public class NetworkingController : UdonSharpBehaviour
         }
         Debug.Log("[Prepare] Setting the Callbutton-States on the arrival floor");
         //setting the callbutton-states
-        _elevatorControllerArrivalArea.SetCallButtonState(buttonUp: false, isCalled: (0UL != (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_ElevatorCalledDown + floorNumber)))));
-        _elevatorControllerArrivalArea.SetCallButtonState(buttonUp: true, isCalled: (0UL != (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_ElevatorCalledUp + floorNumber)))));
+        _elevatorControllerArrivalArea.SetCallButtonState(buttonUp: false, isCalled: (0L != (_syncData1 & (1L << (SyncBoolReq_AddressLong1_ElevatorCalledDown + floorNumber)))));
+        _elevatorControllerArrivalArea.SetCallButtonState(buttonUp: true, isCalled: (0L != (_syncData1 & (1L << (SyncBoolReq_AddressLong1_ElevatorCalledUp + floorNumber)))));
         Debug.Log("[Prepare] Setting the Elevatordoor-States on the arrival floor");
         //setting the elevators-open/closed states
         for (int elevatorNumber = 0; elevatorNumber < 3; elevatorNumber++)
         {
-            bool setOpen = (0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXopen + elevatorNumber))));
+            bool setOpen = (0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXopen + elevatorNumber))));
             if (setOpen && GetSyncElevatorFloor(elevatorNumber) == floorNumber)
             {
                 Debug.Log($"[Prepare] Opening elevator {elevatorNumber}");
                 //Passes elevatorNumber, (if going up), (if idle)
-                _elevatorControllerArrivalArea.OpenElevator(elevatorNumber, 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumber))), 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumber))));
+                _elevatorControllerArrivalArea.OpenElevator(elevatorNumber, 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXgoingUp + elevatorNumber))), 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumber))));
             }
             else
             {
@@ -2020,7 +2006,7 @@ public class NetworkingController : UdonSharpBehaviour
         {
             Debug.Log("[NetworkController] Elevator called to floor " + floorNumber + " by localPlayer (Up)");
             //if something with an array OR Elevator called up on floor X
-            if (_pendingCallUp_LOCAL_EXT[floorNumber] || 0UL != (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_ElevatorCalledUp + floorNumber))))
+            if (_pendingCallUp_LOCAL_EXT[floorNumber] || 0L != (_syncData1 & (1L << (SyncBoolReq_AddressLong1_ElevatorCalledUp + floorNumber))))
                 return;
             _pendingCallUp_LOCAL_EXT[floorNumber] = true;
             _pendingCallTimeUp_LOCAL_EXT[floorNumber] = Time.time;
@@ -2031,7 +2017,7 @@ public class NetworkingController : UdonSharpBehaviour
         {
             Debug.Log("[NetworkController] Elevator called to floor " + floorNumber + " by localPlayer (Down)");
             //if something with an array OR Elevator called down on floor X
-            if (_pendingCallDown_LOCAL_EXT[floorNumber] || 0UL != (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_ElevatorCalledDown + floorNumber))))
+            if (_pendingCallDown_LOCAL_EXT[floorNumber] || 0L != (_syncData1 & (1L << (SyncBoolReq_AddressLong1_ElevatorCalledDown + floorNumber))))
                 return;
             _pendingCallDown_LOCAL_EXT[floorNumber] = true;
             _pendingCallTimeDown_LOCAL_EXT[floorNumber] = Time.time;
@@ -2048,7 +2034,7 @@ public class NetworkingController : UdonSharpBehaviour
         if (buttonNumber == 0) //OPEN
         {
             //If NOT elevator X open
-            if (0UL == (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXopen + elevatorNumber))))
+            if (0L == (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXopen + elevatorNumber))))
             {
                 _elevatorRequester.RequestElevatorDoorStateChange(elevatorNumber, true);
             }
@@ -2057,7 +2043,7 @@ public class NetworkingController : UdonSharpBehaviour
         if (buttonNumber == 1) //CLOSE
         {
             //If elevator X open
-            if (0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXopen + elevatorNumber))))
+            if (0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXopen + elevatorNumber))))
             {
                 _elevatorRequester.RequestElevatorDoorStateChange(elevatorNumber, false);
             }
@@ -2120,7 +2106,7 @@ public class NetworkingController : UdonSharpBehaviour
     {
         Debug.Log("[NetworkingController] Master received Elevator called to floor " + floor + " by localPlayer (DirectionUp: " + directionUp.ToString() + ")");
         //if direction up AND NOT elevator called up to floor x
-        if (directionUp && (0UL == (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_ElevatorCalledUp + floor)))))
+        if (directionUp && (0L == (_syncData1 & (1L << (SyncBoolReq_AddressLong1_ElevatorCalledUp + floor)))))
         {
             if (!MASTER_ElevatorAlreadyThereAndOpen(floor, true))
             {
@@ -2130,7 +2116,7 @@ public class NetworkingController : UdonSharpBehaviour
             }
         }
         //if NOT direction up AND NOT elevator called down to floor x
-        else if (!directionUp && (0UL == (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_ElevatorCalledDown + floor)))))
+        else if (!directionUp && (0L == (_syncData1 & (1L << (SyncBoolReq_AddressLong1_ElevatorCalledDown + floor)))))
         {
             if (!MASTER_ElevatorAlreadyThereAndOpen(floor, false))
             {
@@ -2146,15 +2132,15 @@ public class NetworkingController : UdonSharpBehaviour
     public void ELREQ_CallToChangeDoorState(int elevatorNumber, bool open)
     {
         float test = Time.time - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber];
-        Debug.Log("Master received CallToChangeDoorState for elevator " + elevatorNumber + " (Direction open: " + open.ToString() + ") Elevator driving:" + _elevatorIsDriving_MASTER[elevatorNumber]);
+        Debug.Log("Master received CallToChangeDoorState for elevator " + elevatorNumber + " (Direction open: " + open.ToString() + ") Elevator driving:" + (0L != (_syncData2 & (1L << (SyncBool_AddressLong2_ElevatorXIsDriving + elevatorNumber)))));
 
         //if (open AND elevator X idle) OR (some timing stuff AND NOT driving)
-        if (open && 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumber))) || (Time.time - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] < 2.5f && !_elevatorIsDriving_MASTER[elevatorNumber]))
+        if (open && 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumber))) || (Time.time - _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] < 2.5f && (0L == (_syncData2 & (1L << (SyncBool_AddressLong2_ElevatorXIsDriving + elevatorNumber))))))
         {
-            MASTER_HandleFloorDoorOpening(elevatorNumber, GetSyncElevatorFloor(elevatorNumber), 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXgoingUp + elevatorNumber))), 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXidle + elevatorNumber))));
+            MASTER_HandleFloorDoorOpening(elevatorNumber, GetSyncElevatorFloor(elevatorNumber), 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXgoingUp + elevatorNumber))), 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumber))));
         }
         //if NOT open AND elevator X idle AND some timing stuff
-        else if (!open && 0UL != (_syncData1 & (1UL << (SyncBool_AddressUlong_ElevatorXopen + elevatorNumber))) && Time.time - _timeAtCurrentFloorElevatorOpened_MASTER[elevatorNumber] > 6f)
+        else if (!open && 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXopen + elevatorNumber))) && Time.time - _timeAtCurrentFloorElevatorOpened_MASTER[elevatorNumber] > 6f)
         {
             MASTER_SetSyncValue(SyncBool_Elevator0open + elevatorNumber, false);
             _timeAtCurrentFloorElevatorClosed_MASTER[elevatorNumber] = Time.time;
@@ -2168,7 +2154,7 @@ public class NetworkingController : UdonSharpBehaviour
 
         Debug.Log("[NetworkController] Master received client request to set target for elevator " + elevatorNumber + " to floor " + floorNumber);
         //if elevatorNumber0 AND NOT elevator0 called to floor X
-        if (elevatorNumber == 0 && (0UL == (_syncData1 & (1UL << (SyncBoolReq_AddressUlong_Elevator0CalledToFloor + floorNumber)))))
+        if (elevatorNumber == 0 && (0L == (_syncData1 & (1L << (SyncBoolReq_AddressLong1_Elevator0CalledToFloor + floorNumber)))))
         {
             Debug.Log("Internal target was now set.");
             MASTER_SetSyncValue(SyncBoolReq_Elevator0CalledToFloor_0 + floorNumber, true);
@@ -2177,7 +2163,7 @@ public class NetworkingController : UdonSharpBehaviour
             return;
         }
         //if elevatorNumber1 AND NOT elevator1 called to floor X
-        else if (elevatorNumber == 1 && (0U == (_syncData2 & (1U << (SyncBoolReq_AddressUint_Elevator1CalledToFloor + floorNumber)))))
+        else if (elevatorNumber == 1 && (0L == (_syncData2 & (1L << (SyncBoolReq_AddressLong2_Elevator1CalledToFloor + floorNumber)))))
         {
             Debug.Log("Internal target was now set.");
             MASTER_SetSyncValue(SyncBoolReq_Elevator1CalledToFloor_0 + floorNumber, true);
@@ -2186,7 +2172,7 @@ public class NetworkingController : UdonSharpBehaviour
             return;
         }
         //if elevatorNumber2 AND NOT elevator2 called to floor X
-        else if (elevatorNumber == 2 && (0U == (_syncData2 & (1U << (SyncBoolReq_AddressUint_Elevator2CalledToFloor + floorNumber)))))
+        else if (elevatorNumber == 2 && (0L == (_syncData2 & (1L << (SyncBoolReq_AddressLong2_Elevator2CalledToFloor + floorNumber)))))
         {
             Debug.Log("Internal target was now set.");
             MASTER_SetSyncValue(SyncBoolReq_Elevator2CalledToFloor_0 + floorNumber, true);
@@ -2204,15 +2190,15 @@ public class NetworkingController : UdonSharpBehaviour
     /// <returns></returns>
     private bool MASTER_ElevatorAlreadyThereAndOpen(int floor, bool directionUp)
     {
-        if (_elevator0Working && GetSyncElevatorFloor(0) == floor && 0UL != (_syncData1 & (SyncBool_MaskUlong_Elevator0open)) && (0UL != (_syncData1 & (SyncBool_MaskUlong_Elevator0goingUp)) || 0UL != (_syncData1 & (SyncBool_MaskUlong_Elevator0idle))))
+        if (_elevator0Working && GetSyncElevatorFloor(0) == floor && 0L != (_syncData1 & (SyncBool_MaskLong1_Elevator0open)) && (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator0goingUp)) || 0L != (_syncData1 & (SyncBool_MaskLong1_Elevator0idle))))
         {
             return true;
         }
-        if (_elevator1Working && GetSyncElevatorFloor(1) == floor && 0UL != (_syncData1 & (SyncBool_MaskUlong_Elevator1open)) && (0UL != (_syncData1 & (SyncBool_MaskUlong_Elevator1goingUp)) || 0UL != (_syncData1 & (SyncBool_MaskUlong_Elevator1idle))))
+        if (_elevator1Working && GetSyncElevatorFloor(1) == floor && 0L != (_syncData1 & (SyncBool_MaskLong1_Elevator1open)) && (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator1goingUp)) || 0L != (_syncData1 & (SyncBool_MaskLong1_Elevator1idle))))
         {
             return true;
         }
-        if (_elevator2Working && GetSyncElevatorFloor(2) == floor && 0UL != (_syncData1 & (SyncBool_MaskUlong_Elevator2open)) && (0UL != (_syncData1 & (SyncBool_MaskUlong_Elevator2goingUp)) || 0UL != (_syncData1 & (SyncBool_MaskUlong_Elevator2idle))))
+        if (_elevator2Working && GetSyncElevatorFloor(2) == floor && 0L != (_syncData1 & (SyncBool_MaskLong1_Elevator2open)) && (0L != (_syncData1 & (SyncBool_MaskLong1_Elevator2goingUp)) || 0L != (_syncData1 & (SyncBool_MaskLong1_Elevator2idle))))
         {
             return true;
         }
@@ -2227,26 +2213,27 @@ public class NetworkingController : UdonSharpBehaviour
     //------------------------------------------ SyncBool lowlevel code ------------------------------------------
     //------------------------------------------------------------------------------------------------------------
     /// <summary>
-    /// This script sets and reads individual bits within a uint as well as encoding three numbers (nibbles) within the most significant bytes
+    /// This script sets and reads individual bits within two Longs as well as encoding three numbers (nibbles) within the most significant bytes
     /// 
-    /// The ulong maps as follows:-
+    /// The first long maps as follows:-
     ///  - 63-60 variable_1 (4bits)
     ///  - 59-56 variable_2 (4bits)
     ///  - 55-52 variable_3 (4bits)
     ///  - 51-0 binary bools [51-0]
     ///
-    /// The uint maps as follows:-
-    ///  - 0-31 binary bools [52-83(?)]
+    /// The second long maps as follows:-
+    ///  - 0-63 binary bools [52-115]
     /// 
     /// Script by NotFish
-    /// </summary>''        
+    /// </summary>     
     private const byte elevatorOneOffset = 60;
     private const byte elevatorTwoOffset = 56;
     private const byte elevatorThreeOffset = 52;
-    private const byte ulongBoolEndPosition = 51; //You will need to recalculate the bool array classes if you modify this
-    private const ulong nibbleMask = 15; // ...0000 0000 1111        
+    private const byte long1BoolEndPosition = 51; //You will need to recalculate the bool array classes if you modify this
+    private const long nibbleMask = 15; // ...0000 0000 1111        
+
     /// <summary>
-    /// Modifies a _syncData1 & _syncData2 on the bit level.
+    /// Modifies _syncData1 & _syncData2 on the bit level.
     /// Sets "value" to bit "position" of "input".
     /// </summary>       
     /// <param name="input">uint to modify</param>
@@ -2257,63 +2244,63 @@ public class NetworkingController : UdonSharpBehaviour
     {
         Debug.Log($"SYNC DATA bool {position} set to {value.ToString()}");
         //Not sure if there is something multi-threaded going on in the background, so creating working copies just in case.
-        ulong localUlong = _syncData1;
-        uint localUint = _syncData2;
+        long locallong1 = _syncData1;
+        long locallong2 = _syncData2;
 
         //Sanitise position
-        if (position < 0 || position > 83)
+        if (position < 0 || position > 115)
         {
             //TODO: remove on live build
             Debug.Log("uintConverter - Position out of range");
             return;
         }
 
-        //Fill ulong then uint            
-        if (position <= ulongBoolEndPosition)
+        //Fill long then uint            
+        if (position <= long1BoolEndPosition)
         {
-            //Store in the ulong
+            //Store in the long
             if (value)
             {
                 //We want to set the value to true
                 //Set the bit using a bitwise OR. 
-                localUlong |= (1UL << position);
+                locallong1 |= (1L << position);
             }
             else
             {
                 //We want to set the value to false
                 //Udon does not currently support bitwise NOT
                 //Instead making sure bit is set to true and using a bitwise XOR.
-                ulong mask = (1UL << position);
-                localUlong |= mask;
-                localUlong ^= mask;
+                long mask = (1L << position);
+                locallong1 |= mask;
+                locallong1 ^= mask;
             }
         }
-        else // position > length of ulong
+        else // position > length of long
         {
             //Store in the uint
             //Need to shift to to a valid address first!
-            position -= ulongBoolEndPosition + 1;
+            position -= long1BoolEndPosition + 1;
 
             if (value)
             {
                 //We want to set the value to true
                 //Set the bit using a bitwise OR. 
-                localUint |= (1U << position);
+                locallong2 |= (1L << position);
             }
             else
             {
                 //We want to set the value to false
                 //Udon does not currently support bitwise NOT
                 //Instead making sure bit is set to true and using a bitwise XOR.
-                uint mask = (1U << position);
-                localUint |= mask;
-                localUint ^= mask;
+                long mask = (1L << position);
+                locallong2 |= mask;
+                locallong2 ^= mask;
             }
         }
 
         //Let's not forget to actually write it back to syncData!
-        _syncData1 = localUlong;
-        _syncData2 = localUint;
+        _syncData1 = locallong1;
+        _syncData2 = locallong2;
     }
 
     /// <summary>
@@ -2325,21 +2312,21 @@ public class NetworkingController : UdonSharpBehaviour
     private bool GetSyncValue(int position)
     {
         //Sanitise position
-        if (position < 0 || position > 83)
+        if (position < 0 || position > 115)
         {
             //TODO: remove on live build
             Debug.Log("uintConverter - Position out of range");
             return false;
         }
 
-        //Read from Ulong then uint            
+        //Read from long then uint            
 
-        if (position <= ulongBoolEndPosition)
+        if (position <= long1BoolEndPosition)
         {
-            //Read from the ulong
+            //Read from the long
             //Inspect using a bitwise AND and a mask.
             //Branched in an IF statment for readability.
-            if ((_syncData1 & (1UL << position)) != 0UL)
+            if ((_syncData1 & (1L << position)) != 0L)
             {
                 return true;
             }
@@ -2348,15 +2335,15 @@ public class NetworkingController : UdonSharpBehaviour
                 return false;
             }
         }
-        else // position < ulong length
+        else // position < long length
         {
             //Read from the uint
             //Need to shift to to a valid address first!
-            position -= ulongBoolEndPosition + 1;
+            position -= long1BoolEndPosition + 1;
 
             //Inspect using a bitwise AND and a mask.
             //Branched in an IF statment for readability.
-            if ((_syncData2 & (1U << position)) != 0)
+            if ((_syncData2 & (1L << position)) != 0)
             {
                 return true;
             }
@@ -2370,211 +2357,276 @@ public class NetworkingController : UdonSharpBehaviour
     /// <summary>
     /// Reads out all the booleans at once (preserving mapping compared to direct access)
     /// </summary>               
-    /// <returns>Returns all the bools within the uint and ulong</returns>
+    /// <returns>Returns all the bools within both longs</returns>
     private bool[] GetBoolArray()
     {
-        bool[] output = new bool[84];
+        bool[] output = new bool[116];
 
         //Look a precomputed masks and no loops :)
-        output[0] = (_syncData1 & 1UL) != 0UL;
-        output[1] = (_syncData1 & 2UL) != 0U;
-        output[2] = (_syncData1 & 4UL) != 0U;
-        output[3] = (_syncData1 & 8UL) != 0U;
-        output[4] = (_syncData1 & 16UL) != 0U;
-        output[5] = (_syncData1 & 32UL) != 0U;
-        output[6] = (_syncData1 & 64UL) != 0U;
-        output[7] = (_syncData1 & 128UL) != 0U;
-        output[8] = (_syncData1 & 256UL) != 0U;
-        output[9] = (_syncData1 & 512UL) != 0U;
-        output[10] = (_syncData1 & 1024UL) != 0U;
-        output[11] = (_syncData1 & 2048UL) != 0U;
-        output[12] = (_syncData1 & 4096UL) != 0U;
-        output[13] = (_syncData1 & 8192UL) != 0U;
-        output[14] = (_syncData1 & 16384UL) != 0U;
-        output[15] = (_syncData1 & 32768UL) != 0U;
-        output[16] = (_syncData1 & 65536UL) != 0U;
-        output[17] = (_syncData1 & 131072UL) != 0U;
-        output[18] = (_syncData1 & 262144UL) != 0U;
-        output[19] = (_syncData1 & 524288UL) != 0U;
-        output[20] = (_syncData1 & 1048576UL) != 0U;
-        output[21] = (_syncData1 & 2097152UL) != 0U;
-        output[22] = (_syncData1 & 4194304UL) != 0U;
-        output[23] = (_syncData1 & 8388608UL) != 0U;
-        output[24] = (_syncData1 & 16777216UL) != 0U;
-        output[25] = (_syncData1 & 33554432UL) != 0U;
-        output[26] = (_syncData1 & 67108864UL) != 0U;
-        output[27] = (_syncData1 & 134217728UL) != 0U;
-        output[28] = (_syncData1 & 268435456UL) != 0U;
-        output[29] = (_syncData1 & 536870912UL) != 0U;
-        output[30] = (_syncData1 & 1073741824UL) != 0U;
-        output[31] = (_syncData1 & 2147483648UL) != 0U;
-        output[32] = (_syncData1 & 4294967296UL) != 0U;
-        output[33] = (_syncData1 & 8589934592UL) != 0U;
-        output[34] = (_syncData1 & 17179869184UL) != 0U;
-        output[35] = (_syncData1 & 34359738368UL) != 0U;
-        output[36] = (_syncData1 & 68719476736UL) != 0U;
-        output[37] = (_syncData1 & 137438953472UL) != 0U;
-        output[38] = (_syncData1 & 274877906944UL) != 0U;
-        output[39] = (_syncData1 & 549755813888UL) != 0U;
-        output[40] = (_syncData1 & 1099511627776UL) != 0U;
-        output[41] = (_syncData1 & 2199023255552UL) != 0U;
-        output[42] = (_syncData1 & 4398046511104UL) != 0U;
-        output[43] = (_syncData1 & 8796093022208UL) != 0U;
-        output[44] = (_syncData1 & 17592186044416UL) != 0U;
-        output[45] = (_syncData1 & 35184372088832UL) != 0U;
-        output[46] = (_syncData1 & 70368744177664UL) != 0U;
-        output[47] = (_syncData1 & 140737488355328UL) != 0U;
-        output[48] = (_syncData1 & 281474976710656UL) != 0U;
-        output[49] = (_syncData1 & 562949953421312UL) != 0U;
-        output[50] = (_syncData1 & 1125899906842624UL) != 0U;
-        output[51] = (_syncData1 & 2251799813685248UL) != 0U;
-        output[52] = (_syncData2 & 1U) != 0U;
-        output[53] = (_syncData2 & 2U) != 0U;
-        output[54] = (_syncData2 & 4U) != 0U;
-        output[55] = (_syncData2 & 8U) != 0U;
-        output[56] = (_syncData2 & 16U) != 0U;
-        output[57] = (_syncData2 & 32U) != 0U;
-        output[58] = (_syncData2 & 64U) != 0U;
-        output[59] = (_syncData2 & 128U) != 0U;
-        output[60] = (_syncData2 & 256U) != 0U;
-        output[61] = (_syncData2 & 512U) != 0U;
-        output[62] = (_syncData2 & 1024U) != 0U;
-        output[63] = (_syncData2 & 2048U) != 0U;
-        output[64] = (_syncData2 & 4096U) != 0U;
-        output[65] = (_syncData2 & 8192U) != 0U;
-        output[66] = (_syncData2 & 16384U) != 0U;
-        output[67] = (_syncData2 & 32768U) != 0U;
-        output[68] = (_syncData2 & 65536U) != 0U;
-        output[69] = (_syncData2 & 131072U) != 0U;
-        output[70] = (_syncData2 & 262144U) != 0U;
-        output[71] = (_syncData2 & 524288U) != 0U;
-        output[72] = (_syncData2 & 1048576U) != 0U;
-        output[73] = (_syncData2 & 2097152U) != 0U;
-        output[74] = (_syncData2 & 4194304U) != 0U;
-        output[75] = (_syncData2 & 8388608U) != 0U;
-        output[76] = (_syncData2 & 16777216U) != 0U;
-        output[77] = (_syncData2 & 33554432U) != 0U;
-        output[78] = (_syncData2 & 67108864U) != 0U;
-        output[79] = (_syncData2 & 134217728U) != 0U;
-        output[80] = (_syncData2 & 268435456U) != 0U;
-        output[81] = (_syncData2 & 536870912U) != 0U;
-        output[82] = (_syncData2 & 1073741824U) != 0U;
-        output[83] = (_syncData2 & 2147483648U) != 0U;
+        output[0] = (_syncData1 & 1L) != 0L;
+        output[1] = (_syncData1 & 2L) != 0L;
+        output[2] = (_syncData1 & 4L) != 0L;
+        output[3] = (_syncData1 & 8L) != 0L;
+        output[4] = (_syncData1 & 16L) != 0L;
+        output[5] = (_syncData1 & 32L) != 0L;
+        output[6] = (_syncData1 & 64L) != 0L;
+        output[7] = (_syncData1 & 128L) != 0L;
+        output[8] = (_syncData1 & 256L) != 0L;
+        output[9] = (_syncData1 & 512L) != 0L;
+        output[10] = (_syncData1 & 1024L) != 0L;
+        output[11] = (_syncData1 & 2048L) != 0L;
+        output[12] = (_syncData1 & 4096L) != 0L;
+        output[13] = (_syncData1 & 8192L) != 0L;
+        output[14] = (_syncData1 & 16384L) != 0L;
+        output[15] = (_syncData1 & 32768L) != 0L;
+        output[16] = (_syncData1 & 65536L) != 0L;
+        output[17] = (_syncData1 & 131072L) != 0L;
+        output[18] = (_syncData1 & 262144L) != 0L;
+        output[19] = (_syncData1 & 524288L) != 0L;
+        output[20] = (_syncData1 & 1048576L) != 0L;
+        output[21] = (_syncData1 & 2097152L) != 0L;
+        output[22] = (_syncData1 & 4194304L) != 0L;
+        output[23] = (_syncData1 & 8388608L) != 0L;
+        output[24] = (_syncData1 & 16777216L) != 0L;
+        output[25] = (_syncData1 & 33554432L) != 0L;
+        output[26] = (_syncData1 & 67108864L) != 0L;
+        output[27] = (_syncData1 & 134217728L) != 0L;
+        output[28] = (_syncData1 & 268435456L) != 0L;
+        output[29] = (_syncData1 & 536870912L) != 0L;
+        output[30] = (_syncData1 & 1073741824L) != 0L;
+        output[31] = (_syncData1 & 2147483648L) != 0L;
+        output[32] = (_syncData1 & 4294967296L) != 0L;
+        output[33] = (_syncData1 & 8589934592L) != 0L;
+        output[34] = (_syncData1 & 17179869184L) != 0L;
+        output[35] = (_syncData1 & 34359738368L) != 0L;
+        output[36] = (_syncData1 & 68719476736L) != 0L;
+        output[37] = (_syncData1 & 137438953472L) != 0L;
+        output[38] = (_syncData1 & 274877906944L) != 0L;
+        output[39] = (_syncData1 & 549755813888L) != 0L;
+        output[40] = (_syncData1 & 1099511627776L) != 0L;
+        output[41] = (_syncData1 & 2199023255552L) != 0L;
+        output[42] = (_syncData1 & 4398046511104L) != 0L;
+        output[43] = (_syncData1 & 8796093022208L) != 0L;
+        output[44] = (_syncData1 & 17592186044416L) != 0L;
+        output[45] = (_syncData1 & 35184372088832L) != 0L;
+        output[46] = (_syncData1 & 70368744177664L) != 0L;
+        output[47] = (_syncData1 & 140737488355328L) != 0L;
+        output[48] = (_syncData1 & 281474976710656L) != 0L;
+        output[49] = (_syncData1 & 562949953421312L) != 0L;
+        output[50] = (_syncData1 & 1125899906842624L) != 0L;
+        output[51] = (_syncData1 & 2251799813685248L) != 0L;
+        output[52] = (_syncData2 & 1L) != 0L;
+        output[53] = (_syncData2 & 2L) != 0L;
+        output[54] = (_syncData2 & 4L) != 0L;
+        output[55] = (_syncData2 & 8L) != 0L;
+        output[56] = (_syncData2 & 16L) != 0L;
+        output[57] = (_syncData2 & 32L) != 0L;
+        output[58] = (_syncData2 & 64L) != 0L;
+        output[59] = (_syncData2 & 128L) != 0L;
+        output[60] = (_syncData2 & 256L) != 0L;
+        output[61] = (_syncData2 & 512L) != 0L;
+        output[62] = (_syncData2 & 1024L) != 0L;
+        output[63] = (_syncData2 & 2048L) != 0L;
+        output[64] = (_syncData2 & 4096L) != 0L;
+        output[65] = (_syncData2 & 8192L) != 0L;
+        output[66] = (_syncData2 & 16384L) != 0L;
+        output[67] = (_syncData2 & 32768L) != 0L;
+        output[68] = (_syncData2 & 65536L) != 0L;
+        output[69] = (_syncData2 & 131072L) != 0L;
+        output[70] = (_syncData2 & 262144L) != 0L;
+        output[71] = (_syncData2 & 524288L) != 0L;
+        output[72] = (_syncData2 & 1048576L) != 0L;
+        output[73] = (_syncData2 & 2097152L) != 0L;
+        output[74] = (_syncData2 & 4194304L) != 0L;
+        output[75] = (_syncData2 & 8388608L) != 0L;
+        output[76] = (_syncData2 & 16777216L) != 0L;
+        output[77] = (_syncData2 & 33554432L) != 0L;
+        output[78] = (_syncData2 & 67108864L) != 0L;
+        output[79] = (_syncData2 & 134217728L) != 0L;
+        output[80] = (_syncData2 & 268435456L) != 0L;
+        output[81] = (_syncData2 & 536870912L) != 0L;
+        output[82] = (_syncData2 & 1073741824L) != 0L;
+        output[83] = (_syncData2 & 2147483648L) != 0L;
+        output[84] = (_syncData2 & 4294967296L) != 0L;
+        output[85] = (_syncData2 & 8589934592L) != 0L;
+        output[86] = (_syncData2 & 17179869184L) != 0L;
+        output[87] = (_syncData2 & 34359738368L) != 0L;
+        output[88] = (_syncData2 & 68719476736L) != 0L;
+        output[89] = (_syncData2 & 137438953472L) != 0L;
+        output[90] = (_syncData2 & 274877906944L) != 0L;
+        output[91] = (_syncData2 & 549755813888L) != 0L;
+        output[92] = (_syncData2 & 1099511627776L) != 0L;
+        output[93] = (_syncData2 & 2199023255552L) != 0L;
+        output[94] = (_syncData2 & 4398046511104L) != 0L;
+        output[95] = (_syncData2 & 8796093022208L) != 0L;
+        output[96] = (_syncData2 & 17592186044416L) != 0L;
+        output[97] = (_syncData2 & 35184372088832L) != 0L;
+        output[98] = (_syncData2 & 70368744177664L) != 0L;
+        output[99] = (_syncData2 & 140737488355328L) != 0L;
+        output[100] = (_syncData2 & 281474976710656L) != 0L;
+        output[101] = (_syncData2 & 562949953421312L) != 0L;
+        output[102] = (_syncData2 & 1125899906842624L) != 0L;
+        output[103] = (_syncData2 & 2251799813685248L) != 0L;
+        output[104] = (_syncData2 & 4503599627370496L) != 0L;
+        output[105] = (_syncData2 & 9007199254740992L) != 0L;
+        output[106] = (_syncData2 & 18014398509481984L) != 0L;
+        output[107] = (_syncData2 & 36028797018963968L) != 0L;
+        output[108] = (_syncData2 & 72057594037927936L) != 0L;
+        output[109] = (_syncData2 & 144115188075855872L) != 0L;
+        output[110] = (_syncData2 & 288230376151711744L) != 0L;
+        output[111] = (_syncData2 & 576460752303423488L) != 0L;
+        output[112] = (_syncData2 & 1152921504606846976L) != 0L;
+        output[113] = (_syncData2 & 2305843009213693952L) != 0L;
+        output[114] = (_syncData2 & 4611686018427387904L) != 0L;
+        output[115] = (_syncData2 & -9223372036854775808L) != 0L;
 
         return output;
     }
 
     /// <summary>
-    /// Reads out all the Ulong booleans at once (preserving mapping compared to direct access)
+    /// Reads out all the long1 booleans at once (preserving mapping compared to direct access)
     /// </summary>               
-    /// <returns>Returns all the bools within the ulong</returns>
-    private bool[] GetBoolArrayUlongONLY()
+    /// <returns>Returns all the bools within the long1</returns>
+    private bool[] GetBoolArrayLong1ONLY()
     {
         bool[] output = new bool[52];
 
         //Look a precomputed masks and no loops :)
-        output[0] = (_syncData1 & 1UL) != 0UL;
-        output[1] = (_syncData1 & 2UL) != 0U;
-        output[2] = (_syncData1 & 4UL) != 0U;
-        output[3] = (_syncData1 & 8UL) != 0U;
-        output[4] = (_syncData1 & 16UL) != 0U;
-        output[5] = (_syncData1 & 32UL) != 0U;
-        output[6] = (_syncData1 & 64UL) != 0U;
-        output[7] = (_syncData1 & 128UL) != 0U;
-        output[8] = (_syncData1 & 256UL) != 0U;
-        output[9] = (_syncData1 & 512UL) != 0U;
-        output[10] = (_syncData1 & 1024UL) != 0U;
-        output[11] = (_syncData1 & 2048UL) != 0U;
-        output[12] = (_syncData1 & 4096UL) != 0U;
-        output[13] = (_syncData1 & 8192UL) != 0U;
-        output[14] = (_syncData1 & 16384UL) != 0U;
-        output[15] = (_syncData1 & 32768UL) != 0U;
-        output[16] = (_syncData1 & 65536UL) != 0U;
-        output[17] = (_syncData1 & 131072UL) != 0U;
-        output[18] = (_syncData1 & 262144UL) != 0U;
-        output[19] = (_syncData1 & 524288UL) != 0U;
-        output[20] = (_syncData1 & 1048576UL) != 0U;
-        output[21] = (_syncData1 & 2097152UL) != 0U;
-        output[22] = (_syncData1 & 4194304UL) != 0U;
-        output[23] = (_syncData1 & 8388608UL) != 0U;
-        output[24] = (_syncData1 & 16777216UL) != 0U;
-        output[25] = (_syncData1 & 33554432UL) != 0U;
-        output[26] = (_syncData1 & 67108864UL) != 0U;
-        output[27] = (_syncData1 & 134217728UL) != 0U;
-        output[28] = (_syncData1 & 268435456UL) != 0U;
-        output[29] = (_syncData1 & 536870912UL) != 0U;
-        output[30] = (_syncData1 & 1073741824UL) != 0U;
-        output[31] = (_syncData1 & 2147483648UL) != 0U;
-        output[32] = (_syncData1 & 4294967296UL) != 0U;
-        output[33] = (_syncData1 & 8589934592UL) != 0U;
-        output[34] = (_syncData1 & 17179869184UL) != 0U;
-        output[35] = (_syncData1 & 34359738368UL) != 0U;
-        output[36] = (_syncData1 & 68719476736UL) != 0U;
-        output[37] = (_syncData1 & 137438953472UL) != 0U;
-        output[38] = (_syncData1 & 274877906944UL) != 0U;
-        output[39] = (_syncData1 & 549755813888UL) != 0U;
-        output[40] = (_syncData1 & 1099511627776UL) != 0U;
-        output[41] = (_syncData1 & 2199023255552UL) != 0U;
-        output[42] = (_syncData1 & 4398046511104UL) != 0U;
-        output[43] = (_syncData1 & 8796093022208UL) != 0U;
-        output[44] = (_syncData1 & 17592186044416UL) != 0U;
-        output[45] = (_syncData1 & 35184372088832UL) != 0U;
-        output[46] = (_syncData1 & 70368744177664UL) != 0U;
-        output[47] = (_syncData1 & 140737488355328UL) != 0U;
-        output[48] = (_syncData1 & 281474976710656UL) != 0U;
-        output[49] = (_syncData1 & 562949953421312UL) != 0U;
-        output[50] = (_syncData1 & 1125899906842624UL) != 0U;
-        output[51] = (_syncData1 & 2251799813685248UL) != 0U;
+        output[0] = (_syncData1 & 1L) != 0L;
+        output[1] = (_syncData1 & 2L) != 0L;
+        output[2] = (_syncData1 & 4L) != 0L;
+        output[3] = (_syncData1 & 8L) != 0L;
+        output[4] = (_syncData1 & 16L) != 0L;
+        output[5] = (_syncData1 & 32L) != 0L;
+        output[6] = (_syncData1 & 64L) != 0L;
+        output[7] = (_syncData1 & 128L) != 0L;
+        output[8] = (_syncData1 & 256L) != 0L;
+        output[9] = (_syncData1 & 512L) != 0L;
+        output[10] = (_syncData1 & 1024L) != 0L;
+        output[11] = (_syncData1 & 2048L) != 0L;
+        output[12] = (_syncData1 & 4096L) != 0L;
+        output[13] = (_syncData1 & 8192L) != 0L;
+        output[14] = (_syncData1 & 16384L) != 0L;
+        output[15] = (_syncData1 & 32768L) != 0L;
+        output[16] = (_syncData1 & 65536L) != 0L;
+        output[17] = (_syncData1 & 131072L) != 0L;
+        output[18] = (_syncData1 & 262144L) != 0L;
+        output[19] = (_syncData1 & 524288L) != 0L;
+        output[20] = (_syncData1 & 1048576L) != 0L;
+        output[21] = (_syncData1 & 2097152L) != 0L;
+        output[22] = (_syncData1 & 4194304L) != 0L;
+        output[23] = (_syncData1 & 8388608L) != 0L;
+        output[24] = (_syncData1 & 16777216L) != 0L;
+        output[25] = (_syncData1 & 33554432L) != 0L;
+        output[26] = (_syncData1 & 67108864L) != 0L;
+        output[27] = (_syncData1 & 134217728L) != 0L;
+        output[28] = (_syncData1 & 268435456L) != 0L;
+        output[29] = (_syncData1 & 536870912L) != 0L;
+        output[30] = (_syncData1 & 1073741824L) != 0L;
+        output[31] = (_syncData1 & 2147483648L) != 0L;
+        output[32] = (_syncData1 & 4294967296L) != 0L;
+        output[33] = (_syncData1 & 8589934592L) != 0L;
+        output[34] = (_syncData1 & 17179869184L) != 0L;
+        output[35] = (_syncData1 & 34359738368L) != 0L;
+        output[36] = (_syncData1 & 68719476736L) != 0L;
+        output[37] = (_syncData1 & 137438953472L) != 0L;
+        output[38] = (_syncData1 & 274877906944L) != 0L;
+        output[39] = (_syncData1 & 549755813888L) != 0L;
+        output[40] = (_syncData1 & 1099511627776L) != 0L;
+        output[41] = (_syncData1 & 2199023255552L) != 0L;
+        output[42] = (_syncData1 & 4398046511104L) != 0L;
+        output[43] = (_syncData1 & 8796093022208L) != 0L;
+        output[44] = (_syncData1 & 17592186044416L) != 0L;
+        output[45] = (_syncData1 & 35184372088832L) != 0L;
+        output[46] = (_syncData1 & 70368744177664L) != 0L;
+        output[47] = (_syncData1 & 140737488355328L) != 0L;
+        output[48] = (_syncData1 & 281474976710656L) != 0L;
+        output[49] = (_syncData1 & 562949953421312L) != 0L;
+        output[50] = (_syncData1 & 1125899906842624L) != 0L;
+        output[51] = (_syncData1 & 2251799813685248L) != 0L;
 
         return output;
     }
 
     /// <summary>
-    /// Reads out all the Uint booleans at once (preserving mapping compared to direct access)
+    /// Reads out all the long2 booleans at once (preserving mapping compared to direct access)
     /// </summary>               
-    /// <returns>Returns all the bools within the uint</returns>
-    private bool[] GetBoolArrayUintONLY()
+    /// <returns>Returns all the bools within long2</returns>
+    private bool[] GetBoolArrayLong2ONLY()
     {
-        bool[] output = new bool[84];
+        bool[] output = new bool[116];
 
         //Look a precomputed masks and no loops :)
-        output[52] = (_syncData2 & 1U) != 0U;
-        output[53] = (_syncData2 & 2U) != 0U;
-        output[54] = (_syncData2 & 4U) != 0U;
-        output[55] = (_syncData2 & 8U) != 0U;
-        output[56] = (_syncData2 & 16U) != 0U;
-        output[57] = (_syncData2 & 32U) != 0U;
-        output[58] = (_syncData2 & 64U) != 0U;
-        output[59] = (_syncData2 & 128U) != 0U;
-        output[60] = (_syncData2 & 256U) != 0U;
-        output[61] = (_syncData2 & 512U) != 0U;
-        output[62] = (_syncData2 & 1024U) != 0U;
-        output[63] = (_syncData2 & 2048U) != 0U;
-        output[64] = (_syncData2 & 4096U) != 0U;
-        output[65] = (_syncData2 & 8192U) != 0U;
-        output[66] = (_syncData2 & 16384U) != 0U;
-        output[67] = (_syncData2 & 32768U) != 0U;
-        output[68] = (_syncData2 & 65536U) != 0U;
-        output[69] = (_syncData2 & 131072U) != 0U;
-        output[70] = (_syncData2 & 262144U) != 0U;
-        output[71] = (_syncData2 & 524288U) != 0U;
-        output[72] = (_syncData2 & 1048576U) != 0U;
-        output[73] = (_syncData2 & 2097152U) != 0U;
-        output[74] = (_syncData2 & 4194304U) != 0U;
-        output[75] = (_syncData2 & 8388608U) != 0U;
-        output[76] = (_syncData2 & 16777216U) != 0U;
-        output[77] = (_syncData2 & 33554432U) != 0U;
-        output[78] = (_syncData2 & 67108864U) != 0U;
-        output[79] = (_syncData2 & 134217728U) != 0U;
-        output[80] = (_syncData2 & 268435456U) != 0U;
-        output[81] = (_syncData2 & 536870912U) != 0U;
-        output[82] = (_syncData2 & 1073741824U) != 0U;
-        output[83] = (_syncData2 & 2147483648U) != 0U;
+        output[52] = (_syncData2 & 1L) != 0L;
+        output[53] = (_syncData2 & 2L) != 0L;
+        output[54] = (_syncData2 & 4L) != 0L;
+        output[55] = (_syncData2 & 8L) != 0L;
+        output[56] = (_syncData2 & 16L) != 0L;
+        output[57] = (_syncData2 & 32L) != 0L;
+        output[58] = (_syncData2 & 64L) != 0L;
+        output[59] = (_syncData2 & 128L) != 0L;
+        output[60] = (_syncData2 & 256L) != 0L;
+        output[61] = (_syncData2 & 512L) != 0L;
+        output[62] = (_syncData2 & 1024L) != 0L;
+        output[63] = (_syncData2 & 2048L) != 0L;
+        output[64] = (_syncData2 & 4096L) != 0L;
+        output[65] = (_syncData2 & 8192L) != 0L;
+        output[66] = (_syncData2 & 16384L) != 0L;
+        output[67] = (_syncData2 & 32768L) != 0L;
+        output[68] = (_syncData2 & 65536L) != 0L;
+        output[69] = (_syncData2 & 131072L) != 0L;
+        output[70] = (_syncData2 & 262144L) != 0L;
+        output[71] = (_syncData2 & 524288L) != 0L;
+        output[72] = (_syncData2 & 1048576L) != 0L;
+        output[73] = (_syncData2 & 2097152L) != 0L;
+        output[74] = (_syncData2 & 4194304L) != 0L;
+        output[75] = (_syncData2 & 8388608L) != 0L;
+        output[76] = (_syncData2 & 16777216L) != 0L;
+        output[77] = (_syncData2 & 33554432L) != 0L;
+        output[78] = (_syncData2 & 67108864L) != 0L;
+        output[79] = (_syncData2 & 134217728L) != 0L;
+        output[80] = (_syncData2 & 268435456L) != 0L;
+        output[81] = (_syncData2 & 536870912L) != 0L;
+        output[82] = (_syncData2 & 1073741824L) != 0L;
+        output[83] = (_syncData2 & 2147483648L) != 0L;
+        output[84] = (_syncData2 & 4294967296L) != 0L;
+        output[85] = (_syncData2 & 8589934592L) != 0L;
+        output[86] = (_syncData2 & 17179869184L) != 0L;
+        output[87] = (_syncData2 & 34359738368L) != 0L;
+        output[88] = (_syncData2 & 68719476736L) != 0L;
+        output[89] = (_syncData2 & 137438953472L) != 0L;
+        output[90] = (_syncData2 & 274877906944L) != 0L;
+        output[91] = (_syncData2 & 549755813888L) != 0L;
+        output[92] = (_syncData2 & 1099511627776L) != 0L;
+        output[93] = (_syncData2 & 2199023255552L) != 0L;
+        output[94] = (_syncData2 & 4398046511104L) != 0L;
+        output[95] = (_syncData2 & 8796093022208L) != 0L;
+        output[96] = (_syncData2 & 17592186044416L) != 0L;
+        output[97] = (_syncData2 & 35184372088832L) != 0L;
+        output[98] = (_syncData2 & 70368744177664L) != 0L;
+        output[99] = (_syncData2 & 140737488355328L) != 0L;
+        output[100] = (_syncData2 & 281474976710656L) != 0L;
+        output[101] = (_syncData2 & 562949953421312L) != 0L;
+        output[102] = (_syncData2 & 1125899906842624L) != 0L;
+        output[103] = (_syncData2 & 2251799813685248L) != 0L;
+        output[104] = (_syncData2 & 4503599627370496L) != 0L;
+        output[105] = (_syncData2 & 9007199254740992L) != 0L;
+        output[106] = (_syncData2 & 18014398509481984L) != 0L;
+        output[107] = (_syncData2 & 36028797018963968L) != 0L;
+        output[108] = (_syncData2 & 72057594037927936L) != 0L;
+        output[109] = (_syncData2 & 144115188075855872L) != 0L;
+        output[110] = (_syncData2 & 288230376151711744L) != 0L;
+        output[111] = (_syncData2 & 576460752303423488L) != 0L;
+        output[112] = (_syncData2 & 1152921504606846976L) != 0L;
+        output[113] = (_syncData2 & 2305843009213693952L) != 0L;
+        output[114] = (_syncData2 & 4611686018427387904L) != 0L;
+        output[115] = (_syncData2 & -9223372036854775808L) != 0L;
+
         return output;
     }
 
     /// <summary>
-    /// Decodes and returns the floor number of the ulong
+    /// Decodes and returns the floor number of the long
     /// </summary>           
     /// <param name="elevatorNumber">Number of the elevator 1-3</param>        
     /// <param name="floorNumber">value to set to the elevator variable</param>
@@ -2583,8 +2635,8 @@ public class NetworkingController : UdonSharpBehaviour
     {
         Debug.Log($"SYNC DATA elevator {elevatorNumber} floor setting to {floorNumber}");
         //Not sure if there is something multi-threaded going on in the background, so creating working copies just in case.
-        ulong localUlong = _syncData1;
-        //Debug.Log($"SYNC DATA_1 was {localUlong}");
+        long locallong = _syncData1;
+        //Debug.Log($"SYNC DATA_1 was {locallong}");
         //Sanitise the size of elevatorNumber
         if (elevatorNumber < 0 || elevatorNumber > 2)
         {
@@ -2600,7 +2652,7 @@ public class NetworkingController : UdonSharpBehaviour
             Debug.Log($"uintConverter - Elevator  {elevatorNumber} number invalid");
             return;
         }
-        ulong modifiedFloorNumber = (ulong)floorNumber;
+        long modifiedFloorNumber = (long)floorNumber;
         //Not sure if Udon likes SWITCH cases, so just doing this with IF statments
         //Setting the variables using the following process        
         //1- Shift the data to the right bit section of the uint
@@ -2611,33 +2663,33 @@ public class NetworkingController : UdonSharpBehaviour
         if (elevatorNumber == 0)
         {
             modifiedFloorNumber = (modifiedFloorNumber << elevatorOneOffset);
-            const ulong mask = (nibbleMask << elevatorOneOffset);
-            localUlong |= mask;
-            localUlong ^= mask;
-            localUlong |= modifiedFloorNumber;
+            const long mask = (nibbleMask << elevatorOneOffset);
+            locallong |= mask;
+            locallong ^= mask;
+            locallong |= modifiedFloorNumber;
         }
         else if (elevatorNumber == 1)
         {
             modifiedFloorNumber = (modifiedFloorNumber << elevatorTwoOffset);
-            const ulong mask = (nibbleMask << elevatorTwoOffset);
-            localUlong |= mask;
-            localUlong ^= mask;
-            localUlong |= modifiedFloorNumber;
+            const long mask = (nibbleMask << elevatorTwoOffset);
+            locallong |= mask;
+            locallong ^= mask;
+            locallong |= modifiedFloorNumber;
         }
         else  //Elevator 3
         {
             modifiedFloorNumber = (modifiedFloorNumber << elevatorThreeOffset);
-            const ulong mask = (nibbleMask << elevatorThreeOffset);
-            localUlong |= mask;
-            localUlong ^= mask;
-            localUlong |= modifiedFloorNumber;
+            const long mask = (nibbleMask << elevatorThreeOffset);
+            locallong |= mask;
+            locallong ^= mask;
+            locallong |= modifiedFloorNumber;
         }
-        _syncData1 = localUlong;
-        //Debug.Log($"SYNC DATA_1 is now {localUlong}");
+        _syncData1 = locallong;
+        //Debug.Log($"SYNC DATA_1 is now {locallong}");
     }
 
     /// <summary>
-    /// Decodes and returns the floor number of the ulong
+    /// Decodes and returns the floor number of the long
     /// </summary>              
     /// <param name="elevatorNumber">Number of the elevator 1-3</param>        
     /// <returns>Returns the floorNumber from the uint</returns>
@@ -2655,13 +2707,16 @@ public class NetworkingController : UdonSharpBehaviour
         //Not sure if Udon likes SWITCH cases, so just doing this with IF statments
         if (elevatorNumber == 0)
         {
-            //No need to mask the higher bits, so a straight return.
-            return (int)(_syncData1 >> elevatorOneOffset); ;
+            //Shift data
+            long shiftedData = (_syncData1 >> elevatorOneOffset);
+            //Mask away the higher bits
+            shiftedData &= nibbleMask;
+            return (int)(shiftedData & nibbleMask);
         }
         else if (elevatorNumber == 1)
         {
             //Shift data
-            ulong shiftedData = (_syncData1 >> elevatorTwoOffset);
+            long shiftedData = (_syncData1 >> elevatorTwoOffset);
             //Mask away the higher bits
             shiftedData &= nibbleMask;
             return (int)(shiftedData & nibbleMask);
@@ -2669,29 +2724,12 @@ public class NetworkingController : UdonSharpBehaviour
         else  //Elevator 3
         {
             //Shift data
-            ulong shiftedData = (_syncData1 >> elevatorThreeOffset);
+            long shiftedData = (_syncData1 >> elevatorThreeOffset);
             //Mask away the higher bits                
             return (int)(shiftedData & nibbleMask);
         }
     }
     #endregion SYNCBOOL_FUNCTIONS
-
-
-    public ulong CastAwayAnyHopeToUlong(long input)
-    {
-        ulong output = 0UL;
-
-        for (int i = 0; i < 64; i++)
-        {
-            //if long has bit
-            if ((input & (1L << i)) != 0L)
-            {
-                //set ulong bit to true
-                output |= (1UL << i);
-            }
-        }
-        return output;
-    }
 
     public long CastAwayAnyHopeToLong(ulong input)
     {
@@ -2700,10 +2738,26 @@ public class NetworkingController : UdonSharpBehaviour
         for (int i = 0; i < 64; i++)
         {
             //if long has bit
-            if ((input & (1UL << i)) != 0UL)
+            if ((input & (1UL << i)) != 0L)
             {
-                //set ulong bit to true
+                //set long bit to true
                 output |= (1L << i);
+            }
+        }
+        return output;
+    }
+
+    public ulong CastAwayAnyHopeToUlong(long input)
+    {
+        ulong output = 0L;
+
+        for (int i = 0; i < 64; i++)
+        {
+            //if long has bit
+            if ((input & (1L << i)) != 0L)
+            {
+                //set long bit to true
+                output |= (1UL << i);
             }
         }
         return output;
