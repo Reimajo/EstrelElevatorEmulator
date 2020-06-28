@@ -1325,10 +1325,26 @@ namespace WindowsFormsApp1
                 case SyncBoolReq_Elevator2CalledToFloor_13:
                     LOCAL_SetElevatorInternalButtonState(2, 13, called: newState);
                     break;
+                case SyncBool_Elevator0IsDriving:
+                    LOCAL_SetElevatorDrivingState(0, isDriving: newState);
+                    break;
+                case SyncBool_Elevator1IsDriving:
+                    LOCAL_SetElevatorDrivingState(1, isDriving: newState);
+                    break;
+                case SyncBool_Elevator2IsDriving:
+                    LOCAL_SetElevatorDrivingState(2, isDriving: newState);
+                    break;
                 default:
                     Debug.Print("ERROR: UNKNOWN BOOL HAS CHANGED IN SYNCBOOL, position: " + syncBoolPosition);
                     break;
             }
+        }
+        /// <summary>
+        /// Setting if an elevator is currently driving
+        /// </summary>
+        private void LOCAL_SetElevatorDrivingState(int elevatorNumber, bool isDriving)
+        {
+            _elevatorControllerArrivalArea.SetElevatorDrivingState(elevatorNumber, isDriving);
         }
         /// <summary>
         /// Storing locally known elevator levels
@@ -2485,6 +2501,11 @@ namespace WindowsFormsApp1
         internal void SetElevatorCalledUp(int floor)
         {
             form1.SetElevatorCalledUp(floor);
+        }
+
+        internal void SetElevatorDrivingState(int elevatorNumber, bool isDriving)
+        {
+            //not needed, just for Udon version
         }
     }
     /// <summary>

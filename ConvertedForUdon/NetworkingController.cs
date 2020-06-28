@@ -8,6 +8,7 @@ public class NetworkingController : UdonSharpBehaviour
 {
     #region variables
     public PlayerModCheck _playerModCheck;
+    public ElevatorSoundController _elevatorSoundController;
     public Transform _currentSpawn;
     public Transform _readonlyReceptionSpawn;
     public Transform _readonlyFloorSpawn;
@@ -50,7 +51,7 @@ public class NetworkingController : UdonSharpBehaviour
     /// <summary>
     /// elevator states, synced by master
     /// </summary>
-    [HideInInspector, UdonSynced(UdonSyncMode.None)]    
+    [HideInInspector, UdonSynced(UdonSyncMode.None)]
     private long _syncData1 = 0;
     /// <summary>
     /// elevator request states, synced by master
@@ -1350,10 +1351,27 @@ public class NetworkingController : UdonSharpBehaviour
             case 82: //elevator2-working
             case 83: //elevator3-working
                 break;
+            case SyncBool_Elevator0IsDriving:
+                LOCAL_SetElevatorDrivingState(0, isDriving: newState);
+                break;
+            case SyncBool_Elevator1IsDriving:
+                LOCAL_SetElevatorDrivingState(1, isDriving: newState);
+                break;
+            case SyncBool_Elevator2IsDriving:
+                LOCAL_SetElevatorDrivingState(2, isDriving: newState);
+                break;
             default:
                 Debug.Log("ERROR: UNKNOWN BOOL HAS CHANGED IN SYNCBOOL, position: " + syncBoolPosition);
                 break;
         }
+    }
+    /// <summary>
+    /// Setting if an elevator is currently driving
+    /// </summary>
+    private void LOCAL_SetElevatorDrivingState(int elevatorNumber, bool isDriving)
+    {
+        if (_playerIsInElevatorNumber == elevatorNumber)
+            _elevatorSoundController.SetElevatorDrivingState(elevatorNumber, isDriving);
     }
     /// <summary>
     /// Storing locally known elevator levels
@@ -1510,6 +1528,8 @@ public class NetworkingController : UdonSharpBehaviour
         if (setOpen)
         {
             Debug.Log($"[NetworkController] LocalPlayer received to open elevator {elevatorNumber} on floor {floorNumber} while localPlayer is on floor {_localPlayerCurrentFloor}");
+            if (floorNumber == _localPlayerCurrentFloor)
+                _elevatorSoundController.ChangeElevatorStaticSoundState(elevatorNumber, turnOn: true);
             bool thisElevatorWasAlreadyOpened = false;
             if (_playerIsInElevatorNumber == elevatorNumber)
             {
@@ -1966,6 +1986,7 @@ public class NetworkingController : UdonSharpBehaviour
     {
         _localPlayerCurrentFloor = floorNumber;
         _elevatorControllerArrivalArea._floorLevel = floorNumber;
+        _elevatorSoundController.SetFloorLevel(floorNumber);
         _playerModCheck._currentFloorLocalPlayer = floorNumber;
         if (_userIsInVR)
         {
@@ -2478,7 +2499,7 @@ public class NetworkingController : UdonSharpBehaviour
         output[112] = (_syncData2 & 1152921504606846976L) != 0L;
         output[113] = (_syncData2 & 2305843009213693952L) != 0L;
         output[114] = (_syncData2 & 4611686018427387904L) != 0L;
-        output[115] = (_syncData2 & -9223372036854775808L) != 0L;
+        //output[115] = (_syncData2 & -9223372036854775808L) != 0L;
 
         return output;
     }
@@ -2620,7 +2641,7 @@ public class NetworkingController : UdonSharpBehaviour
         output[112] = (_syncData2 & 1152921504606846976L) != 0L;
         output[113] = (_syncData2 & 2305843009213693952L) != 0L;
         output[114] = (_syncData2 & 4611686018427387904L) != 0L;
-        output[115] = (_syncData2 & -9223372036854775808L) != 0L;
+        //output[115] = (_syncData2 & -9223372036854775808L) != 0L;
 
         return output;
     }
@@ -2730,38 +2751,6 @@ public class NetworkingController : UdonSharpBehaviour
         }
     }
     #endregion SYNCBOOL_FUNCTIONS
-
-    public long CastAwayAnyHopeToLong(ulong input)
-    {
-        long output = 0L;
-
-        for (int i = 0; i < 64; i++)
-        {
-            //if long has bit
-            if ((input & (1UL << i)) != 0L)
-            {
-                //set long bit to true
-                output |= (1L << i);
-            }
-        }
-        return output;
-    }
-
-    public ulong CastAwayAnyHopeToUlong(long input)
-    {
-        ulong output = 0L;
-
-        for (int i = 0; i < 64; i++)
-        {
-            //if long has bit
-            if ((input & (1L << i)) != 0L)
-            {
-                //set long bit to true
-                output |= (1UL << i);
-            }
-        }
-        return output;
-    }
 }
 
 
@@ -2783,6 +2772,37 @@ public class NetworkingController : UdonSharpBehaviour
 ////------------------------------------------------------------------------------------------------------------
 ////------------------------------------------ SyncBool lowlevel code ------------------------------------------
 ////------------------------------------------------------------------------------------------------------------
+//public long CastAwayAnyHopeToLong(ulong input)
+//{
+//    long output = 0L;
+
+//    for (int i = 0; i < 64; i++)
+//    {
+//        //if long has bit
+//        if ((input & (1UL << i)) != 0L)
+//        {
+//            //set long bit to true
+//            output |= (1L << i);
+//        }
+//    }
+//    return output;
+//}
+
+//public ulong CastAwayAnyHopeToUlong(long input)
+//{
+//    ulong output = 0L;
+
+//    for (int i = 0; i < 64; i++)
+//    {
+//        //if long has bit
+//        if ((input & (1L << i)) != 0L)
+//        {
+//            //set long bit to true
+//            output |= (1UL << i);
+//        }
+//    }
+//    return output;
+//}
 
 ///// <summary>
 ///// This script sets and reads individual bits within a uint as well as encoding three numbers (nibbles) within the most significant bytes
