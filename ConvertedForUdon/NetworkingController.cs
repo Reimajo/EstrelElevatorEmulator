@@ -232,6 +232,35 @@ public class NetworkingController : UdonSharpBehaviour
     private const int SyncBool_Elevator0IsDriving = 84;
     private const int SyncBool_Elevator1IsDriving = 85;
     private const int SyncBool_Elevator2IsDriving = 86;
+    /// <summary>
+    /// Bools for rooms because theres room for bools...
+    /// </summary>
+    private const int SyncBool_Room1IsLocked = 87;
+    private const int SyncBool_Room2IsLocked = 88;
+    private const int SyncBool_Room3IsLocked = 89;
+    private const int SyncBool_Room4IsLocked = 90;
+    private const int SyncBool_Room5IsLocked = 91;
+    private const int SyncBool_Room6IsLocked = 92;
+    private const int SyncBool_Room7IsLocked = 93;
+    private const int SyncBool_Room8IsLocked = 94;
+    private const int SyncBool_Room9IsLocked = 95;
+    private const int SyncBool_Room10IsLocked = 96;
+    private const int SyncBool_Room11IsLocked = 97;
+    private const int SyncBool_Room12IsLocked = 98;
+    private const int SyncBool_Room13IsLocked = 99;
+    private const int SyncBool_Room1IsSuite = 100;
+    private const int SyncBool_Room2IsSuite = 101;
+    private const int SyncBool_Room3IsSuite = 102;
+    private const int SyncBool_Room4IsSuite = 103;
+    private const int SyncBool_Room5IsSuite = 104;
+    private const int SyncBool_Room6IsSuite = 105;
+    private const int SyncBool_Room7IsSuite = 106;
+    private const int SyncBool_Room8IsSuite = 107;
+    private const int SyncBool_Room9IsSuite = 108;
+    private const int SyncBool_Room10IsSuite = 109;
+    private const int SyncBool_Room11IsSuite = 110;
+    private const int SyncBool_Room12IsSuite = 111;
+    private const int SyncBool_Room13IsSuite = 112;
     #endregion ENUM_SYNCBOOL
     #region ENUM_DIRECTSYNCBOOL
     /// <summary>
@@ -371,6 +400,36 @@ public class NetworkingController : UdonSharpBehaviour
     private const long SyncBool_MaskLong2_Elevator0IsDriving = (1L << 32);
     private const long SyncBool_MaskLong2_Elevator1IsDriving = (1L << 33);
     private const long SyncBool_MaskLong2_Elevator2IsDriving = (1L << 34);
+
+    //Bools for rooms
+    private const int SyncBool_AddressLong2_RoomXIsLocked = 35;
+    private const long SyncBool_MaskLong2_Room1IsLocked = (1L << 35);
+    private const long SyncBool_MaskLong2_Room2IsLocked = (1L << 36);
+    private const long SyncBool_MaskLong2_Room3IsLocked = (1L << 37);
+    private const long SyncBool_MaskLong2_Room4IsLocked = (1L << 38);
+    private const long SyncBool_MaskLong2_Room5IsLocked = (1L << 39);
+    private const long SyncBool_MaskLong2_Room6IsLocked = (1L << 40);
+    private const long SyncBool_MaskLong2_Room7IsLocked = (1L << 41);
+    private const long SyncBool_MaskLong2_Room8IsLocked = (1L << 42);
+    private const long SyncBool_MaskLong2_Room9IsLocked = (1L << 43);
+    private const long SyncBool_MaskLong2_Room10IsLocked = (1L << 44);
+    private const long SyncBool_MaskLong2_Room11IsLocked = (1L << 45);
+    private const long SyncBool_MaskLong2_Room12IsLocked = (1L << 46);
+    private const long SyncBool_MaskLong2_Room13IsLocked = (1L << 47);
+    private const int SyncBool_AddressLong2_RoomXIsSuite = 48;
+    private const long SyncBool_MaskLong2_Room1IsSuite = (1L << 48);
+    private const long SyncBool_MaskLong2_Room2IsSuite = (1L << 49);
+    private const long SyncBool_MaskLong2_Room3IsSuite = (1L << 50);
+    private const long SyncBool_MaskLong2_Room4IsSuite = (1L << 51);
+    private const long SyncBool_MaskLong2_Room5IsSuite = (1L << 52);
+    private const long SyncBool_MaskLong2_Room6IsSuite = (1L << 53);
+    private const long SyncBool_MaskLong2_Room7IsSuite = (1L << 54);
+    private const long SyncBool_MaskLong2_Room8IsSuite = (1L << 55);
+    private const long SyncBool_MaskLong2_Room9IsSuite = (1L << 56);
+    private const long SyncBool_MaskLong2_Room10IsSuite = (1L << 57);
+    private const long SyncBool_MaskLong2_Room11IsSuite = (1L << 58);
+    private const long SyncBool_MaskLong2_Room12IsSuite = (1L << 59);
+    private const long SyncBool_MaskLong2_Room13IsSuite = (1L << 60);
 
     #endregion ENUM_DIRECTSYNCBOOL
     //------------------------------------------------------------------------------------------------------------
@@ -1076,14 +1135,14 @@ public class NetworkingController : UdonSharpBehaviour
     private long _localSyncData2 = 0;
     private bool[] _localSyncDataBools = new bool[116];
     /// <summary>
-    /// The long maps as follows:-
+    /// The long1 maps as follows:-
     ///  - 63-60 variable_1 (4bits)
     ///  - 59-56 variable_2 (4bits)
     ///  - 55-52 variable_3 (4bits)
     ///  - 0-51 binary bools [0-51]
     ///
-    /// The uint maps as follows:-
-    ///  - 0-31 binary bools [52-83(?)]
+    /// The long2 maps as follows:-
+    ///  - 0-63 binary bools [52-115]
     ///  
     /// Is run every time a network packet is received by localPlayer
     /// </summary>
@@ -1110,7 +1169,7 @@ public class NetworkingController : UdonSharpBehaviour
         if (_syncData2 != _localSyncData2)
         {
             bool[] cachedSync2Bools = GetBoolArrayLong2ONLY();
-            //the positions 0-31 are binary bools that might have changed (position 52-83)
+            //the positions 0-31 are binary bools that might have changed (position 52-115)
             for (int i = 52; i < 116; i++)
             {
                 if (cachedSync2Bools[i] != _localSyncDataBools[i])
@@ -2291,7 +2350,7 @@ public class NetworkingController : UdonSharpBehaviour
     /// Sets "value" to bit "position" of "input".
     /// </summary>       
     /// <param name="input">uint to modify</param>
-    /// <param name="position">Bit position to modify (0-83)</param>
+    /// <param name="position">Bit position to modify (0-115)</param>
     /// <param name="value">Value to set the bit</param>        
     /// <returns>Returns the modified uint</returns>
     private void MASTER_SetSyncValue(int position, bool value)
@@ -2361,7 +2420,7 @@ public class NetworkingController : UdonSharpBehaviour
     /// Reads the value of the bit at "position" of the combined syncData (_syncData1 & _syncData2).
     /// </summary>       
     /// <param name="input">uint to inspect</param>
-    /// <param name="position">Bit position to read (0-83)</param>
+    /// <param name="position">Bit position to read (0-115)</param>
     /// <returns>Boolean of specified bit position. Returns false on error.</returns>
     private bool GetSyncValue(int position)
     {
@@ -2532,7 +2591,7 @@ public class NetworkingController : UdonSharpBehaviour
         output[112] = (_syncData2 & 1152921504606846976L) != 0L;
         output[113] = (_syncData2 & 2305843009213693952L) != 0L;
         output[114] = (_syncData2 & 4611686018427387904L) != 0L;
-        //output[115] = (_syncData2 & -9223372036854775808L) != 0L;
+        output[115] = (_syncData2 >> 63) != 0L;
 
         return output;
     }
@@ -2674,7 +2733,7 @@ public class NetworkingController : UdonSharpBehaviour
         output[112] = (_syncData2 & 1152921504606846976L) != 0L;
         output[113] = (_syncData2 & 2305843009213693952L) != 0L;
         output[114] = (_syncData2 & 4611686018427387904L) != 0L;
-        //output[115] = (_syncData2 & -9223372036854775808L) != 0L;
+        output[115] = (_syncData2 >> 63) != 0L;
 
         return output;
     }
@@ -2812,7 +2871,7 @@ public class NetworkingController : UdonSharpBehaviour
 //    for (int i = 0; i < 64; i++)
 //    {
 //        //if long has bit
-//        if ((input & (1UL << i)) != 0L)
+//        if ((input & (1UL << i)) != 0UL)
 //        {
 //            //set long bit to true
 //            output |= (1L << i);
