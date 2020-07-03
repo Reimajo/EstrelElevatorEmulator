@@ -152,7 +152,7 @@ public class ElevatorController : UdonSharpBehaviour
     /// <summary>
     /// Initializing the scene
     /// </summary>
-    public void CustomStart()
+    public void CustomStart(float buttonVolume)
     {
         Debug.Log("[ElevatorController] is now in Start()");
         _localPlayer = Networking.LocalPlayer;
@@ -179,14 +179,14 @@ public class ElevatorController : UdonSharpBehaviour
         _elevator1.SetActive(false);
         _elevator2.SetActive(false);
         _elevator3.SetActive(false);
-        CloseElevator(0);
-        CloseElevator(1);
-        CloseElevator(2);
+        CloseElevator(0, false);
+        CloseElevator(1, false);
+        CloseElevator(2, false);
         //Setting up lower scripts
-        _elevatorCallPanelDesktop_1.CustomStart();
-        _elevatorCallPanelDesktop_2.CustomStart();
-        _elevatorCallPanelForVR_1.CustomStart();
-        _elevatorCallPanelForVR_2.CustomStart();
+        _elevatorCallPanelDesktop_1.CustomStart(buttonVolume);
+        _elevatorCallPanelDesktop_2.CustomStart(buttonVolume);
+        _elevatorCallPanelForVR_1.CustomStart(buttonVolume);
+        _elevatorCallPanelForVR_2.CustomStart(buttonVolume);
         if (_avatarHeight != 1.1f)
             OnAvatarChanged();
         _scriptIsLoaded = true;
@@ -210,7 +210,7 @@ public class ElevatorController : UdonSharpBehaviour
         else
         {
             SetElevatorLevelOnDisplay(14, 0);
-           // CloseElevator(0); //this function is external where numbers are zero-based
+            // CloseElevator(0); //this function is external where numbers are zero-based
             _elevator1.SetActive(false);
             _defectSign1.SetActive(true);
         }
@@ -308,10 +308,15 @@ public class ElevatorController : UdonSharpBehaviour
     /// <summary>
     /// Elevator open
     /// </summary>
-    public void OpenElevator(int elevatorNumber, bool directionUp, bool isIdle)
+    public void OpenElevator(int elevatorNumber, bool directionUp, bool isIdle, bool withSounds)
     {
         Debug.Log($"[ElevatorController] called to open elevator {elevatorNumber} in floor {_floorLevel}");
-        if(!isIdle)
+        if (withSounds)
+        {
+            _elevatorSoundController.DoorStartsOpening(elevatorNumber);
+            _elevatorSoundController.PlayOpeningSound(elevatorNumber);
+        }
+        if (!isIdle)
         {
             //apply some corrections to avoid weird states that make no sense
             if (!directionUp && _floorLevel == 0)
@@ -335,9 +340,11 @@ public class ElevatorController : UdonSharpBehaviour
     /// <summary>
     /// Elevator close
     /// </summary>
-    public void CloseElevator(int elevatorNumber)
+    public void CloseElevator(int elevatorNumber, bool withSound)
     {
         Debug.Log($"[ElevatorController] called to close elevator {elevatorNumber} in floor {_floorLevel}");
+        if (withSound)
+            _elevatorSoundController.PlayClosingSound(elevatorNumber);
         if (elevatorNumber == 0)
         {
             INTERNAL_CloseElevator(_animator1, 0, _topStatePanelRenderer1);
@@ -525,7 +532,7 @@ public class ElevatorController : UdonSharpBehaviour
         }
         else
         {
-            if(_floorLevel == 0)
+            if (_floorLevel == 0)
             {
                 _networkController._playerIsInReceptionElevator = true;
             }
@@ -534,6 +541,7 @@ public class ElevatorController : UdonSharpBehaviour
                 _networkController._playerIsInReceptionElevator = false;
             }
             _networkController._playerIsInElevatorNumber = elevatorNumber;
+            _elevatorSoundController.DoorIsFullyClosedWithPlayerInside(elevatorNumber);
         }
     }
     /// <summary>

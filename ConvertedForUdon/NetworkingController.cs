@@ -7,6 +7,7 @@ using System;
 public class NetworkingController : UdonSharpBehaviour
 {
     #region variables
+    private float _buttonVolume = 0.2f;
     public PlayerModCheck _playerModCheck;
     public ElevatorSoundController _elevatorSoundController;
     public Transform _currentSpawn;
@@ -85,6 +86,29 @@ public class NetworkingController : UdonSharpBehaviour
     private bool _elevator0Working = false;
     private bool _elevator1Working = false;
     private bool _elevator2Working = false;
+    /// <summary>
+    /// Storing the current state of some elevator functions
+    /// </summary>
+    private bool[] _elevatorLoliStairsAreEnabled = new bool[3];
+    private bool[] _elevatorMirrorIsEnabled = new bool[3];
+    private bool _elevatorMusicIsEnabled = true;
+    /// <summary>
+    /// asking network if there is a free room of a given choice
+    /// </summary>
+    /// <param name="isStandardRoom"></param>
+    /// <returns></returns>
+    public bool CheckForFreeRoom(bool isStandardRoom)
+    {
+        //TODO: Add code, currently just a dummy function
+        if (isStandardRoom)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
     #endregion variables
     //------------------------------------------------------------------------------------------------------------
     //------------------------------------SYNCBOOL ENUM-----------------------------------------------------------
@@ -106,6 +130,13 @@ public class NetworkingController : UdonSharpBehaviour
     private const int SyncBool_Elevator0goingUp = 7;
     private const int SyncBool_Elevator1goingUp = 8;
     private const int SyncBool_Elevator2goingUp = 9;
+
+    public int BookFreeRoom(bool isStandardRoom)
+    {
+        //Todo: Get a free room from network here
+        return 1;
+    }
+
     /// <summary>
     /// Sync-data positions for elevator call up buttons
     /// </summary>
@@ -422,17 +453,17 @@ public class NetworkingController : UdonSharpBehaviour
             MASTER_SetConstSceneElevatorStates();
             MASTER_FirstMasterSetupElevatorControl();
         }
-        _elevatorControllerReception.CustomStart();
-        _elevatorControllerArrivalArea.CustomStart();
+        _elevatorControllerReception.CustomStart(_buttonVolume);
+        _elevatorControllerArrivalArea.CustomStart(_buttonVolume);
         //for reception level
         if (_userIsInVR)
         {
-            _InsidePanelScriptElevatorForVR_0.CustomStart();
-            _InsidePanelScriptElevatorForVR_1.CustomStart();
-            _InsidePanelScriptElevatorForVR_2.CustomStart();
-            _InsidePanelFloorScriptElevatorForVR_0.CustomStart();
-            _InsidePanelFloorScriptElevatorForVR_1.CustomStart();
-            _InsidePanelFloorScriptElevatorForVR_2.CustomStart();
+            _InsidePanelScriptElevatorForVR_0.CustomStart(_buttonVolume);
+            _InsidePanelScriptElevatorForVR_1.CustomStart(_buttonVolume);
+            _InsidePanelScriptElevatorForVR_2.CustomStart(_buttonVolume);
+            _InsidePanelFloorScriptElevatorForVR_0.CustomStart(_buttonVolume);
+            _InsidePanelFloorScriptElevatorForVR_1.CustomStart(_buttonVolume);
+            _InsidePanelFloorScriptElevatorForVR_2.CustomStart(_buttonVolume);
             Debug.Log("[NetworkController] Fired CustomStart for Inside Button Panels");
         }
         else
@@ -1429,8 +1460,7 @@ public class NetworkingController : UdonSharpBehaviour
     /// </summary>
     private void LOCAL_SetElevatorDrivingState(int elevatorNumber, bool isDriving)
     {
-        if (_playerIsInElevatorNumber == elevatorNumber)
-            _elevatorSoundController.SetElevatorDrivingState(elevatorNumber, isDriving);
+        _elevatorSoundController.SetElevatorDrivingState(elevatorNumber, isDriving);
     }
     /// <summary>
     /// Storing locally known elevator levels
@@ -1599,12 +1629,12 @@ public class NetworkingController : UdonSharpBehaviour
                 if (floorNumber == 0)
                 {
                     //Passes elevatorNumber, (if going up), (if idle)
-                    _elevatorControllerReception.OpenElevator(elevatorNumber, 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXgoingUp + elevatorNumber))), 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumber))));
+                    _elevatorControllerReception.OpenElevator(elevatorNumber, 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXgoingUp + elevatorNumber))), 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumber))), withSounds: true);
                 }
                 else if (floorNumber == _localPlayerCurrentFloor)
                 {
                     //Passes elevatorNumber, (if going up), (if idle)
-                    _elevatorControllerArrivalArea.OpenElevator(elevatorNumber, 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXgoingUp + elevatorNumber))), 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumber))));
+                    _elevatorControllerArrivalArea.OpenElevator(elevatorNumber, 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXgoingUp + elevatorNumber))), 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumber))), withSounds: true);
                 }
             }
         }
@@ -1613,11 +1643,11 @@ public class NetworkingController : UdonSharpBehaviour
             Debug.Log("[NetworkController] LocalPlayer received to close elevator " + elevatorNumber + " on floor " + floorNumber);
             if (floorNumber == 0)
             {
-                _elevatorControllerReception.CloseElevator(elevatorNumber);
+                _elevatorControllerReception.CloseElevator(elevatorNumber, withSound: true);
             }
             else if (floorNumber == _localPlayerCurrentFloor)
             {
-                _elevatorControllerArrivalArea.CloseElevator(elevatorNumber);
+                _elevatorControllerArrivalArea.CloseElevator(elevatorNumber, withSound: true);
             }
         }
     }
@@ -1813,11 +1843,6 @@ public class NetworkingController : UdonSharpBehaviour
         }
     }
     /// <summary>
-    /// Storing the current state of some elevator functions
-    /// </summary>
-    private bool[] _elevatorLoliStairsAreEnabled = new bool[3];
-    private bool[] _elevatorMirrorIsEnabled = new bool[3];
-    /// <summary>
     /// To check if a player is inside a certain elevator
     /// </summary>
     public BoxCollider _playerInsideElevator0DetectorReception;
@@ -1977,7 +2002,7 @@ public class NetworkingController : UdonSharpBehaviour
         {
             Debug.Log("[Prepare] Floor is 0 so we'll open reception elevator and teleport there.");
             //open just the reception elevator where the player is inside
-            _elevatorControllerReception.OpenElevator(elevatorNumberWithPlayerInside, 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXgoingUp + elevatorNumberWithPlayerInside))), 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumberWithPlayerInside))));
+            _elevatorControllerReception.OpenElevator(elevatorNumberWithPlayerInside, 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXgoingUp + elevatorNumberWithPlayerInside))), 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumberWithPlayerInside))), withSounds: true);
             //teleport to reception
             //_localPlayer.TeleportTo(_teleportTarget, _localPlayer.GetRotation());
             _teleportCounter = 3;
@@ -1992,16 +2017,17 @@ public class NetworkingController : UdonSharpBehaviour
         for (int elevatorNumber = 0; elevatorNumber < 3; elevatorNumber++)
         {
             bool setOpen = (0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXopen + elevatorNumber))));
+            bool withSounds = elevatorNumber == elevatorNumberWithPlayerInside;
             if (setOpen && GetSyncElevatorFloor(elevatorNumber) == floorNumber)
             {
                 Debug.Log($"[Prepare] Opening elevator {elevatorNumber}");
                 //Passes elevatorNumber, (if going up), (if idle)
-                _elevatorControllerArrivalArea.OpenElevator(elevatorNumber, 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXgoingUp + elevatorNumber))), 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumber))));
+                _elevatorControllerArrivalArea.OpenElevator(elevatorNumber, 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXgoingUp + elevatorNumber))), 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumber))), withSounds);
             }
             else
             {
                 Debug.Log($"[Prepare] Closing elevator {elevatorNumber}");
-                _elevatorControllerArrivalArea.CloseElevator(elevatorNumber);
+                _elevatorControllerArrivalArea.CloseElevator(elevatorNumber, withSounds);
             }
         }
         //finally, teleport the player
@@ -2118,6 +2144,7 @@ public class NetworkingController : UdonSharpBehaviour
             {
                 _elevatorRequester.RequestElevatorDoorStateChange(elevatorNumber, true);
             }
+            LOCAL_SetElevatorInternalButtonState(elevatorNumber, buttonNumber, called: false);
             return;
         }
         if (buttonNumber == 1) //CLOSE
@@ -2127,6 +2154,7 @@ public class NetworkingController : UdonSharpBehaviour
             {
                 _elevatorRequester.RequestElevatorDoorStateChange(elevatorNumber, false);
             }
+            LOCAL_SetElevatorInternalButtonState(elevatorNumber, buttonNumber, called: false);
             return;
         }
         if (buttonNumber == 2) // (m2) mirror-button
@@ -2149,7 +2177,12 @@ public class NetworkingController : UdonSharpBehaviour
         }
         if (buttonNumber == 18) // RING-button
         {
-            //This button does absolutely nothing atm lol
+            bool newState = !_elevatorMusicIsEnabled;
+            _elevatorMusicIsEnabled = newState;
+            _elevatorSoundController.SetMusicUserChoiceState(elevatorNumber, newState);
+            LOCAL_SetElevatorInternalButtonState(0, buttonNumber, called: !newState);
+            LOCAL_SetElevatorInternalButtonState(1, buttonNumber, called: !newState);
+            LOCAL_SetElevatorInternalButtonState(2, buttonNumber, called: !newState);
             return;
         }
         //every other button is an internal floor request, button 4 is floor 0 etc.
