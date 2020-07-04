@@ -190,32 +190,32 @@ namespace WindowsFormsApp1
         /// <summary>
         /// Bools for rooms because theres room for bools...
         /// </summary>
-        private const int SyncBool_Room1IsLocked = 87;
-        private const int SyncBool_Room2IsLocked = 88;
-        private const int SyncBool_Room3IsLocked = 89;
-        private const int SyncBool_Room4IsLocked = 90;
-        private const int SyncBool_Room5IsLocked = 91;
-        private const int SyncBool_Room6IsLocked = 92;
-        private const int SyncBool_Room7IsLocked = 93;
-        private const int SyncBool_Room8IsLocked = 94;
-        private const int SyncBool_Room9IsLocked = 95;
-        private const int SyncBool_Room10IsLocked = 96;
-        private const int SyncBool_Room11IsLocked = 97;
-        private const int SyncBool_Room12IsLocked = 98;
-        private const int SyncBool_Room13IsLocked = 99;
-        private const int SyncBool_Room1IsSuite = 100;
-        private const int SyncBool_Room2IsSuite = 101;
-        private const int SyncBool_Room3IsSuite = 102;
-        private const int SyncBool_Room4IsSuite = 103;
-        private const int SyncBool_Room5IsSuite = 104;
-        private const int SyncBool_Room6IsSuite = 105;
-        private const int SyncBool_Room7IsSuite = 106;
-        private const int SyncBool_Room8IsSuite = 107;
-        private const int SyncBool_Room9IsSuite = 108;
-        private const int SyncBool_Room10IsSuite = 109;
-        private const int SyncBool_Room11IsSuite = 110;
-        private const int SyncBool_Room12IsSuite = 111;
-        private const int SyncBool_Room13IsSuite = 112;
+        private const int SyncBool_Room0IsLocked = 87;
+        private const int SyncBool_Room1IsLocked = 88;
+        private const int SyncBool_Room2IsLocked = 89;
+        private const int SyncBool_Room3IsLocked = 90;
+        private const int SyncBool_Room4IsLocked = 91;
+        private const int SyncBool_Room5IsLocked = 92;
+        private const int SyncBool_Room6IsLocked = 93;
+        private const int SyncBool_Room7IsLocked = 94;
+        private const int SyncBool_Room8IsLocked = 95;
+        private const int SyncBool_Room9IsLocked = 96;
+        private const int SyncBool_Room10IsLocked = 97;
+        private const int SyncBool_Room11IsLocked = 98;
+        private const int SyncBool_Room12IsLocked = 99;
+        private const int SyncBool_Room0IsAvailable = 100;
+        private const int SyncBool_Room1IsAvailable = 101;
+        private const int SyncBool_Room2IsAvailable = 102;
+        private const int SyncBool_Room3IsAvailable = 103;
+        private const int SyncBool_Room4IsAvailable = 104;
+        private const int SyncBool_Room5IsAvailable = 105;
+        private const int SyncBool_Room6IsAvailable = 106;
+        private const int SyncBool_Room7IsAvailable = 107;
+        private const int SyncBool_Room8IsAvailable = 108;
+        private const int SyncBool_Room9IsAvailable = 109;
+        private const int SyncBool_Room10IsAvailable = 110;
+        private const int SyncBool_Room11IsAvailable = 111;
+        private const int SyncBool_Room12IsAvailable = 112;
         #endregion ENUM_SYNCBOOL
         #region ENUM_DIRECTSYNCBOOL
         /// <summary>
@@ -358,33 +358,33 @@ namespace WindowsFormsApp1
 
         //Bools for rooms
         private const int SyncBool_AddressLong2_RoomXIsLocked = 35;
-        private const long SyncBool_MaskLong2_Room1IsLocked = (1L << 35);
-        private const long SyncBool_MaskLong2_Room2IsLocked = (1L << 36);
-        private const long SyncBool_MaskLong2_Room3IsLocked = (1L << 37);
-        private const long SyncBool_MaskLong2_Room4IsLocked = (1L << 38);
-        private const long SyncBool_MaskLong2_Room5IsLocked = (1L << 39);
-        private const long SyncBool_MaskLong2_Room6IsLocked = (1L << 40);
-        private const long SyncBool_MaskLong2_Room7IsLocked = (1L << 41);
-        private const long SyncBool_MaskLong2_Room8IsLocked = (1L << 42);
-        private const long SyncBool_MaskLong2_Room9IsLocked = (1L << 43);
-        private const long SyncBool_MaskLong2_Room10IsLocked = (1L << 44);
-        private const long SyncBool_MaskLong2_Room11IsLocked = (1L << 45);
-        private const long SyncBool_MaskLong2_Room12IsLocked = (1L << 46);
-        private const long SyncBool_MaskLong2_Room13IsLocked = (1L << 47);
-        private const int SyncBool_AddressLong2_RoomXIsSuite = 48;
-        private const long SyncBool_MaskLong2_Room1IsSuite = (1L << 48);
-        private const long SyncBool_MaskLong2_Room2IsSuite = (1L << 49);
-        private const long SyncBool_MaskLong2_Room3IsSuite = (1L << 50);
-        private const long SyncBool_MaskLong2_Room4IsSuite = (1L << 51);
-        private const long SyncBool_MaskLong2_Room5IsSuite = (1L << 52);
-        private const long SyncBool_MaskLong2_Room6IsSuite = (1L << 53);
-        private const long SyncBool_MaskLong2_Room7IsSuite = (1L << 54);
-        private const long SyncBool_MaskLong2_Room8IsSuite = (1L << 55);
-        private const long SyncBool_MaskLong2_Room9IsSuite = (1L << 56);
-        private const long SyncBool_MaskLong2_Room10IsSuite = (1L << 57);
-        private const long SyncBool_MaskLong2_Room11IsSuite = (1L << 58);
-        private const long SyncBool_MaskLong2_Room12IsSuite = (1L << 59);
-        private const long SyncBool_MaskLong2_Room13IsSuite = (1L << 60);
+        private const long SyncBool_MaskLong2_Room0IsLocked = (1L << 35);
+        private const long SyncBool_MaskLong2_Room1IsLocked = (1L << 36);
+        private const long SyncBool_MaskLong2_Room2IsLocked = (1L << 37);
+        private const long SyncBool_MaskLong2_Room3IsLocked = (1L << 38);
+        private const long SyncBool_MaskLong2_Room4IsLocked = (1L << 39);
+        private const long SyncBool_MaskLong2_Room5IsLocked = (1L << 40);
+        private const long SyncBool_MaskLong2_Room6IsLocked = (1L << 41);
+        private const long SyncBool_MaskLong2_Room7IsLocked = (1L << 42);
+        private const long SyncBool_MaskLong2_Room8IsLocked = (1L << 43);
+        private const long SyncBool_MaskLong2_Room9IsLocked = (1L << 44);
+        private const long SyncBool_MaskLong2_Room10IsLocked = (1L << 45);
+        private const long SyncBool_MaskLong2_Room11IsLocked = (1L << 46);
+        private const long SyncBool_MaskLong2_Room12IsLocked = (1L << 47);
+        private const int SyncBool_AddressLong2_RoomXIsAvailable = 48;
+        private const long SyncBool_MaskLong2_Room0IsAvailable = (1L << 48);
+        private const long SyncBool_MaskLong2_Room1IsAvailable = (1L << 49);
+        private const long SyncBool_MaskLong2_Room2IsAvailable = (1L << 50);
+        private const long SyncBool_MaskLong2_Room3IsAvailable = (1L << 51);
+        private const long SyncBool_MaskLong2_Room4IsAvailable = (1L << 52);
+        private const long SyncBool_MaskLong2_Room5IsAvailable = (1L << 53);
+        private const long SyncBool_MaskLong2_Room6IsAvailable = (1L << 54);
+        private const long SyncBool_MaskLong2_Room7IsAvailable = (1L << 55);
+        private const long SyncBool_MaskLong2_Room8IsAvailable = (1L << 56);
+        private const long SyncBool_MaskLong2_Room9IsAvailable = (1L << 57);
+        private const long SyncBool_MaskLong2_Room10IsAvailable = (1L << 58);
+        private const long SyncBool_MaskLong2_Room11IsAvailable = (1L << 59);
+        private const long SyncBool_MaskLong2_Room12IsAvailable = (1L << 60);
 
         #endregion ENUM_DIRECTSYNCBOOL
         //------------------------------------------------------------------------------------------------------------
