@@ -2328,20 +2328,42 @@ public class NetworkingController : UdonSharpBehaviour
     private const int suiteRoomLowerBound = 6;
     private const int suiteRoomUpperBound = 12;
 
-    public int BookFreeRoom(bool isStandardRoom)
+    //Masks used to quickly check room availability
+    private const long standardRoomMask = SyncBool_MaskLong2_Room0IsAvailable |
+                                          SyncBool_MaskLong2_Room1IsAvailable |
+                                          SyncBool_MaskLong2_Room2IsAvailable |
+                                          SyncBool_MaskLong2_Room3IsAvailable |
+                                          SyncBool_MaskLong2_Room4IsAvailable |
+                                          SyncBool_MaskLong2_Room5IsAvailable;
+
+    private const long suiteRoomMask = SyncBool_MaskLong2_Room6IsAvailable |
+                                       SyncBool_MaskLong2_Room7IsAvailable |
+                                       SyncBool_MaskLong2_Room8IsAvailable |
+                                       SyncBool_MaskLong2_Room9IsAvailable |
+                                       SyncBool_MaskLong2_Room10IsAvailable |
+                                       SyncBool_MaskLong2_Room11IsAvailable |
+                                       SyncBool_MaskLong2_Room12IsAvailable;
+
+    public int BookRandomRoom(bool isSuite)
     {
         //Variables holding the list of available rooms
         int[] availableRooms;
         int numberOfAvailableRooms = 0;
 
-        //Populate the array depending on if it is a standard room or suite being requested
-        if (isStandardRoom)
+        //Firstly do a fast check to see if rooms are available
+        if (!IsRoomAvailable(isSuite))
+        {
+            return -1;
+        }
+
+        //Populate the room array depending on if it is a standard room or suite being requested
+        if (isSuite)
         {
             //Initialise availableRooms array
-            availableRooms = new int[standardRoomUpperBound - standardRoomLowerBound + 1];
+            availableRooms = new int[suiteRoomUpperBound - suiteRoomLowerBound + 1];
 
             //Check availability of the rooms
-            for (int i = standardRoomLowerBound; i <= standardRoomUpperBound; i++)
+            for (int i = suiteRoomLowerBound; i <= suiteRoomUpperBound; i++)
             {
                 if (0L != (_syncData2 & (1L << SyncBool_AddressLong2_RoomXIsAvailable + i)))
                 {
@@ -2352,8 +2374,9 @@ public class NetworkingController : UdonSharpBehaviour
         }
         else
         {
-            availableRooms = new int[suiteRoomUpperBound - suiteRoomLowerBound + 1];
-            for (int i = suiteRoomLowerBound; i <= suiteRoomUpperBound; i++)
+            availableRooms = new int[standardRoomUpperBound - standardRoomLowerBound + 1];
+
+            for (int i = standardRoomLowerBound; i <= standardRoomUpperBound; i++)
             {
                 if (0L != (_syncData2 & (1L << SyncBool_AddressLong2_RoomXIsAvailable + i)))
                 {
@@ -2374,10 +2397,35 @@ public class NetworkingController : UdonSharpBehaviour
         int chosenRoom = availableRooms[UnityEngine.Random.Range(0, numberOfAvailableRooms)];
 
         //Reserve the room (set availability to zero)
+        //TODO: GET THE MASTER TO DO THIS!!!! ************************************************************************
         MASTER_SetSyncValue(SyncBool_Room0IsAvailable + chosenRoom, false);
 
         //Return the Room
         return chosenRoom;
+    }
+
+    public bool IsRoomAvailable(bool isSuite)
+    {
+        if (isSuite)
+        {
+            return 0L != (_syncData2 & suiteRoomMask);
+        }
+        else
+        {
+            return 0L != (_syncData2 & standardRoomMask);
+        }
+    }
+
+    public bool CheckIfRoomWasBooked(int roomNumber)
+    {
+        //TODO: Hardcoded max room number
+        if (roomNumber < 0 || roomNumber >= 13)
+        {
+            Debug.Log("Room booking checker - Room number out of range: " + roomNumber);
+        }
+
+        //Check if RoomAvailable is false
+        return 0L == (_syncData2 & (1L << SyncBool_AddressLong2_RoomXIsAvailable + roomNumber));
     }
 
     #endregion ROOM_FUNCTIONS
