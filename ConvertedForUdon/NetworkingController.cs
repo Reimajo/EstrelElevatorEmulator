@@ -60,6 +60,11 @@ public class NetworkingController : UdonSharpBehaviour
     [HideInInspector, UdonSynced(UdonSyncMode.None)]
     public long _syncData2 = 0;
     /// <summary>
+    /// Room counter variables
+    /// </summary>
+    [HideInInspector, UdonSynced(UdonSyncMode.None)]
+    public long _syncData3 = 0;
+    /// <summary>
     /// Current floor level that localPlayer is on
     /// </summary>
     private int _localPlayerCurrentFloor = 0;
@@ -92,23 +97,7 @@ public class NetworkingController : UdonSharpBehaviour
     private bool[] _elevatorLoliStairsAreEnabled = new bool[3];
     private bool[] _elevatorMirrorIsEnabled = new bool[3];
     private bool _elevatorMusicIsEnabled = true;
-    /// <summary>
-    /// asking network if there is a free room of a given choice
-    /// </summary>
-    /// <param name="isStandardRoom"></param>
-    /// <returns></returns>
-    public bool CheckForFreeRoom(bool isStandardRoom)
-    {
-        //TODO: Add code, currently just a dummy function
-        if (isStandardRoom)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
+
     #endregion variables
     //------------------------------------------------------------------------------------------------------------
     //------------------------------------SYNCBOOL ENUM-----------------------------------------------------------
@@ -130,12 +119,6 @@ public class NetworkingController : UdonSharpBehaviour
     private const int SyncBool_Elevator0goingUp = 7;
     private const int SyncBool_Elevator1goingUp = 8;
     private const int SyncBool_Elevator2goingUp = 9;
-
-    public int BookFreeRoom(bool isStandardRoom)
-    {
-        //Todo: Get a free room from network here
-        return 1;
-    }
 
     /// <summary>
     /// Sync-data positions for elevator call up buttons
@@ -235,32 +218,32 @@ public class NetworkingController : UdonSharpBehaviour
     /// <summary>
     /// Bools for rooms because theres room for bools...
     /// </summary>
-    private const int SyncBool_Room1IsLocked = 87;
-    private const int SyncBool_Room2IsLocked = 88;
-    private const int SyncBool_Room3IsLocked = 89;
-    private const int SyncBool_Room4IsLocked = 90;
-    private const int SyncBool_Room5IsLocked = 91;
-    private const int SyncBool_Room6IsLocked = 92;
-    private const int SyncBool_Room7IsLocked = 93;
-    private const int SyncBool_Room8IsLocked = 94;
-    private const int SyncBool_Room9IsLocked = 95;
-    private const int SyncBool_Room10IsLocked = 96;
-    private const int SyncBool_Room11IsLocked = 97;
-    private const int SyncBool_Room12IsLocked = 98;
-    private const int SyncBool_Room13IsLocked = 99;
-    private const int SyncBool_Room1IsSuite = 100;
-    private const int SyncBool_Room2IsSuite = 101;
-    private const int SyncBool_Room3IsSuite = 102;
-    private const int SyncBool_Room4IsSuite = 103;
-    private const int SyncBool_Room5IsSuite = 104;
-    private const int SyncBool_Room6IsSuite = 105;
-    private const int SyncBool_Room7IsSuite = 106;
-    private const int SyncBool_Room8IsSuite = 107;
-    private const int SyncBool_Room9IsSuite = 108;
-    private const int SyncBool_Room10IsSuite = 109;
-    private const int SyncBool_Room11IsSuite = 110;
-    private const int SyncBool_Room12IsSuite = 111;
-    private const int SyncBool_Room13IsSuite = 112;
+    private const int SyncBool_Room0IsLocked = 87;
+    private const int SyncBool_Room1IsLocked = 88;
+    private const int SyncBool_Room2IsLocked = 89;
+    private const int SyncBool_Room3IsLocked = 90;
+    private const int SyncBool_Room4IsLocked = 91;
+    private const int SyncBool_Room5IsLocked = 92;
+    private const int SyncBool_Room6IsLocked = 93;
+    private const int SyncBool_Room7IsLocked = 94;
+    private const int SyncBool_Room8IsLocked = 95;
+    private const int SyncBool_Room9IsLocked = 96;
+    private const int SyncBool_Room10IsLocked = 97;
+    private const int SyncBool_Room11IsLocked = 98;
+    private const int SyncBool_Room12IsLocked = 99;
+    private const int SyncBool_Room0IsAvailable = 100;
+    private const int SyncBool_Room1IsAvailable = 101;
+    private const int SyncBool_Room2IsAvailable = 102;
+    private const int SyncBool_Room3IsAvailable = 103;
+    private const int SyncBool_Room4IsAvailable = 104;
+    private const int SyncBool_Room5IsAvailable = 105;
+    private const int SyncBool_Room6IsAvailable = 106;
+    private const int SyncBool_Room7IsAvailable = 107;
+    private const int SyncBool_Room8IsAvailable = 108;
+    private const int SyncBool_Room9IsAvailable = 109;
+    private const int SyncBool_Room10IsAvailable = 110;
+    private const int SyncBool_Room11IsAvailable = 111;
+    private const int SyncBool_Room12IsAvailable = 112;
     #endregion ENUM_SYNCBOOL
     #region ENUM_DIRECTSYNCBOOL
     /// <summary>
@@ -403,33 +386,33 @@ public class NetworkingController : UdonSharpBehaviour
 
     //Bools for rooms
     private const int SyncBool_AddressLong2_RoomXIsLocked = 35;
-    private const long SyncBool_MaskLong2_Room1IsLocked = (1L << 35);
-    private const long SyncBool_MaskLong2_Room2IsLocked = (1L << 36);
-    private const long SyncBool_MaskLong2_Room3IsLocked = (1L << 37);
-    private const long SyncBool_MaskLong2_Room4IsLocked = (1L << 38);
-    private const long SyncBool_MaskLong2_Room5IsLocked = (1L << 39);
-    private const long SyncBool_MaskLong2_Room6IsLocked = (1L << 40);
-    private const long SyncBool_MaskLong2_Room7IsLocked = (1L << 41);
-    private const long SyncBool_MaskLong2_Room8IsLocked = (1L << 42);
-    private const long SyncBool_MaskLong2_Room9IsLocked = (1L << 43);
-    private const long SyncBool_MaskLong2_Room10IsLocked = (1L << 44);
-    private const long SyncBool_MaskLong2_Room11IsLocked = (1L << 45);
-    private const long SyncBool_MaskLong2_Room12IsLocked = (1L << 46);
-    private const long SyncBool_MaskLong2_Room13IsLocked = (1L << 47);
-    private const int SyncBool_AddressLong2_RoomXIsSuite = 48;
-    private const long SyncBool_MaskLong2_Room1IsSuite = (1L << 48);
-    private const long SyncBool_MaskLong2_Room2IsSuite = (1L << 49);
-    private const long SyncBool_MaskLong2_Room3IsSuite = (1L << 50);
-    private const long SyncBool_MaskLong2_Room4IsSuite = (1L << 51);
-    private const long SyncBool_MaskLong2_Room5IsSuite = (1L << 52);
-    private const long SyncBool_MaskLong2_Room6IsSuite = (1L << 53);
-    private const long SyncBool_MaskLong2_Room7IsSuite = (1L << 54);
-    private const long SyncBool_MaskLong2_Room8IsSuite = (1L << 55);
-    private const long SyncBool_MaskLong2_Room9IsSuite = (1L << 56);
-    private const long SyncBool_MaskLong2_Room10IsSuite = (1L << 57);
-    private const long SyncBool_MaskLong2_Room11IsSuite = (1L << 58);
-    private const long SyncBool_MaskLong2_Room12IsSuite = (1L << 59);
-    private const long SyncBool_MaskLong2_Room13IsSuite = (1L << 60);
+    private const long SyncBool_MaskLong2_Room0IsLocked = (1L << 35);
+    private const long SyncBool_MaskLong2_Room1IsLocked = (1L << 36);
+    private const long SyncBool_MaskLong2_Room2IsLocked = (1L << 37);
+    private const long SyncBool_MaskLong2_Room3IsLocked = (1L << 38);
+    private const long SyncBool_MaskLong2_Room4IsLocked = (1L << 39);
+    private const long SyncBool_MaskLong2_Room5IsLocked = (1L << 40);
+    private const long SyncBool_MaskLong2_Room6IsLocked = (1L << 41);
+    private const long SyncBool_MaskLong2_Room7IsLocked = (1L << 42);
+    private const long SyncBool_MaskLong2_Room8IsLocked = (1L << 43);
+    private const long SyncBool_MaskLong2_Room9IsLocked = (1L << 44);
+    private const long SyncBool_MaskLong2_Room10IsLocked = (1L << 45);
+    private const long SyncBool_MaskLong2_Room11IsLocked = (1L << 46);
+    private const long SyncBool_MaskLong2_Room12IsLocked = (1L << 47);
+    private const int SyncBool_AddressLong2_RoomXIsAvailable = 48;
+    private const long SyncBool_MaskLong2_Room0IsAvailable = (1L << 48);
+    private const long SyncBool_MaskLong2_Room1IsAvailable = (1L << 49);
+    private const long SyncBool_MaskLong2_Room2IsAvailable = (1L << 50);
+    private const long SyncBool_MaskLong2_Room3IsAvailable = (1L << 51);
+    private const long SyncBool_MaskLong2_Room4IsAvailable = (1L << 52);
+    private const long SyncBool_MaskLong2_Room5IsAvailable = (1L << 53);
+    private const long SyncBool_MaskLong2_Room6IsAvailable = (1L << 54);
+    private const long SyncBool_MaskLong2_Room7IsAvailable = (1L << 55);
+    private const long SyncBool_MaskLong2_Room8IsAvailable = (1L << 56);
+    private const long SyncBool_MaskLong2_Room9IsAvailable = (1L << 57);
+    private const long SyncBool_MaskLong2_Room10IsAvailable = (1L << 58);
+    private const long SyncBool_MaskLong2_Room11IsAvailable = (1L << 59);
+    private const long SyncBool_MaskLong2_Room12IsAvailable = (1L << 60);
 
     #endregion ENUM_DIRECTSYNCBOOL
     //------------------------------------------------------------------------------------------------------------
@@ -2318,6 +2301,147 @@ public class NetworkingController : UdonSharpBehaviour
         return false;
     }
     #endregion ELREQ_FUNCTIONS
+    #region ROOMREQ_FUNCTIONS
+
+    /// <summary>
+    /// Master function for booking a room
+    /// </summary>
+    /// <param name="roomNumber">Room to book</param>
+    public void ROOMREQ_BookRoom(int roomNumber)
+    {
+        Debug.Log("[NetworkController] Master received client request to reserve room " + roomNumber);
+        MASTER_SetSyncValue(SyncBool_Room0IsAvailable + roomNumber, false);        
+    }
+    #endregion ROOMREQ_FUNCTIONS
+    //------------------------------------------------------------------------------------------------------------
+    //------------------------------------ Room Functions --------------------------------------------------------
+    //------------------------------------------------------------------------------------------------------------
+    #region ROOM_FUNCTIONS
+
+    //Bounds are inclusive
+    private const int standardRoomLowerBound = 0;
+    private const int standardRoomUpperBound = 5;
+    private const int suiteRoomLowerBound = 6;
+    private const int suiteRoomUpperBound = 12;
+
+    //Masks used to quickly check room availability
+    private const long standardRoomMask = SyncBool_MaskLong2_Room0IsAvailable |
+                                          SyncBool_MaskLong2_Room1IsAvailable |
+                                          SyncBool_MaskLong2_Room2IsAvailable |
+                                          SyncBool_MaskLong2_Room3IsAvailable |
+                                          SyncBool_MaskLong2_Room4IsAvailable |
+                                          SyncBool_MaskLong2_Room5IsAvailable;
+
+    private const long suiteRoomMask = SyncBool_MaskLong2_Room6IsAvailable |
+                                       SyncBool_MaskLong2_Room7IsAvailable |
+                                       SyncBool_MaskLong2_Room8IsAvailable |
+                                       SyncBool_MaskLong2_Room9IsAvailable |
+                                       SyncBool_MaskLong2_Room10IsAvailable |
+                                       SyncBool_MaskLong2_Room11IsAvailable |
+                                       SyncBool_MaskLong2_Room12IsAvailable;
+
+
+    /// <summary>
+    /// Books a random room based on room type. Availability is checked and request is sent to the master.
+    /// </summary>
+    /// <param name="isStandardRoom">Is a standard room being requested?</param>
+    /// <returns></returns>
+    public int BookRandomRoom(bool isStandardRoom)
+    {
+        //Variables holding the list of available rooms
+        int[] availableRooms;
+        int numberOfAvailableRooms = 0;
+
+        //Firstly do a fast check to see if rooms are available
+        if (!IsRoomAvailable(isStandardRoom))
+        {
+            return -1;
+        }
+
+        //Populate the room array depending on if it is a standard room or suite being requested
+        if (isStandardRoom)
+        {
+            //Initialise availableRooms array
+            availableRooms = new int[standardRoomUpperBound - standardRoomLowerBound + 1];
+
+            //Check availability of the rooms
+            for (int i = standardRoomLowerBound; i <= standardRoomUpperBound; i++)
+            {
+                if (0L != (_syncData2 & (1L << SyncBool_AddressLong2_RoomXIsAvailable + i)))
+                {
+                    availableRooms[numberOfAvailableRooms] = i;
+                    numberOfAvailableRooms++;
+                }
+            }
+        }
+        else //Find Suites
+        {
+            availableRooms = new int[suiteRoomUpperBound - suiteRoomLowerBound + 1];
+
+
+            for (int i = suiteRoomLowerBound; i <= suiteRoomUpperBound; i++)
+            {
+                if (0L != (_syncData2 & (1L << SyncBool_AddressLong2_RoomXIsAvailable + i)))
+                {
+                    availableRooms[numberOfAvailableRooms] = i;
+                    numberOfAvailableRooms++;
+                }
+            }
+        }
+        //Appropriate/Available room numbers are now listed in "availableRooms"
+
+        //No free rooms? Exit here
+        if (numberOfAvailableRooms == 0)
+        {
+            return -1;
+        }
+
+        //Pick a random room from the list
+        int chosenRoom = availableRooms[UnityEngine.Random.Range(0, numberOfAvailableRooms)];
+
+        //Book the room by sending a request to the master
+        _elevatorRequester.RequestRoomBooking(chosenRoom);
+
+        //Return the room number
+        return chosenRoom;
+    }
+
+    /// <summary>
+    /// Checks if a specific type of room available
+    /// </summary>
+    /// <param name="isStandardRoom">Is a standard room being requested?</param>
+    /// <returns>If the room type is available</returns>
+    public bool IsRoomAvailable(bool isStandardRoom)
+    {
+        if (isStandardRoom)
+        {
+            return 0L != (_syncData2 & standardRoomMask);
+        }
+        else
+        {            
+            return 0L != (_syncData2 & suiteRoomMask);
+        }
+    }
+
+    /// <summary>
+    /// Checks if a particular room is currently booked (unavailable)
+    /// </summary>
+    /// <param name="roomNumber">Room number to check</param>
+    /// <returns>If the specific room is no longer available</returns>
+    public bool CheckIfRoomWasBooked(int roomNumber)
+    {
+        //TODO: Hardcoded max room number
+        //TODO: RoomNumber check can be removed in final build
+        if (roomNumber < 0 || roomNumber >= 13)
+        {
+            Debug.Log("Room booking checker - Room number out of range: " + roomNumber);
+        }
+
+        //Return true if the room is not available
+        return 0L == (_syncData2 & (1L << SyncBool_AddressLong2_RoomXIsAvailable + roomNumber));
+    }
+
+    #endregion ROOM_FUNCTIONS
     //------------------------------------------------------------------------------------------------------------
     //----------------------------------SyncBool Interface -------------------------------------------------------
     //------------------------------------------------------------------------------------------------------------
@@ -2843,6 +2967,122 @@ public class NetworkingController : UdonSharpBehaviour
         }
     }
     #endregion SYNCBOOL_FUNCTIONS
+    #region ROOM_SYNCDATA_FUNCTIONS
+
+    //If these are changed, check they still fit within a long!
+    private const int roomVariableMaxValue = 27;
+    private const int roomVariableMaxNumberOfValues = 13;
+
+    /// <summary>
+    /// Encodes an arbitrarily sized value into a long, the value size is set with roomVariableMaxValue. 
+    /// </summary>
+    /// <param name="roomNumber">Which value to be set</param>
+    /// <param name="value">Value to be encoded</param>
+    public void EncodeRoomVariable(int roomNumber, int value)
+    {
+        long localSyncRooms = _syncData3;
+
+        //Sanitise input
+        if (roomNumber < 0 || roomNumber >= roomVariableMaxNumberOfValues)
+        {
+            Debug.Log("EncodeRoomVar - Room number out of range: " + roomNumber);
+            return;
+        }
+
+        if (value < 0 || value > roomVariableMaxValue)
+        {
+            Debug.Log("EncodeRoomVar - Value out of range: " + value);
+            return;
+        }
+
+        //As the values are numerically encoded, it is difficult to mask out the value to zero it.
+        //So to counter this we will work on delta values, not absolute.
+        //I.e. read in the old value, figure out the difference and work with that.        
+
+        //Calculate the delta using a local copy (sync value CANNOT change during these operations!!!!!)
+        long deltaLong = value - DecodeRoomVariableLocal(localSyncRooms, roomNumber);
+
+        //Ideally you would use Math.Pow here but not sure if Udon has it
+        //Instead, doing it the longhanded way
+        for (int i = 0; i < roomNumber; i++)
+        {
+            deltaLong *= roomVariableMaxValue + 1;
+        }
+
+        //Now to merge the changes simply add deltaLong, et voila.
+        _syncData3 = localSyncRooms + deltaLong;
+    }
+
+    /// <summary>
+    /// Decode the value created by EncodeRoomVariable.
+    /// </summary>
+    /// <param name="localSyncRooms">The long to be decoded</param>
+    /// <param name="roomNumber">Which value to be accessed</param>
+    /// <returns>Decoded value</returns>
+    private int DecodeRoomVariableLocal(long localSyncRooms, int roomNumber)
+    {
+        //Ideally you would use Math.Pow here but not sure if Udon has it
+        //Instead, doing it the longhanded way
+        long baseNumber = 1;
+        for (int i = 0; i < roomNumber; i++)
+        {
+            baseNumber *= roomVariableMaxValue + 1;
+        }
+
+        //Use integer division to get rid of lower values
+        localSyncRooms /= baseNumber;
+
+        //The more significant values are still present
+        //So we'll integer divide to extract these and the multiply it back... Is there a more efficient way???
+        long removeTheseValues = (long)(localSyncRooms / (roomVariableMaxValue + 1));
+        //Adding an extra cast above just in-case the udon compiler decides to optimise away the hack...
+        removeTheseValues *= (roomVariableMaxValue + 1);
+
+        //Technically "removeTheseValues" should now be missing the numbers we are interesting in.
+        //So to get the value we check the difference between the original :D
+        return (int)(localSyncRooms - removeTheseValues);
+    }
+
+    /// <summary>
+    /// Decode the value created by EncodeRoomVariable
+    /// </summary>
+    /// <param name="localSyncRooms">The long to be decoded</param>
+    /// <param name="roomNumber">Which value to be accessed</param>
+    /// <returns>Decoded value</returns>
+    public int DecodeRoomVariable(int roomNumber)
+    {
+        //Sanitise input first
+        if (roomNumber < 0 || roomNumber >= roomVariableMaxNumberOfValues)
+        {
+            Debug.Log("EncodeRoomVar - Room number out of range: " + roomNumber);
+            return 0;
+        }
+
+        return DecodeRoomVariableLocal(_syncData3, roomNumber);
+    }
+
+    /// <summary>
+    /// Decrements all non-zero room variables by one
+    /// </summary>
+    public void DecrementRoomVariables()
+    {
+        for (int roomNumber = 0; roomNumber < roomVariableMaxNumberOfValues; roomNumber++)
+        {
+            //Check if the value is currently zero
+            int value = DecodeRoomVariable(roomNumber);
+            if (value != 0)
+            {
+                //This is an optimised version of EncodeRoomVariable for decrementing (no error checking)
+                long deltaLong = -1L;
+                for (int i = 0; i < roomNumber; i++)
+                {
+                    deltaLong *= roomVariableMaxValue + 1;
+                }
+                _syncData3 += deltaLong;
+            }
+        }
+    }
+    #endregion ROOM_SYNCDATA_FUNCTIONS
 }
 
 

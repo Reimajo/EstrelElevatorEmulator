@@ -390,4 +390,76 @@ public class ElevatorRequester : UdonSharpBehaviour
         _networkingController.ELREQ_SetInternalTarget(2, 13);
     }
     #endregion RequestElevatorInternalTarget
+
+    /// <summary>
+    /// Requests a room booking from the master
+    /// </summary>
+    /// <param name="roomNumber">Room to book</param>
+    public void RequestRoomBooking(int roomNumber)
+    {
+        Debug.Log("[ElevatorRequester] Request for room booking. Room: " + roomNumber.ToString());
+        if (Networking.LocalPlayer.isMaster)
+        {
+            //master doesn't need to send a request over network
+            _networkingController.ROOMREQ_BookRoom(roomNumber);
+            return;
+        }
+        string functionName = $"ROB{roomNumber}";
+        Debug.Log($"Sending Network function {functionName} to master");
+        SendCustomNetworkEvent(VRC.Udon.Common.Interfaces.NetworkEventTarget.Owner, functionName);
+    }
+    #region RequestRoomBooking
+    public void ROB0()
+    {
+        _networkingController.ROOMREQ_BookRoom(0);
+    }
+    public void ROB1()
+    {
+        _networkingController.ROOMREQ_BookRoom(1);
+    }
+    public void ROB2()
+    {
+        _networkingController.ROOMREQ_BookRoom(2);
+    }
+    public void ROB3()
+    {
+        _networkingController.ROOMREQ_BookRoom(3);
+    }
+    public void ROB4()
+    {
+        _networkingController.ROOMREQ_BookRoom(4);
+    }
+    public void ROB5()
+    {
+        _networkingController.ROOMREQ_BookRoom(5);
+    }
+    public void ROB6()
+    {
+        _networkingController.ROOMREQ_BookRoom(6);
+    }
+    public void ROB7()
+    {
+        _networkingController.ROOMREQ_BookRoom(7);
+    }
+    public void ROB8()
+    {
+        _networkingController.ROOMREQ_BookRoom(8);
+    }
+    public void ROB9()
+    {
+        _networkingController.ROOMREQ_BookRoom(9);
+    }
+    public void ROB10()
+    {
+        _networkingController.ROOMREQ_BookRoom(10);
+    }
+    public void ROB11()
+    {
+        _networkingController.ROOMREQ_BookRoom(11);
+    }
+    public void ROB12()
+    {
+        _networkingController.ROOMREQ_BookRoom(12);
+    }
+    #endregion RequestRoomBooking
 }
