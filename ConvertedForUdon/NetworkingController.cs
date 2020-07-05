@@ -1433,6 +1433,61 @@ public class NetworkingController : UdonSharpBehaviour
             case SyncBool_Elevator2IsDriving:
                 LOCAL_SetElevatorDrivingState(2, isDriving: newState);
                 break;
+            //Rooms
+            case SyncBool_Room0IsAvailable:
+            case SyncBool_Room1IsAvailable:
+            case SyncBool_Room2IsAvailable:
+            case SyncBool_Room3IsAvailable:
+            case SyncBool_Room4IsAvailable:
+            case SyncBool_Room5IsAvailable:
+            case SyncBool_Room6IsAvailable:
+            case SyncBool_Room7IsAvailable:
+            case SyncBool_Room8IsAvailable:
+            case SyncBool_Room9IsAvailable:
+            case SyncBool_Room10IsAvailable:
+            case SyncBool_Room11IsAvailable:
+            case SyncBool_Room12IsAvailable:
+                break;
+            case SyncBool_Room0IsLocked:
+                LOCAL_RoomLockStateChanged(0, newState);
+                break;
+            case SyncBool_Room1IsLocked:
+                LOCAL_RoomLockStateChanged(1, newState);
+                break;
+            case SyncBool_Room2IsLocked:
+                LOCAL_RoomLockStateChanged(2, newState);
+                break;
+            case SyncBool_Room3IsLocked:
+                LOCAL_RoomLockStateChanged(3, newState);
+                break;
+            case SyncBool_Room4IsLocked:
+                LOCAL_RoomLockStateChanged(4, newState);
+                break;
+            case SyncBool_Room5IsLocked:
+                LOCAL_RoomLockStateChanged(5, newState);
+                break;
+            case SyncBool_Room6IsLocked:
+                LOCAL_RoomLockStateChanged(6, newState);
+                break;
+            case SyncBool_Room7IsLocked:
+                LOCAL_RoomLockStateChanged(7, newState);
+                break;
+            case SyncBool_Room8IsLocked:
+                LOCAL_RoomLockStateChanged(8, newState);
+                break;
+            case SyncBool_Room9IsLocked:
+                LOCAL_RoomLockStateChanged(9, newState);
+                break;
+            case SyncBool_Room10IsLocked:
+                LOCAL_RoomLockStateChanged(10, newState);
+                break;
+            case SyncBool_Room11IsLocked:
+                LOCAL_RoomLockStateChanged(11, newState);
+                break;
+            case SyncBool_Room12IsLocked:
+                LOCAL_RoomLockStateChanged(12, newState);
+                break;
+ 
             default:
                 Debug.Log("ERROR: UNKNOWN BOOL HAS CHANGED IN SYNCBOOL, position: " + syncBoolPosition);
                 break;
@@ -2310,8 +2365,49 @@ public class NetworkingController : UdonSharpBehaviour
     public void ROOMREQ_BookRoom(int roomNumber)
     {
         Debug.Log("[NetworkController] Master received client request to reserve room " + roomNumber);
-        MASTER_SetSyncValue(SyncBool_Room0IsAvailable + roomNumber, false);        
+        
+        //Mark room as unavailable
+        MASTER_SetSyncValue(SyncBool_Room0IsAvailable + roomNumber, false);
+
+        //Make sure it is locked
+        ROOMREQ_ChangeLockState(roomNumber, true);
+
+        //Start the key timeout
+        MASTER_RoomResetTimeout(roomNumber);
     }
+
+    /// <summary>
+    /// Resets a card and marks room as available
+    /// </summary>
+    /// <param name="roomNumber"></param>
+    public void ROOMREQ_ReleaseRoom(int roomNumber)
+    {
+        //TODO: I have no idea how the keycards work yet...
+        //TODO: Teleporting card voodoo magic...
+
+        //Marking room as available
+        MASTER_SetSyncValue(SyncBool_Room0IsAvailable + roomNumber, true);
+    }
+
+    public void ROOMREQ_ChangeLockState(int roomNumber, bool requestLock)
+    {
+        if(requestLock)
+        {
+            //Lock the room
+            MASTER_SetSyncValue(SyncBool_Room0IsLocked + roomNumber , true);
+
+            //TODO: Does anything else need to happen? Should the timer start again?
+        }
+        else
+        {
+            //Unlock the room
+            MASTER_SetSyncValue(SyncBool_Room0IsLocked + roomNumber, false);
+
+            //Stop the timeout
+            MASTER_RoomCancelTimeout(roomNumber);
+        }
+    }
+
     #endregion ROOMREQ_FUNCTIONS
     //------------------------------------------------------------------------------------------------------------
     //------------------------------------ Room Functions --------------------------------------------------------
@@ -2439,6 +2535,59 @@ public class NetworkingController : UdonSharpBehaviour
 
         //Return true if the room is not available
         return 0L == (_syncData2 & (1L << SyncBool_AddressLong2_RoomXIsAvailable + roomNumber));
+    }
+
+   
+    /// <summary>
+    /// Client request to return a keycard
+    /// </summary>
+    /// <param name="roomNumber">Room number on card</param>
+    public void ReturnRoomCard(int roomNumber)
+    {
+        //TODO: I have no idea how the keycards work yet... assuming we know the roomnumber?
+        _elevatorRequester.RequestRoomRelease(roomNumber);
+    }
+
+    public void LockRoom(int roomNumber)
+    {
+        //If room is unlocked (RoomXIsLocked == 0), then send lock request
+        if (0L == (_syncData2 & (1L << SyncBool_AddressLong2_RoomXIsLocked + roomNumber)))
+        {
+            _elevatorRequester.RequestRoomLock(roomNumber);
+        }        
+    }
+
+    public void UnlockRoom(int roomNumber)
+    {
+        //If room is locked (RoomXIsLocked == 1), then send unlock request
+        if (0L != (_syncData2 & (1L << SyncBool_AddressLong2_RoomXIsLocked + roomNumber)))
+        {
+            _elevatorRequester.RequestRoomUnlock(roomNumber);
+        }
+    }
+
+    public bool isRoomLocked(int roomNumber)
+    {
+        //TODO: Added for accessibility, locally it would be better to read directly from the syncBool.
+        return 0L != (_syncData2 & (1L << SyncBool_AddressLong2_RoomXIsLocked + roomNumber));
+    }
+
+    public void MASTER_RoomCancelTimeout(int roomNumber)
+    {
+        //Setting the timer to zero will bypass the event calls 
+        MASTER_SetRoomTimer(roomNumber, 0);
+    }
+
+    public void MASTER_RoomResetTimeout(int roomNumber)
+    {
+        //Reset timer by setting it to the max value
+        //If a shorter timeout is needed it can be set here
+        MASTER_SetRoomTimer(roomNumber, roomTimerMaxValue);
+    }
+
+    public void LOCAL_RoomLockStateChanged(int roomNumber, bool isLocked)
+    {
+        //TODO: handler for change of room lock bools
     }
 
     #endregion ROOM_FUNCTIONS
@@ -3079,7 +3228,8 @@ public class NetworkingController : UdonSharpBehaviour
 
                 if (value == 1)
                 {
-                    //TODO: Card expiry
+                    //If value was 1, it is now zero... So release the room
+                    ROOMREQ_ReleaseRoom(roomNumber);
                 }
 
             }
