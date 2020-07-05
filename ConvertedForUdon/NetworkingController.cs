@@ -2442,14 +2442,14 @@ public class NetworkingController : UdonSharpBehaviour
     /// </summary>
     /// <param name="isStandardRoom">Is a standard room being requested?</param>
     /// <returns></returns>
-    public int BookRandomRoom(bool isStandardRoom)
+    public int LOCAL_BookRandomRoom(bool isStandardRoom)
     {
         //Variables holding the list of available rooms
         int[] availableRooms;
         int numberOfAvailableRooms = 0;
 
         //Firstly do a fast check to see if rooms are available
-        if (!IsRoomAvailable(isStandardRoom))
+        if (!LOCAL_IsRoomAvailable(isStandardRoom))
         {
             return -1;
         }
@@ -2507,7 +2507,7 @@ public class NetworkingController : UdonSharpBehaviour
     /// </summary>
     /// <param name="isStandardRoom">Is a standard room being requested?</param>
     /// <returns>If the room type is available</returns>
-    public bool IsRoomAvailable(bool isStandardRoom)
+    public bool LOCAL_IsRoomAvailable(bool isStandardRoom)
     {
         if (isStandardRoom)
         {
@@ -2524,7 +2524,7 @@ public class NetworkingController : UdonSharpBehaviour
     /// </summary>
     /// <param name="roomNumber">Room number to check</param>
     /// <returns>If the specific room is no longer available</returns>
-    public bool CheckIfRoomWasBooked(int roomNumber)
+    public bool LOCAL_CheckIfRoomWasBooked(int roomNumber)
     {
         //TODO: Hardcoded max room number
         //TODO: RoomNumber check can be removed in final build
@@ -2542,13 +2542,13 @@ public class NetworkingController : UdonSharpBehaviour
     /// Client request to return a keycard
     /// </summary>
     /// <param name="roomNumber">Room number on card</param>
-    public void ReturnRoomCard(int roomNumber)
+    public void LOCAL_ReturnRoomCard(int roomNumber)
     {
         //TODO: I have no idea how the keycards work yet... assuming we know the roomnumber?
         _elevatorRequester.RequestRoomRelease(roomNumber);
     }
 
-    public void LockRoom(int roomNumber)
+    public void LOCAL_LockRoom(int roomNumber)
     {
         //If room is unlocked (RoomXIsLocked == 0), then send lock request
         if (0L == (_syncData2 & (1L << SyncBool_AddressLong2_RoomXIsLocked + roomNumber)))
@@ -2557,7 +2557,7 @@ public class NetworkingController : UdonSharpBehaviour
         }        
     }
 
-    public void UnlockRoom(int roomNumber)
+    public void LOCAL_UnlockRoom(int roomNumber)
     {
         //If room is locked (RoomXIsLocked == 1), then send unlock request
         if (0L != (_syncData2 & (1L << SyncBool_AddressLong2_RoomXIsLocked + roomNumber)))
@@ -2566,7 +2566,7 @@ public class NetworkingController : UdonSharpBehaviour
         }
     }
 
-    public bool isRoomLocked(int roomNumber)
+    public bool LOCAL_isRoomLocked(int roomNumber)
     {
         //TODO: Added for accessibility, locally it would be better to read directly from the syncBool.
         return 0L != (_syncData2 & (1L << SyncBool_AddressLong2_RoomXIsLocked + roomNumber));
@@ -3149,7 +3149,7 @@ public class NetworkingController : UdonSharpBehaviour
         //I.e. read in the old value, figure out the difference and work with that.        
 
         //Calculate the delta using a local copy (sync value CANNOT change during these operations!!!!!)
-        long deltaLong = value - GetRoomTimerFromLong(localSyncRooms, roomNumber);
+        long deltaLong = value - LOCAL_GetRoomTimerFromLong(localSyncRooms, roomNumber);
 
         //Ideally you would use Math.Pow here but not sure if Udon has it
         //Instead, doing it the longhanded way
@@ -3168,7 +3168,7 @@ public class NetworkingController : UdonSharpBehaviour
     /// <param name="localSyncRooms">The long to be decoded</param>
     /// <param name="roomNumber">Which value to be accessed</param>
     /// <returns>Decoded value</returns>
-    private int GetRoomTimerFromLong(long localSyncRooms, int roomNumber)
+    private int LOCAL_GetRoomTimerFromLong(long localSyncRooms, int roomNumber)
     {
         //Ideally you would use Math.Pow here but not sure if Udon has it
         //Instead, doing it the longhanded way
@@ -3198,7 +3198,7 @@ public class NetworkingController : UdonSharpBehaviour
     /// <param name="localSyncRooms">The long to be decoded</param>
     /// <param name="roomNumber">Which value to be accessed</param>
     /// <returns>Decoded value</returns>
-    public int GetRoomTimer(int roomNumber)
+    public int LOCAL_GetRoomTimer(int roomNumber)
     {
         //Sanitise input first
         if (roomNumber < 0 || roomNumber >= numberOfRoomTimers)
@@ -3207,7 +3207,7 @@ public class NetworkingController : UdonSharpBehaviour
             return 0;
         }
 
-        return GetRoomTimerFromLong(_syncData3, roomNumber);
+        return LOCAL_GetRoomTimerFromLong(_syncData3, roomNumber);
     }
 
     /// <summary>
@@ -3218,7 +3218,7 @@ public class NetworkingController : UdonSharpBehaviour
         long deltaLong = 0L;
         for (int roomNumber = numberOfRoomTimers - 1; roomNumber >= 0; roomNumber--)
         {
-            int value = GetRoomTimerFromLong(_syncData3, roomNumber);
+            int value = LOCAL_GetRoomTimerFromLong(_syncData3, roomNumber);
 
             if (value > 0)
             {
