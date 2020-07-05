@@ -2970,28 +2970,28 @@ public class NetworkingController : UdonSharpBehaviour
     #region ROOM_SYNCDATA_FUNCTIONS
 
     //If these are changed, check they still fit within a long!
-    private const int roomVariableMaxValue = 27;
-    private const int roomVariableMaxNumberOfValues = 13;
+    private const int roomTimerMaxValue = 27;
+    private const int numberOfRoomTimers = 13;
 
     /// <summary>
-    /// Encodes an arbitrarily sized value into a long, the value size is set with roomVariableMaxValue. 
+    /// Encodes an arbitrarily sized value into a long, the value size is set with roomTimerMaxValue. 
     /// </summary>
     /// <param name="roomNumber">Which value to be set</param>
-    /// <param name="value">Value to be encoded</param>
-    public void EncodeRoomVariable(int roomNumber, int value)
+    /// <param name="value">Value to be encoded in the timer</param>
+    public void MASTER_SetRoomTimer(int roomNumber, int value)
     {
         long localSyncRooms = _syncData3;
 
         //Sanitise input
-        if (roomNumber < 0 || roomNumber >= roomVariableMaxNumberOfValues)
+        if (roomNumber < 0 || roomNumber >= numberOfRoomTimers)
         {
-            Debug.Log("EncodeRoomVar - Room number out of range: " + roomNumber);
+            //Debug.Log("EncodeRoomVar - Room number out of range: " + roomNumber);
             return;
         }
 
-        if (value < 0 || value > roomVariableMaxValue)
+        if (value < 0 || value > roomTimerMaxValue)
         {
-            Debug.Log("EncodeRoomVar - Value out of range: " + value);
+            //Debug.Log("EncodeRoomVar - Value out of range: " + value);
             return;
         }
 
@@ -3000,13 +3000,13 @@ public class NetworkingController : UdonSharpBehaviour
         //I.e. read in the old value, figure out the difference and work with that.        
 
         //Calculate the delta using a local copy (sync value CANNOT change during these operations!!!!!)
-        long deltaLong = value - DecodeRoomVariableLocal(localSyncRooms, roomNumber);
+        long deltaLong = value - GetRoomTimerFromLong(localSyncRooms, roomNumber);
 
         //Ideally you would use Math.Pow here but not sure if Udon has it
         //Instead, doing it the longhanded way
         for (int i = 0; i < roomNumber; i++)
         {
-            deltaLong *= roomVariableMaxValue + 1;
+            deltaLong *= roomTimerMaxValue + 1;
         }
 
         //Now to merge the changes simply add deltaLong, et voila.
@@ -3019,14 +3019,14 @@ public class NetworkingController : UdonSharpBehaviour
     /// <param name="localSyncRooms">The long to be decoded</param>
     /// <param name="roomNumber">Which value to be accessed</param>
     /// <returns>Decoded value</returns>
-    private int DecodeRoomVariableLocal(long localSyncRooms, int roomNumber)
+    private int GetRoomTimerFromLong(long localSyncRooms, int roomNumber)
     {
         //Ideally you would use Math.Pow here but not sure if Udon has it
         //Instead, doing it the longhanded way
         long baseNumber = 1;
         for (int i = 0; i < roomNumber; i++)
         {
-            baseNumber *= roomVariableMaxValue + 1;
+            baseNumber *= roomTimerMaxValue + 1;
         }
 
         //Use integer division to get rid of lower values
@@ -3034,9 +3034,9 @@ public class NetworkingController : UdonSharpBehaviour
 
         //The more significant values are still present
         //So we'll integer divide to extract these and the multiply it back... Is there a more efficient way???
-        long removeTheseValues = (long)(localSyncRooms / (roomVariableMaxValue + 1));
+        long removeTheseValues = (long)(localSyncRooms / (roomTimerMaxValue + 1));
         //Adding an extra cast above just in-case the udon compiler decides to optimise away the hack...
-        removeTheseValues *= (roomVariableMaxValue + 1);
+        removeTheseValues *= (roomTimerMaxValue + 1);
 
         //Technically "removeTheseValues" should now be missing the numbers we are interesting in.
         //So to get the value we check the difference between the original :D
@@ -3049,38 +3049,48 @@ public class NetworkingController : UdonSharpBehaviour
     /// <param name="localSyncRooms">The long to be decoded</param>
     /// <param name="roomNumber">Which value to be accessed</param>
     /// <returns>Decoded value</returns>
-    public int DecodeRoomVariable(int roomNumber)
+    public int GetRoomTimer(int roomNumber)
     {
         //Sanitise input first
-        if (roomNumber < 0 || roomNumber >= roomVariableMaxNumberOfValues)
+        if (roomNumber < 0 || roomNumber >= numberOfRoomTimers)
         {
-            Debug.Log("EncodeRoomVar - Room number out of range: " + roomNumber);
+            //Debug.Log("EncodeRoomVar - Room number out of range: " + roomNumber);
             return 0;
         }
 
-        return DecodeRoomVariableLocal(_syncData3, roomNumber);
+        return GetRoomTimerFromLong(_syncData3, roomNumber);
     }
 
     /// <summary>
     /// Decrements all non-zero room variables by one
     /// </summary>
-    public void DecrementRoomVariables()
+    public void MASTER_DecrementRoomTimers()
     {
-        for (int roomNumber = 0; roomNumber < roomVariableMaxNumberOfValues; roomNumber++)
+        long deltaLong = 0L;
+        for (int roomNumber = numberOfRoomTimers - 1; roomNumber >= 0; roomNumber--)
         {
-            //Check if the value is currently zero
-            int value = DecodeRoomVariable(roomNumber);
-            if (value != 0)
+            int value = GetRoomTimerFromLong(_syncData3, roomNumber);
+
+            if (value > 0)
             {
-                //This is an optimised version of EncodeRoomVariable for decrementing (no error checking)
-                long deltaLong = -1L;
-                for (int i = 0; i < roomNumber; i++)
+                //shift old values up one "timer" and decrement by one
+                deltaLong *= roomTimerMaxValue + 1;
+                deltaLong--;
+
+                if (value == 1)
                 {
-                    deltaLong *= roomVariableMaxValue + 1;
+                    //TODO: Card expiry
                 }
-                _syncData3 += deltaLong;
+
+            }
+            else
+            {
+                //Dont modify this timer
+                deltaLong *= roomTimerMaxValue + 1;
             }
         }
+        //Apply the decrement to syncData
+        _syncData3 += deltaLong;
     }
     #endregion ROOM_SYNCDATA_FUNCTIONS
 }
