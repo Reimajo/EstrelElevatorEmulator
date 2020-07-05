@@ -1433,6 +1433,61 @@ public class NetworkingController : UdonSharpBehaviour
             case SyncBool_Elevator2IsDriving:
                 LOCAL_SetElevatorDrivingState(2, isDriving: newState);
                 break;
+            //Rooms
+            case SyncBool_Room0IsAvailable:
+            case SyncBool_Room1IsAvailable:
+            case SyncBool_Room2IsAvailable:
+            case SyncBool_Room3IsAvailable:
+            case SyncBool_Room4IsAvailable:
+            case SyncBool_Room5IsAvailable:
+            case SyncBool_Room6IsAvailable:
+            case SyncBool_Room7IsAvailable:
+            case SyncBool_Room8IsAvailable:
+            case SyncBool_Room9IsAvailable:
+            case SyncBool_Room10IsAvailable:
+            case SyncBool_Room11IsAvailable:
+            case SyncBool_Room12IsAvailable:
+                break;
+            case SyncBool_Room0IsLocked:
+                LOCAL_RoomLockStateChanged(0, newState);
+                break;
+            case SyncBool_Room1IsLocked:
+                LOCAL_RoomLockStateChanged(1, newState);
+                break;
+            case SyncBool_Room2IsLocked:
+                LOCAL_RoomLockStateChanged(2, newState);
+                break;
+            case SyncBool_Room3IsLocked:
+                LOCAL_RoomLockStateChanged(3, newState);
+                break;
+            case SyncBool_Room4IsLocked:
+                LOCAL_RoomLockStateChanged(4, newState);
+                break;
+            case SyncBool_Room5IsLocked:
+                LOCAL_RoomLockStateChanged(5, newState);
+                break;
+            case SyncBool_Room6IsLocked:
+                LOCAL_RoomLockStateChanged(6, newState);
+                break;
+            case SyncBool_Room7IsLocked:
+                LOCAL_RoomLockStateChanged(7, newState);
+                break;
+            case SyncBool_Room8IsLocked:
+                LOCAL_RoomLockStateChanged(8, newState);
+                break;
+            case SyncBool_Room9IsLocked:
+                LOCAL_RoomLockStateChanged(9, newState);
+                break;
+            case SyncBool_Room10IsLocked:
+                LOCAL_RoomLockStateChanged(10, newState);
+                break;
+            case SyncBool_Room11IsLocked:
+                LOCAL_RoomLockStateChanged(11, newState);
+                break;
+            case SyncBool_Room12IsLocked:
+                LOCAL_RoomLockStateChanged(12, newState);
+                break;
+ 
             default:
                 Debug.Log("ERROR: UNKNOWN BOOL HAS CHANGED IN SYNCBOOL, position: " + syncBoolPosition);
                 break;
@@ -2310,8 +2365,49 @@ public class NetworkingController : UdonSharpBehaviour
     public void ROOMREQ_BookRoom(int roomNumber)
     {
         Debug.Log("[NetworkController] Master received client request to reserve room " + roomNumber);
-        MASTER_SetSyncValue(SyncBool_Room0IsAvailable + roomNumber, false);        
+        
+        //Mark room as unavailable
+        MASTER_SetSyncValue(SyncBool_Room0IsAvailable + roomNumber, false);
+
+        //Make sure it is locked
+        ROOMREQ_ChangeLockState(roomNumber, true);
+
+        //Start the key timeout
+        MASTER_RoomResetTimeout(roomNumber);
     }
+
+    /// <summary>
+    /// Resets a card and marks room as available
+    /// </summary>
+    /// <param name="roomNumber"></param>
+    public void ROOMREQ_ReleaseRoom(int roomNumber)
+    {
+        //TODO: I have no idea how the keycards work yet...
+        //TODO: Teleporting card voodoo magic...
+
+        //Marking room as available
+        MASTER_SetSyncValue(SyncBool_Room0IsAvailable + roomNumber, true);
+    }
+
+    public void ROOMREQ_ChangeLockState(int roomNumber, bool requestLock)
+    {
+        if(requestLock)
+        {
+            //Lock the room
+            MASTER_SetSyncValue(SyncBool_Room0IsLocked + roomNumber , true);
+
+            //TODO: Does anything else need to happen? Should the timer start again?
+        }
+        else
+        {
+            //Unlock the room
+            MASTER_SetSyncValue(SyncBool_Room0IsLocked + roomNumber, false);
+
+            //Stop the timeout
+            MASTER_RoomCancelTimeout(roomNumber);
+        }
+    }
+
     #endregion ROOMREQ_FUNCTIONS
     //------------------------------------------------------------------------------------------------------------
     //------------------------------------ Room Functions --------------------------------------------------------
@@ -2346,14 +2442,14 @@ public class NetworkingController : UdonSharpBehaviour
     /// </summary>
     /// <param name="isStandardRoom">Is a standard room being requested?</param>
     /// <returns></returns>
-    public int BookRandomRoom(bool isStandardRoom)
+    public int LOCAL_BookRandomRoom(bool isStandardRoom)
     {
         //Variables holding the list of available rooms
         int[] availableRooms;
         int numberOfAvailableRooms = 0;
 
         //Firstly do a fast check to see if rooms are available
-        if (!IsRoomAvailable(isStandardRoom))
+        if (!LOCAL_IsRoomAvailable(isStandardRoom))
         {
             return -1;
         }
@@ -2411,7 +2507,7 @@ public class NetworkingController : UdonSharpBehaviour
     /// </summary>
     /// <param name="isStandardRoom">Is a standard room being requested?</param>
     /// <returns>If the room type is available</returns>
-    public bool IsRoomAvailable(bool isStandardRoom)
+    public bool LOCAL_IsRoomAvailable(bool isStandardRoom)
     {
         if (isStandardRoom)
         {
@@ -2428,7 +2524,7 @@ public class NetworkingController : UdonSharpBehaviour
     /// </summary>
     /// <param name="roomNumber">Room number to check</param>
     /// <returns>If the specific room is no longer available</returns>
-    public bool CheckIfRoomWasBooked(int roomNumber)
+    public bool LOCAL_CheckIfRoomWasBooked(int roomNumber)
     {
         //TODO: Hardcoded max room number
         //TODO: RoomNumber check can be removed in final build
@@ -2439,6 +2535,59 @@ public class NetworkingController : UdonSharpBehaviour
 
         //Return true if the room is not available
         return 0L == (_syncData2 & (1L << SyncBool_AddressLong2_RoomXIsAvailable + roomNumber));
+    }
+
+   
+    /// <summary>
+    /// Client request to return a keycard
+    /// </summary>
+    /// <param name="roomNumber">Room number on card</param>
+    public void LOCAL_ReturnRoomCard(int roomNumber)
+    {
+        //TODO: I have no idea how the keycards work yet... assuming we know the roomnumber?
+        _elevatorRequester.RequestRoomRelease(roomNumber);
+    }
+
+    public void LOCAL_LockRoom(int roomNumber)
+    {
+        //If room is unlocked (RoomXIsLocked == 0), then send lock request
+        if (0L == (_syncData2 & (1L << SyncBool_AddressLong2_RoomXIsLocked + roomNumber)))
+        {
+            _elevatorRequester.RequestRoomLock(roomNumber);
+        }        
+    }
+
+    public void LOCAL_UnlockRoom(int roomNumber)
+    {
+        //If room is locked (RoomXIsLocked == 1), then send unlock request
+        if (0L != (_syncData2 & (1L << SyncBool_AddressLong2_RoomXIsLocked + roomNumber)))
+        {
+            _elevatorRequester.RequestRoomUnlock(roomNumber);
+        }
+    }
+
+    public bool LOCAL_isRoomLocked(int roomNumber)
+    {
+        //TODO: Added for accessibility, locally it would be better to read directly from the syncBool.
+        return 0L != (_syncData2 & (1L << SyncBool_AddressLong2_RoomXIsLocked + roomNumber));
+    }
+
+    public void MASTER_RoomCancelTimeout(int roomNumber)
+    {
+        //Setting the timer to zero will bypass the event calls 
+        MASTER_SetRoomTimer(roomNumber, 0);
+    }
+
+    public void MASTER_RoomResetTimeout(int roomNumber)
+    {
+        //Reset timer by setting it to the max value
+        //If a shorter timeout is needed it can be set here
+        MASTER_SetRoomTimer(roomNumber, roomTimerMaxValue);
+    }
+
+    public void LOCAL_RoomLockStateChanged(int roomNumber, bool isLocked)
+    {
+        //TODO: handler for change of room lock bools
     }
 
     #endregion ROOM_FUNCTIONS
@@ -2970,28 +3119,28 @@ public class NetworkingController : UdonSharpBehaviour
     #region ROOM_SYNCDATA_FUNCTIONS
 
     //If these are changed, check they still fit within a long!
-    private const int roomVariableMaxValue = 27;
-    private const int roomVariableMaxNumberOfValues = 13;
+    private const int roomTimerMaxValue = 27;
+    private const int numberOfRoomTimers = 13;
 
     /// <summary>
-    /// Encodes an arbitrarily sized value into a long, the value size is set with roomVariableMaxValue. 
+    /// Encodes an arbitrarily sized value into a long, the value size is set with roomTimerMaxValue. 
     /// </summary>
     /// <param name="roomNumber">Which value to be set</param>
-    /// <param name="value">Value to be encoded</param>
-    public void EncodeRoomVariable(int roomNumber, int value)
+    /// <param name="value">Value to be encoded in the timer</param>
+    public void MASTER_SetRoomTimer(int roomNumber, int value)
     {
         long localSyncRooms = _syncData3;
 
         //Sanitise input
-        if (roomNumber < 0 || roomNumber >= roomVariableMaxNumberOfValues)
+        if (roomNumber < 0 || roomNumber >= numberOfRoomTimers)
         {
-            Debug.Log("EncodeRoomVar - Room number out of range: " + roomNumber);
+            //Debug.Log("EncodeRoomVar - Room number out of range: " + roomNumber);
             return;
         }
 
-        if (value < 0 || value > roomVariableMaxValue)
+        if (value < 0 || value > roomTimerMaxValue)
         {
-            Debug.Log("EncodeRoomVar - Value out of range: " + value);
+            //Debug.Log("EncodeRoomVar - Value out of range: " + value);
             return;
         }
 
@@ -3000,13 +3149,13 @@ public class NetworkingController : UdonSharpBehaviour
         //I.e. read in the old value, figure out the difference and work with that.        
 
         //Calculate the delta using a local copy (sync value CANNOT change during these operations!!!!!)
-        long deltaLong = value - DecodeRoomVariableLocal(localSyncRooms, roomNumber);
+        long deltaLong = value - LOCAL_GetRoomTimerFromLong(localSyncRooms, roomNumber);
 
         //Ideally you would use Math.Pow here but not sure if Udon has it
         //Instead, doing it the longhanded way
         for (int i = 0; i < roomNumber; i++)
         {
-            deltaLong *= roomVariableMaxValue + 1;
+            deltaLong *= roomTimerMaxValue + 1;
         }
 
         //Now to merge the changes simply add deltaLong, et voila.
@@ -3019,14 +3168,14 @@ public class NetworkingController : UdonSharpBehaviour
     /// <param name="localSyncRooms">The long to be decoded</param>
     /// <param name="roomNumber">Which value to be accessed</param>
     /// <returns>Decoded value</returns>
-    private int DecodeRoomVariableLocal(long localSyncRooms, int roomNumber)
+    private int LOCAL_GetRoomTimerFromLong(long localSyncRooms, int roomNumber)
     {
         //Ideally you would use Math.Pow here but not sure if Udon has it
         //Instead, doing it the longhanded way
         long baseNumber = 1;
         for (int i = 0; i < roomNumber; i++)
         {
-            baseNumber *= roomVariableMaxValue + 1;
+            baseNumber *= roomTimerMaxValue + 1;
         }
 
         //Use integer division to get rid of lower values
@@ -3034,9 +3183,9 @@ public class NetworkingController : UdonSharpBehaviour
 
         //The more significant values are still present
         //So we'll integer divide to extract these and the multiply it back... Is there a more efficient way???
-        long removeTheseValues = (long)(localSyncRooms / (roomVariableMaxValue + 1));
+        long removeTheseValues = (long)(localSyncRooms / (roomTimerMaxValue + 1));
         //Adding an extra cast above just in-case the udon compiler decides to optimise away the hack...
-        removeTheseValues *= (roomVariableMaxValue + 1);
+        removeTheseValues *= (roomTimerMaxValue + 1);
 
         //Technically "removeTheseValues" should now be missing the numbers we are interesting in.
         //So to get the value we check the difference between the original :D
@@ -3049,38 +3198,49 @@ public class NetworkingController : UdonSharpBehaviour
     /// <param name="localSyncRooms">The long to be decoded</param>
     /// <param name="roomNumber">Which value to be accessed</param>
     /// <returns>Decoded value</returns>
-    public int DecodeRoomVariable(int roomNumber)
+    public int LOCAL_GetRoomTimer(int roomNumber)
     {
         //Sanitise input first
-        if (roomNumber < 0 || roomNumber >= roomVariableMaxNumberOfValues)
+        if (roomNumber < 0 || roomNumber >= numberOfRoomTimers)
         {
-            Debug.Log("EncodeRoomVar - Room number out of range: " + roomNumber);
+            //Debug.Log("EncodeRoomVar - Room number out of range: " + roomNumber);
             return 0;
         }
 
-        return DecodeRoomVariableLocal(_syncData3, roomNumber);
+        return LOCAL_GetRoomTimerFromLong(_syncData3, roomNumber);
     }
 
     /// <summary>
     /// Decrements all non-zero room variables by one
     /// </summary>
-    public void DecrementRoomVariables()
+    public void MASTER_DecrementRoomTimers()
     {
-        for (int roomNumber = 0; roomNumber < roomVariableMaxNumberOfValues; roomNumber++)
+        long deltaLong = 0L;
+        for (int roomNumber = numberOfRoomTimers - 1; roomNumber >= 0; roomNumber--)
         {
-            //Check if the value is currently zero
-            int value = DecodeRoomVariable(roomNumber);
-            if (value != 0)
+            int value = LOCAL_GetRoomTimerFromLong(_syncData3, roomNumber);
+
+            if (value > 0)
             {
-                //This is an optimised version of EncodeRoomVariable for decrementing (no error checking)
-                long deltaLong = -1L;
-                for (int i = 0; i < roomNumber; i++)
+                //shift old values up one "timer" and decrement by one
+                deltaLong *= roomTimerMaxValue + 1;
+                deltaLong--;
+
+                if (value == 1)
                 {
-                    deltaLong *= roomVariableMaxValue + 1;
+                    //If value was 1, it is now zero... So release the room
+                    ROOMREQ_ReleaseRoom(roomNumber);
                 }
-                _syncData3 += deltaLong;
+
+            }
+            else
+            {
+                //Dont modify this timer
+                deltaLong *= roomTimerMaxValue + 1;
             }
         }
+        //Apply the decrement to syncData
+        _syncData3 += deltaLong;
     }
     #endregion ROOM_SYNCDATA_FUNCTIONS
 }

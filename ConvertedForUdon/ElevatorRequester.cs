@@ -8,6 +8,8 @@ using VRC.Udon;
 public class ElevatorRequester : UdonSharpBehaviour
 {
     public NetworkingController _networkingController;
+
+    #region ElevatorRequests
     /// <summary>
     /// When the player pressed a button outside on the floor
     /// </summary>
@@ -391,6 +393,9 @@ public class ElevatorRequester : UdonSharpBehaviour
     }
     #endregion RequestElevatorInternalTarget
 
+    #endregion ElevatorRequests
+
+    #region RoomRequests
     /// <summary>
     /// Requests a room booking from the master
     /// </summary>
@@ -462,4 +467,223 @@ public class ElevatorRequester : UdonSharpBehaviour
         _networkingController.ROOMREQ_BookRoom(12);
     }
     #endregion RequestRoomBooking
+
+    /// <summary>
+    /// Return room card and releases the room
+    /// </summary>
+    /// <param name="roomNumber">Room to release</param>
+    public void RequestRoomRelease(int roomNumber)
+    {
+        Debug.Log("[ElevatorRequester] Request returning a keycard for room: " + roomNumber.ToString());
+        if (Networking.LocalPlayer.isMaster)
+        {
+            //master doesn't need to send a request over network
+            _networkingController.ROOMREQ_ReleaseRoom(roomNumber);
+            return;
+        }
+        string functionName = $"ROR{roomNumber}";
+        Debug.Log($"Sending Network function {functionName} to master");
+        SendCustomNetworkEvent(VRC.Udon.Common.Interfaces.NetworkEventTarget.Owner, functionName);
+    }
+    #region ReleaseRoomBooking
+    public void ROR0()
+    {
+        _networkingController.ROOMREQ_ReleaseRoom(0);
+    }
+    public void ROR1()
+    {
+        _networkingController.ROOMREQ_ReleaseRoom(1);
+    }
+    public void ROR2()
+    {
+        _networkingController.ROOMREQ_ReleaseRoom(2);
+    }
+    public void ROR3()
+    {
+        _networkingController.ROOMREQ_ReleaseRoom(3);
+    }
+    public void ROR4()
+    {
+        _networkingController.ROOMREQ_ReleaseRoom(4);
+    }
+    public void ROR5()
+    {
+        _networkingController.ROOMREQ_ReleaseRoom(5);
+    }
+    public void ROR6()
+    {
+        _networkingController.ROOMREQ_ReleaseRoom(6);
+    }
+    public void ROR7()
+    {
+        _networkingController.ROOMREQ_ReleaseRoom(7);
+    }
+    public void ROR8()
+    {
+        _networkingController.ROOMREQ_ReleaseRoom(8);
+    }
+    public void ROR9()
+    {
+        _networkingController.ROOMREQ_ReleaseRoom(9);
+    }
+    public void ROR10()
+    {
+        _networkingController.ROOMREQ_ReleaseRoom(10);
+    }
+    public void ROR11()
+    {
+        _networkingController.ROOMREQ_ReleaseRoom(11);
+    }
+    public void ROR12()
+    {
+        _networkingController.ROOMREQ_ReleaseRoom(12);
+    }
+    #endregion ReleaseRoomBooking
+
+
+    /// <summary>
+    /// Request to lock a room
+    /// </summary>
+    /// <param name="roomNumber">Room to lock</param>
+    public void RequestRoomLock(int roomNumber)
+    {
+        Debug.Log("[ElevatorRequester] Request to lock room: " + roomNumber.ToString());
+        if (Networking.LocalPlayer.isMaster)
+        {
+            //master doesn't need to send a request over network
+            _networkingController.ROOMREQ_ChangeLockState(roomNumber, true);
+            return;
+        }
+        string functionName = $"ROL{roomNumber}";
+        Debug.Log($"Sending Network function {functionName} to master");
+        SendCustomNetworkEvent(VRC.Udon.Common.Interfaces.NetworkEventTarget.Owner, functionName);
+    }
+
+    /// <summary>
+    /// Request to unlock a room
+    /// </summary>
+    /// <param name="roomNumber">Room to unlock</param>
+    public void RequestRoomUnlock(int roomNumber)
+    {
+        Debug.Log("[ElevatorRequester] Request to unlock room: " + roomNumber.ToString());
+        if (Networking.LocalPlayer.isMaster)
+        {
+            //master doesn't need to send a request over network
+            _networkingController.ROOMREQ_ChangeLockState(roomNumber, false);
+            return;
+        }
+        string functionName = $"ROU{roomNumber}";
+        Debug.Log($"Sending Network function {functionName} to master");
+        SendCustomNetworkEvent(VRC.Udon.Common.Interfaces.NetworkEventTarget.Owner, functionName);
+    }
+    #region RoomLockUnlockCallbacks
+    public void ROL0()
+    {
+        _networkingController.ROOMREQ_ChangeLockState(0, true);
+    }
+    public void ROL1()
+    {
+        _networkingController.ROOMREQ_ChangeLockState(1, true);
+    }
+    public void ROL2()
+    {
+        _networkingController.ROOMREQ_ChangeLockState(2, true);
+    }
+    public void ROL3()
+    {
+        _networkingController.ROOMREQ_ChangeLockState(3, true);
+    }
+    public void ROL4()
+    {
+        _networkingController.ROOMREQ_ChangeLockState(4, true);
+    }
+    public void ROL5()
+    {
+        _networkingController.ROOMREQ_ChangeLockState(5, true);
+    }
+    public void ROL6()
+    {
+        _networkingController.ROOMREQ_ChangeLockState(6, true);
+    }
+    public void ROL7()
+    {
+        _networkingController.ROOMREQ_ChangeLockState(7, true);
+    }
+    public void ROL8()
+    {
+        _networkingController.ROOMREQ_ChangeLockState(8, true);
+    }
+    public void ROL9()
+    {
+        _networkingController.ROOMREQ_ChangeLockState(9, true);
+    }
+    public void ROL10()
+    {
+        _networkingController.ROOMREQ_ChangeLockState(10, true);
+    }
+    public void ROL11()
+    {
+        _networkingController.ROOMREQ_ChangeLockState(11, true);
+    }
+    public void ROL12()
+    {
+        _networkingController.ROOMREQ_ChangeLockState(12, true);
+    }
+    public void ROU0()
+    {
+        _networkingContROUler.ROOMREQ_ChangeLockState(0, false);
+    }
+    public void ROU1()
+    {
+        _networkingContROUler.ROOMREQ_ChangeLockState(1, false);
+    }
+    public void ROU2()
+    {
+        _networkingContROUler.ROOMREQ_ChangeLockState(2, false);
+    }
+    public void ROU3()
+    {
+        _networkingContROUler.ROOMREQ_ChangeLockState(3, false);
+    }
+    public void ROU4()
+    {
+        _networkingContROUler.ROOMREQ_ChangeLockState(4, false);
+    }
+    public void ROU5()
+    {
+        _networkingContROUler.ROOMREQ_ChangeLockState(5, false);
+    }
+    public void ROU6()
+    {
+        _networkingContROUler.ROOMREQ_ChangeLockState(6, false);
+    }
+    public void ROU7()
+    {
+        _networkingContROUler.ROOMREQ_ChangeLockState(7, false);
+    }
+    public void ROU8()
+    {
+        _networkingContROUler.ROOMREQ_ChangeLockState(8, false);
+    }
+    public void ROU9()
+    {
+        _networkingContROUler.ROOMREQ_ChangeLockState(9, false);
+    }
+    public void ROU10()
+    {
+        _networkingContROUler.ROOMREQ_ChangeLockState(10, false);
+    }
+    public void ROU11()
+    {
+        _networkingContROUler.ROOMREQ_ChangeLockState(11, false);
+    }
+    public void ROU12()
+    {
+        _networkingContROUler.ROOMREQ_ChangeLockState(12, false);
+    }
+
+
+    #endregion RoomLockUnlockCallbacks
+
+    #endregion RoomRequests
 }
