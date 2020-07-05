@@ -2967,7 +2967,7 @@ public class NetworkingController : UdonSharpBehaviour
         }
     }
     #endregion SYNCBOOL_FUNCTIONS
-    #region ROOM_SYNCBOOL_FUNCTIONS
+    #region ROOM_SYNCDATA_FUNCTIONS
 
     //If these are changed, check they still fit within a long!
     private const int roomVariableMaxValue = 27;
@@ -3082,7 +3082,7 @@ public class NetworkingController : UdonSharpBehaviour
             }
         }
     }
-    #endregion ROOM_SYNCBOOL_FUNCTIONS
+    #endregion ROOM_SYNCDATA_FUNCTIONS
 }
 
 
