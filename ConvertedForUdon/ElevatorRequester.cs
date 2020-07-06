@@ -539,8 +539,6 @@ public class ElevatorRequester : UdonSharpBehaviour
         _networkingController.ROOMREQ_ReleaseRoom(12);
     }
     #endregion ReleaseRoomBooking
-
-
     /// <summary>
     /// Request to lock a room
     /// </summary>
@@ -558,7 +556,6 @@ public class ElevatorRequester : UdonSharpBehaviour
         Debug.Log($"Sending Network function {functionName} to master");
         SendCustomNetworkEvent(VRC.Udon.Common.Interfaces.NetworkEventTarget.Owner, functionName);
     }
-
     /// <summary>
     /// Request to unlock a room
     /// </summary>
@@ -631,58 +628,56 @@ public class ElevatorRequester : UdonSharpBehaviour
     }
     public void ROU0()
     {
-        _networkingContROUler.ROOMREQ_ChangeLockState(0, false);
+        _networkingController.ROOMREQ_ChangeLockState(0, false);
     }
     public void ROU1()
     {
-        _networkingContROUler.ROOMREQ_ChangeLockState(1, false);
+        _networkingController.ROOMREQ_ChangeLockState(1, false);
     }
     public void ROU2()
     {
-        _networkingContROUler.ROOMREQ_ChangeLockState(2, false);
+        _networkingController.ROOMREQ_ChangeLockState(2, false);
     }
     public void ROU3()
     {
-        _networkingContROUler.ROOMREQ_ChangeLockState(3, false);
+        _networkingController.ROOMREQ_ChangeLockState(3, false);
     }
     public void ROU4()
     {
-        _networkingContROUler.ROOMREQ_ChangeLockState(4, false);
+        _networkingController.ROOMREQ_ChangeLockState(4, false);
     }
     public void ROU5()
     {
-        _networkingContROUler.ROOMREQ_ChangeLockState(5, false);
+        _networkingController.ROOMREQ_ChangeLockState(5, false);
     }
     public void ROU6()
     {
-        _networkingContROUler.ROOMREQ_ChangeLockState(6, false);
+        _networkingController.ROOMREQ_ChangeLockState(6, false);
     }
     public void ROU7()
     {
-        _networkingContROUler.ROOMREQ_ChangeLockState(7, false);
+        _networkingController.ROOMREQ_ChangeLockState(7, false);
     }
     public void ROU8()
     {
-        _networkingContROUler.ROOMREQ_ChangeLockState(8, false);
+        _networkingController.ROOMREQ_ChangeLockState(8, false);
     }
     public void ROU9()
     {
-        _networkingContROUler.ROOMREQ_ChangeLockState(9, false);
+        _networkingController.ROOMREQ_ChangeLockState(9, false);
     }
     public void ROU10()
     {
-        _networkingContROUler.ROOMREQ_ChangeLockState(10, false);
+        _networkingController.ROOMREQ_ChangeLockState(10, false);
     }
     public void ROU11()
     {
-        _networkingContROUler.ROOMREQ_ChangeLockState(11, false);
+        _networkingController.ROOMREQ_ChangeLockState(11, false);
     }
     public void ROU12()
     {
-        _networkingContROUler.ROOMREQ_ChangeLockState(12, false);
+        _networkingController.ROOMREQ_ChangeLockState(12, false);
     }
-
-
     #endregion RoomLockUnlockCallbacks
 
     #endregion RoomRequests

@@ -425,6 +425,7 @@ public class NetworkingController : UdonSharpBehaviour
     public void Start()
     {
         Debug.Log("[NetworkController] NetworkingController is now in Start()");
+        MASTER_InitializeRooms();
         _floorNumberSignRenderer = _floorNumberSign.GetComponent<Renderer>();
         _floorRoomNumberSignRenderer = _floorRoomNumberSign.GetComponent<Renderer>();
         _localPlayer = Networking.LocalPlayer;
@@ -451,12 +452,12 @@ public class NetworkingController : UdonSharpBehaviour
         }
         else
         {
-            _insidePanelScriptElevatorDesktop_0.CustomStart();
-            _insidePanelScriptElevatorDesktop_1.CustomStart();
-            _insidePanelScriptElevatorDesktop_2.CustomStart();
-            _insidePanelFloorScriptElevatorDesktop_0.CustomStart();
-            _insidePanelFloorScriptElevatorDesktop_1.CustomStart();
-            _insidePanelFloorScriptElevatorDesktop_2.CustomStart();
+            _insidePanelScriptElevatorDesktop_0.CustomStart(_buttonVolume);
+            _insidePanelScriptElevatorDesktop_1.CustomStart(_buttonVolume);
+            _insidePanelScriptElevatorDesktop_2.CustomStart(_buttonVolume);
+            _insidePanelFloorScriptElevatorDesktop_0.CustomStart(_buttonVolume);
+            _insidePanelFloorScriptElevatorDesktop_1.CustomStart(_buttonVolume);
+            _insidePanelFloorScriptElevatorDesktop_2.CustomStart(_buttonVolume);
         }
         Debug.Log("[NetworkController] Elevator NetworkingController is now loaded");
         _worldIsLoaded = true;
@@ -2413,13 +2414,14 @@ public class NetworkingController : UdonSharpBehaviour
     //------------------------------------ Room Functions --------------------------------------------------------
     //------------------------------------------------------------------------------------------------------------
     #region ROOM_FUNCTIONS
-
+    //If these are changed, check they still fit within a long!
+    private const int roomTimerMaxValue = 27;
+    private const int numberOfRoomTimers = 13;
     //Bounds are inclusive
     private const int standardRoomLowerBound = 0;
     private const int standardRoomUpperBound = 5;
     private const int suiteRoomLowerBound = 6;
     private const int suiteRoomUpperBound = 12;
-
     //Masks used to quickly check room availability
     private const long standardRoomMask = SyncBool_MaskLong2_Room0IsAvailable |
                                           SyncBool_MaskLong2_Room1IsAvailable |
@@ -2427,7 +2429,6 @@ public class NetworkingController : UdonSharpBehaviour
                                           SyncBool_MaskLong2_Room3IsAvailable |
                                           SyncBool_MaskLong2_Room4IsAvailable |
                                           SyncBool_MaskLong2_Room5IsAvailable;
-
     private const long suiteRoomMask = SyncBool_MaskLong2_Room6IsAvailable |
                                        SyncBool_MaskLong2_Room7IsAvailable |
                                        SyncBool_MaskLong2_Room8IsAvailable |
@@ -2435,8 +2436,6 @@ public class NetworkingController : UdonSharpBehaviour
                                        SyncBool_MaskLong2_Room10IsAvailable |
                                        SyncBool_MaskLong2_Room11IsAvailable |
                                        SyncBool_MaskLong2_Room12IsAvailable;
-
-
     /// <summary>
     /// Books a random room based on room type. Availability is checked and request is sent to the master.
     /// </summary>
@@ -2501,7 +2500,6 @@ public class NetworkingController : UdonSharpBehaviour
         //Return the room number
         return chosenRoom;
     }
-
     /// <summary>
     /// Checks if a specific type of room available
     /// </summary>
@@ -2518,7 +2516,6 @@ public class NetworkingController : UdonSharpBehaviour
             return 0L != (_syncData2 & suiteRoomMask);
         }
     }
-
     /// <summary>
     /// Checks if a particular room is currently booked (unavailable)
     /// </summary>
@@ -2536,8 +2533,6 @@ public class NetworkingController : UdonSharpBehaviour
         //Return true if the room is not available
         return 0L == (_syncData2 & (1L << SyncBool_AddressLong2_RoomXIsAvailable + roomNumber));
     }
-
-   
     /// <summary>
     /// Client request to return a keycard
     /// </summary>
@@ -2547,7 +2542,6 @@ public class NetworkingController : UdonSharpBehaviour
         //TODO: I have no idea how the keycards work yet... assuming we know the roomnumber?
         _elevatorRequester.RequestRoomRelease(roomNumber);
     }
-
     public void LOCAL_LockRoom(int roomNumber)
     {
         //If room is unlocked (RoomXIsLocked == 0), then send lock request
@@ -2556,7 +2550,6 @@ public class NetworkingController : UdonSharpBehaviour
             _elevatorRequester.RequestRoomLock(roomNumber);
         }        
     }
-
     public void LOCAL_UnlockRoom(int roomNumber)
     {
         //If room is locked (RoomXIsLocked == 1), then send unlock request
@@ -2565,31 +2558,26 @@ public class NetworkingController : UdonSharpBehaviour
             _elevatorRequester.RequestRoomUnlock(roomNumber);
         }
     }
-
     public bool LOCAL_isRoomLocked(int roomNumber)
     {
         //TODO: Added for accessibility, locally it would be better to read directly from the syncBool.
         return 0L != (_syncData2 & (1L << SyncBool_AddressLong2_RoomXIsLocked + roomNumber));
     }
-
     public void MASTER_RoomCancelTimeout(int roomNumber)
     {
         //Setting the timer to zero will bypass the event calls 
         MASTER_SetRoomTimer(roomNumber, 0);
     }
-
     public void MASTER_RoomResetTimeout(int roomNumber)
     {
         //Reset timer by setting it to the max value
         //If a shorter timeout is needed it can be set here
         MASTER_SetRoomTimer(roomNumber, roomTimerMaxValue);
     }
-
     public void LOCAL_RoomLockStateChanged(int roomNumber, bool isLocked)
     {
         //TODO: handler for change of room lock bools
     }
-
     #endregion ROOM_FUNCTIONS
     //------------------------------------------------------------------------------------------------------------
     //----------------------------------SyncBool Interface -------------------------------------------------------
@@ -3117,11 +3105,14 @@ public class NetworkingController : UdonSharpBehaviour
     }
     #endregion SYNCBOOL_FUNCTIONS
     #region ROOM_SYNCDATA_FUNCTIONS
-
-    //If these are changed, check they still fit within a long!
-    private const int roomTimerMaxValue = 27;
-    private const int numberOfRoomTimers = 13;
-
+    /// <summary>
+    /// Setting all rooms as "not booked"
+    /// </summary>
+    private void MASTER_InitializeRooms()
+    {
+        _syncData2 |= SyncBool_MaskLong2_Room0IsAvailable | SyncBool_MaskLong2_Room1IsAvailable | SyncBool_MaskLong2_Room2IsAvailable | SyncBool_MaskLong2_Room3IsAvailable | SyncBool_MaskLong2_Room4IsAvailable | SyncBool_MaskLong2_Room5IsAvailable |
+        SyncBool_MaskLong2_Room6IsAvailable | SyncBool_MaskLong2_Room7IsAvailable | SyncBool_MaskLong2_Room8IsAvailable | SyncBool_MaskLong2_Room9IsAvailable | SyncBool_MaskLong2_Room10IsAvailable | SyncBool_MaskLong2_Room11IsAvailable | SyncBool_MaskLong2_Room12IsAvailable;
+    }
     /// <summary>
     /// Encodes an arbitrarily sized value into a long, the value size is set with roomTimerMaxValue. 
     /// </summary>
@@ -3161,7 +3152,6 @@ public class NetworkingController : UdonSharpBehaviour
         //Now to merge the changes simply add deltaLong, et voila.
         _syncData3 = localSyncRooms + deltaLong;
     }
-
     /// <summary>
     /// Decode the value created by EncodeRoomVariable.
     /// </summary>
@@ -3191,7 +3181,6 @@ public class NetworkingController : UdonSharpBehaviour
         //So to get the value we check the difference between the original :D
         return (int)(localSyncRooms - removeTheseValues);
     }
-
     /// <summary>
     /// Decode the value created by EncodeRoomVariable
     /// </summary>
@@ -3209,7 +3198,6 @@ public class NetworkingController : UdonSharpBehaviour
 
         return LOCAL_GetRoomTimerFromLong(_syncData3, roomNumber);
     }
-
     /// <summary>
     /// Decrements all non-zero room variables by one
     /// </summary>
