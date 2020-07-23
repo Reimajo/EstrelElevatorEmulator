@@ -102,6 +102,11 @@ public class NetworkingController : UdonSharpBehaviour
     /// Timer to store when the decrease function for room timers was last called
     /// </summary>
     private float _roomReqTimeSinceLastDecrease = 0;
+    /// <summary>
+    /// The room that was booked by the user
+    /// Unassigned = -1
+    /// </summary>
+    private int _roomBookedByUser = -1;
     #endregion variables
     //------------------------------------------------------------------------------------------------------------
     //------------------------------------SYNCBOOL ENUM-----------------------------------------------------------
@@ -1452,18 +1457,43 @@ public class NetworkingController : UdonSharpBehaviour
                 break;
             //Rooms
             case SyncBool_Room0IsAvailable:
+                LOCAL_RoomAvailabilityStateChanged(0, newState);
+                break;
             case SyncBool_Room1IsAvailable:
+                LOCAL_RoomAvailabilityStateChanged(1, newState);
+                break;
             case SyncBool_Room2IsAvailable:
+                LOCAL_RoomAvailabilityStateChanged(2, newState);
+                break;
             case SyncBool_Room3IsAvailable:
+                LOCAL_RoomAvailabilityStateChanged(3, newState);
+                break;
             case SyncBool_Room4IsAvailable:
+                LOCAL_RoomAvailabilityStateChanged(4, newState);
+                break;
             case SyncBool_Room5IsAvailable:
+                LOCAL_RoomAvailabilityStateChanged(5, newState);
+                break;
             case SyncBool_Room6IsAvailable:
+                LOCAL_RoomAvailabilityStateChanged(6, newState);
+                break;
             case SyncBool_Room7IsAvailable:
+                LOCAL_RoomAvailabilityStateChanged(7, newState);
+                break;
             case SyncBool_Room8IsAvailable:
+                LOCAL_RoomAvailabilityStateChanged(8, newState);
+                break;
             case SyncBool_Room9IsAvailable:
+                LOCAL_RoomAvailabilityStateChanged(9, newState);
+                break;
             case SyncBool_Room10IsAvailable:
+                LOCAL_RoomAvailabilityStateChanged(10, newState);
+                break;
             case SyncBool_Room11IsAvailable:
+                LOCAL_RoomAvailabilityStateChanged(11, newState);
+                break;
             case SyncBool_Room12IsAvailable:
+                LOCAL_RoomAvailabilityStateChanged(12, newState);
                 break;
             case SyncBool_Room0IsLocked:
                 LOCAL_RoomLockStateChanged(0, newState);
@@ -2515,9 +2545,8 @@ public class NetworkingController : UdonSharpBehaviour
         //Book the room by sending a request to the master
         _elevatorRequester.RequestRoomBooking(chosenRoom);
 
-        //TODO NotFish: LocalPlayer who requested the room needs to put this room bit on his watchlist.
-        //If the bit changes from booked to unbooked, the client needs to call an "ResetRoomBooking() 
-        //function on the ATM controller.
+        //Used as a watchlist, so that the local can be notified if ther are changes to the room booking
+        _roomBookedByUser = chosenRoom;
 
         //Return the room number
         return chosenRoom;
@@ -2602,6 +2631,20 @@ public class NetworkingController : UdonSharpBehaviour
         //only needs to handle changes on _localPlayerCurrentFloor !
         //-> calling a function on the door which ist TBD
     }
+    
+    public void LOCAL_RoomAvailabilityStateChanged(int roomNumber, bool isBooked)
+    {
+        //Check if the room is now unbooked AND if this user had booked the room
+        if(!isBooked && roomNumber == _roomBookedByUser)
+        {
+            //Disable the room watchlist
+            _roomBookedByUser = -1;
+
+            //Release the room from the local ATM
+            _atmController.ResetRoomBooking();
+        }        
+    }
+
     #endregion ROOM_FUNCTIONS
     //------------------------------------------------------------------------------------------------------------
     //----------------------------------SyncBool Interface -------------------------------------------------------
