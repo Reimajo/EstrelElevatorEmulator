@@ -10,6 +10,7 @@ public class NetworkingController : UdonSharpBehaviour
     private float _buttonVolume = 0.2f;
     public PlayerModCheck _playerModCheck;
     public ElevatorSoundController _elevatorSoundController;
+    public ATM_controller _atmController;
     public Transform _currentSpawn;
     public Transform _readonlyReceptionSpawn;
     public Transform _readonlyFloorSpawn;
@@ -96,8 +97,11 @@ public class NetworkingController : UdonSharpBehaviour
     /// </summary>
     private bool[] _elevatorLoliStairsAreEnabled = new bool[3];
     private bool[] _elevatorMirrorIsEnabled = new bool[3];
-    private bool _elevatorMusicIsEnabled = true;
-
+    private bool[] _elevatorMusicIsEnabled = new bool[3];
+    /// <summary>
+    /// Timer to store when the decrease function for room timers was last called
+    /// </summary>
+    private float _roomReqTimeSinceLastDecrease = 0;
     #endregion variables
     //------------------------------------------------------------------------------------------------------------
     //------------------------------------SYNCBOOL ENUM-----------------------------------------------------------
@@ -459,6 +463,10 @@ public class NetworkingController : UdonSharpBehaviour
             _insidePanelFloorScriptElevatorDesktop_1.CustomStart(_buttonVolume);
             _insidePanelFloorScriptElevatorDesktop_2.CustomStart(_buttonVolume);
         }
+        //enable elevator music
+        _elevatorMusicIsEnabled[0] = true;
+        _elevatorMusicIsEnabled[1] = true;
+        _elevatorMusicIsEnabled[2] = true;
         Debug.Log("[NetworkController] Elevator NetworkingController is now loaded");
         _worldIsLoaded = true;
     }
@@ -482,6 +490,14 @@ public class NetworkingController : UdonSharpBehaviour
             LOCAL_OnDeserialization();
             //only the current master does this
             MASTER_RunElevatorControl();
+            //master decreases all timers for roombooking
+            if (_roomReqTimeSinceLastDecrease > 10f) //should be 30 //TODO: change after testing
+            {
+                //is called all 30 seconds by master
+                MASTER_DecrementRoomTimers();
+                _roomReqTimeSinceLastDecrease = 0;
+            }
+            _roomReqTimeSinceLastDecrease += Time.deltaTime;
         }
         //Checking if local external call was handled or dropped
         LOCAL_CheckIfElevatorExternalCallWasReceived();
@@ -1488,7 +1504,7 @@ public class NetworkingController : UdonSharpBehaviour
             case SyncBool_Room12IsLocked:
                 LOCAL_RoomLockStateChanged(12, newState);
                 break;
- 
+
             default:
                 Debug.Log("ERROR: UNKNOWN BOOL HAS CHANGED IN SYNCBOOL, position: " + syncBoolPosition);
                 break;
@@ -2216,12 +2232,21 @@ public class NetworkingController : UdonSharpBehaviour
         }
         if (buttonNumber == 18) // RING-button
         {
-            bool newState = !_elevatorMusicIsEnabled;
-            _elevatorMusicIsEnabled = newState;
+            bool newState = !_elevatorMusicIsEnabled[elevatorNumber];
+            _elevatorMusicIsEnabled[elevatorNumber] = newState;
             _elevatorSoundController.SetMusicUserChoiceState(elevatorNumber, newState);
-            LOCAL_SetElevatorInternalButtonState(0, buttonNumber, called: !newState);
-            LOCAL_SetElevatorInternalButtonState(1, buttonNumber, called: !newState);
-            LOCAL_SetElevatorInternalButtonState(2, buttonNumber, called: !newState);
+            switch (elevatorNumber)
+            {
+                case 0:
+                    LOCAL_SetElevatorInternalButtonState(0, buttonNumber, called: !newState);
+                    break;
+                case 1:
+                    LOCAL_SetElevatorInternalButtonState(1, buttonNumber, called: !newState);
+                    break;
+                case 2:
+                    LOCAL_SetElevatorInternalButtonState(2, buttonNumber, called: !newState);
+                    break;
+            }
             return;
         }
         //every other button is an internal floor request, button 4 is floor 0 etc.
@@ -2358,7 +2383,6 @@ public class NetworkingController : UdonSharpBehaviour
     }
     #endregion ELREQ_FUNCTIONS
     #region ROOMREQ_FUNCTIONS
-
     /// <summary>
     /// Master function for booking a room
     /// </summary>
@@ -2366,7 +2390,7 @@ public class NetworkingController : UdonSharpBehaviour
     public void ROOMREQ_BookRoom(int roomNumber)
     {
         Debug.Log("[NetworkController] Master received client request to reserve room " + roomNumber);
-        
+
         //Mark room as unavailable
         MASTER_SetSyncValue(SyncBool_Room0IsAvailable + roomNumber, false);
 
@@ -2376,39 +2400,33 @@ public class NetworkingController : UdonSharpBehaviour
         //Start the key timeout
         MASTER_RoomResetTimeout(roomNumber);
     }
-
     /// <summary>
     /// Resets a card and marks room as available
     /// </summary>
     /// <param name="roomNumber"></param>
     public void ROOMREQ_ReleaseRoom(int roomNumber)
     {
-        //TODO: I have no idea how the keycards work yet...
-        //TODO: Teleporting card voodoo magic...
-
+        //Teleporting card voodoo magic...
+        _atmController.ResetRoomCardPosition(roomNumber);
         //Marking room as available
         MASTER_SetSyncValue(SyncBool_Room0IsAvailable + roomNumber, true);
     }
 
     public void ROOMREQ_ChangeLockState(int roomNumber, bool requestLock)
     {
-        if(requestLock)
+        if (requestLock)
         {
             //Lock the room
-            MASTER_SetSyncValue(SyncBool_Room0IsLocked + roomNumber , true);
-
-            //TODO: Does anything else need to happen? Should the timer start again?
+            MASTER_SetSyncValue(SyncBool_Room0IsLocked + roomNumber, true);
         }
         else
         {
             //Unlock the room
             MASTER_SetSyncValue(SyncBool_Room0IsLocked + roomNumber, false);
-
             //Stop the timeout
             MASTER_RoomCancelTimeout(roomNumber);
         }
     }
-
     #endregion ROOMREQ_FUNCTIONS
     //------------------------------------------------------------------------------------------------------------
     //------------------------------------ Room Functions --------------------------------------------------------
@@ -2497,6 +2515,10 @@ public class NetworkingController : UdonSharpBehaviour
         //Book the room by sending a request to the master
         _elevatorRequester.RequestRoomBooking(chosenRoom);
 
+        //TODO NotFish: LocalPlayer who requested the room needs to put this room bit on his watchlist.
+        //If the bit changes from booked to unbooked, the client needs to call an "ResetRoomBooking() 
+        //function on the ATM controller.
+
         //Return the room number
         return chosenRoom;
     }
@@ -2512,7 +2534,7 @@ public class NetworkingController : UdonSharpBehaviour
             return 0L != (_syncData2 & standardRoomMask);
         }
         else
-        {            
+        {
             return 0L != (_syncData2 & suiteRoomMask);
         }
     }
@@ -2548,7 +2570,7 @@ public class NetworkingController : UdonSharpBehaviour
         if (0L == (_syncData2 & (1L << SyncBool_AddressLong2_RoomXIsLocked + roomNumber)))
         {
             _elevatorRequester.RequestRoomLock(roomNumber);
-        }        
+        }
     }
     public void LOCAL_UnlockRoom(int roomNumber)
     {
@@ -2577,6 +2599,8 @@ public class NetworkingController : UdonSharpBehaviour
     public void LOCAL_RoomLockStateChanged(int roomNumber, bool isLocked)
     {
         //TODO: handler for change of room lock bools
+        //only needs to handle changes on _localPlayerCurrentFloor !
+        //-> calling a function on the door which ist TBD
     }
     #endregion ROOM_FUNCTIONS
     //------------------------------------------------------------------------------------------------------------
@@ -3203,6 +3227,7 @@ public class NetworkingController : UdonSharpBehaviour
     /// </summary>
     public void MASTER_DecrementRoomTimers()
     {
+        //TODO: Add initial check if any room timer is >0, else return
         long deltaLong = 0L;
         for (int roomNumber = numberOfRoomTimers - 1; roomNumber >= 0; roomNumber--)
         {

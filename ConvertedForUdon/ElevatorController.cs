@@ -525,7 +525,7 @@ public class ElevatorController : UdonSharpBehaviour
             elevatorObj = _elevator3;
         }
         //Check if player is inside elevator, else disable the elevator object
-        if (!inElevatorCollider.bounds.Contains(_localPlayer.GetBonePosition(HumanBodyBones.Head)))
+        if (!inElevatorCollider.bounds.Contains(_localPlayer.GetTrackingData(VRCPlayerApi.TrackingDataType.Head).position))
         {
             elevatorObj.SetActive(false);
             _elevatorSoundController.ChangeElevatorStaticSoundState(elevatorNumber, turnOn: false);

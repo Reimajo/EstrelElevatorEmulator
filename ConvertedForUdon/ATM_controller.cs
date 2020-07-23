@@ -9,8 +9,22 @@ using UnityEngine.UI;
 public class ATM_controller : UdonSharpBehaviour
 {
     public NetworkingController _networkController;
+    //player index bones
+    [HideInInspector]
+    public HumanBodyBones _leftIndexBone = HumanBodyBones.LeftIndexDistal;
+    [HideInInspector]
+    public HumanBodyBones _rightIndexBone = HumanBodyBones.RightIndexDistal;
+    //payment card components
+    public GameObject _paymentCardPickup;
+    private Transform _paymentCardPickupTransform;
+    public GameObject _paymentCardDummy;
+    private Transform _paymentCardDummyTransform;
+    public Transform _paymentCardInsertRefPoint;
+    public BoxCollider _InsertCardZone;
+    //room number components
     public Text _roomNumberText;
     public GameObject _roomNumberObject;
+    //button components
     public GameObject _desktopOnlyComponents;
     public GameObject _vrOnlyComponents;
     private VRCPlayerApi _localPlayer;
@@ -31,7 +45,7 @@ public class ATM_controller : UdonSharpBehaviour
     public Material _confirmationScreen;
     public Material _errorScreen;
     /// <summary>
-    /// touchscreen-buttons
+    /// touchscreen-buttons for desktop users
     /// </summary>
     public BoxCollider _desktopButtonSuiteRoom;
     public BoxCollider _desktopButtonStandardRoom;
@@ -39,6 +53,25 @@ public class ATM_controller : UdonSharpBehaviour
     public BoxCollider _desktopButtonPayment1;
     public BoxCollider _desktopButtonPayment2;
     public BoxCollider _desktopButtonWholeScreen;
+    /// <summary>
+    /// touchscreen-buttons for desktop users
+    /// </summary>
+    public BoxCollider _vrButtonSuiteRoom;
+    public BoxCollider _vrButtonStandardRoom;
+    public BoxCollider _vrButtonBack;
+    public BoxCollider _vrButtonPayment1;
+    public BoxCollider _vrButtonPayment2;
+    public BoxCollider _vrButtonWholeScreen;
+    /// <summary>
+    /// distance from finger bones
+    /// </summary>
+    private float _fingerThickness = 0.03f;
+    public GameObject _activateScriptLOD;
+    private Renderer _lodLevelRenderer;
+    /// <summary>
+    /// GameObject that marks the trigger plate behind the buttons
+    /// </summary>
+    public Transform _planeEndTransform;
     /// <summary>
     /// bools representing the needed button states for both VR and Desktop users
     /// </summary>
@@ -105,16 +138,27 @@ public class ATM_controller : UdonSharpBehaviour
     private bool _roomAvailable = false;
     private bool _selectedStandardRoomType = false;
     private bool _isInVR;
+    private bool _isSetup = false;
+    private Vector3 _pushUpVector;
+    private Vector3 _pushRefPosition;
+    private bool[] _i_wasInBound;
     /// <summary>
     /// At start we need to read all renderers from the screens
     /// </summary>
     public void Start()
     {
+        _paymentCardDummy.SetActive(false);
         _localPlayer = Networking.LocalPlayer;
         _isInVR = _localPlayer.IsUserInVR();
+        _lodLevelRenderer = _activateScriptLOD.GetComponent<Renderer>();
+        _paymentCardPickupTransform = _paymentCardPickup.transform;
+        _paymentCardDummyTransform = _paymentCardDummy.transform;
         if (_isInVR)
         {
             _desktopOnlyComponents.SetActive(false);
+            _pushUpVector = _planeEndTransform.forward;
+            _pushRefPosition = _planeEndTransform.position;
+            SetupBounds();
         }
         else
         {
@@ -128,35 +172,89 @@ public class ATM_controller : UdonSharpBehaviour
             i++;
         }
         SetDefaultState();
+        _isSetup = true;
     }
     private Transform _cardTransform;
     private bool _moveCard = false;
-    public void Update()
+    private bool _paymentCardInserted = false;
+    public void FixedUpdate()
     {
+        if (!_isSetup)
+            return;
+        if (!_paymentCardInserted)
+            InsertCard();
         if (_moveCard)
             MoveCard();
         if (_isLoading)
             ProcessLoading();
-        if(_isInVR)
+        if (_isInVR)
         {
+            if (!_lodLevelRenderer.isVisible)
+                return;
             //do VR-only stuff here
+            ReadBonePositions();
+            CheckAllButtons();
         }
     }
-
-    private void ConfirmBooking(int room)
+    private bool _insertingAnimationStarted = false;
+    private float _timeSinceInsertStart = 0;
+    private Vector3 _paymentCardReleasePosition;
+    private Quaternion _paymentCardReleaseRotation;
+    /// <summary>
+    /// Inserting the card into the atm
+    /// </summary>
+    private void InsertCard()
     {
-        _assignedRoom = room;
-    }
-    private void CancelBooking()
-    {
-        _assignedRoom = -1;
+        //checking if card is close to the atm, else return
+        if (Vector3.Distance(_releaseEndPos.position, _paymentCardPickupTransform.position) > 2f)
+            return;
+        //if the inserting animation was already started
+        if (_insertingAnimationStarted)
+        {
+            _timeSinceInsertStart += Time.fixedDeltaTime;
+            _paymentCardDummyTransform.position = Vector3.Lerp(_paymentCardReleasePosition, _releaseStartPos.position, _timeSinceInsertStart);
+            _paymentCardDummyTransform.rotation = Quaternion.Slerp(_paymentCardReleaseRotation, _releaseStartPos.rotation, _timeSinceInsertStart * 2);
+            if (_timeSinceInsertStart >= 1f)
+            {
+                //now card is fully inserted, so we can disable it
+                _paymentCardDummy.SetActive(false);
+                _paymentCardInserted = true;
+                //show the booking screen now
+                SetScreenState(_enumStateRoomtypeChoice);
+            }
+            return;
+        }
+        //checking if card is inside the insert-zone
+        if (_InsertCardZone.bounds.Contains(_paymentCardInsertRefPoint.position))
+        {
+            Vector3 cardRotation = _paymentCardPickupTransform.eulerAngles;
+            //making sure the card is rotated the right way
+            if (cardRotation.x < 330 && cardRotation.x > 30)
+                return;
+            if (cardRotation.y < 150 && cardRotation.y > 210)
+                return;
+            if (cardRotation.z < 330 && cardRotation.z > 30)
+                return;
+            //replacing the pickup with a dummy
+            _paymentCardDummy.SetActive(true);
+            _paymentCardReleasePosition = _paymentCardPickupTransform.position;
+            _paymentCardReleaseRotation = _paymentCardPickupTransform.rotation;
+            _paymentCardDummyTransform.position = _paymentCardPickupTransform.position;
+            _paymentCardDummyTransform.rotation = _paymentCardPickupTransform.rotation;
+            //disabling the pickup furever
+            _paymentCardPickup.SetActive(false);
+            //start the insert animation
+            _insertingAnimationStarted = true;
+            //playing insert-audio
+            AudioSource.PlayClipAtPoint(_cardOutAudio, _releaseStartPos.position, 0.3f);
+        }
     }
     /// <summary>
     /// When the screen shows a loading picture, this function processes what happens next
     /// </summary>
     private void ProcessLoading()
     {
-        _timeSinceLoading += Time.deltaTime;
+        _timeSinceLoading += Time.fixedDeltaTime;
         if (_timeSinceLoading > 2f)
         {
             //this state is reached when user needs to make a payment choice next
@@ -175,8 +273,10 @@ public class ATM_controller : UdonSharpBehaviour
                     _isLoading = false;
                     break;
                 case _enumStatePaymentChoiceLaden:
-                    if (_assignedRoom == -1) //checking if room was really booked
+                    //checking if master confirmed the room booking uwu
+                    if (!_networkController.LOCAL_CheckIfRoomWasBooked(_assignedRoom)) //checking if room was really booked
                     {
+                        _assignedRoom = -1;
                         _timeSinceLoading = 0;
                         //show error screen when master didn't responded and wait x seconds till loading again
                         SetScreenState(_enumStateErrorScreen);
@@ -184,10 +284,11 @@ public class ATM_controller : UdonSharpBehaviour
                     else
                     {
                         _isLoading = false;
+                        Networking.SetOwner(_localPlayer, _keyCards[_assignedRoom].gameObject);
                         SetScreenState(_enumStateSuccess);
-                        _roomNumberText.text = _assignedRoom.ToString();
-                        Debug.Log($"ATM accesses card {_assignedRoom - 1} transform now...");
-                        _cardTransform = _keyCards[_assignedRoom - 1].transform;
+                        _roomNumberText.text = (_assignedRoom + 1).ToString();
+                        Debug.Log($"ATM accesses card {_assignedRoom} transform now...");
+                        _cardTransform = _keyCards[_assignedRoom].transform;
                         _cardTransform.position = _releaseStartPos.position;
                         _cardTransform.rotation = _releaseStartPos.rotation;
                         _moveCard = true;
@@ -201,21 +302,28 @@ public class ATM_controller : UdonSharpBehaviour
             }
         }
     }
+    private float _movingSinceSeconds = 0;
     /// <summary>
     /// Moving the card out
     /// </summary>
     private void MoveCard()
     {
-        float distance = Vector3.Distance(_cardTransform.position, _releaseEndPos.position);
-        if (distance < 0.001f || distance > 2f)
+        _movingSinceSeconds += Time.fixedDeltaTime / 2; //travels for 2 seconds
+        if (_movingSinceSeconds >= 2.5f)
         {
+            Debug.Log("[ATM] stopped moving the card.");
             _moveCard = false;
+            return;
+        }
+        else if (_movingSinceSeconds > 2f)
+        {
+            //trying to "stop" the card for 500ms
+            _cardTransform.position = _releaseEndPos.position;
         }
         else
         {
-            _cardTransform.position = Vector3.Lerp(_cardTransform.position, _releaseEndPos.position, Time.deltaTime);
+            _cardTransform.position = Vector3.Lerp(_releaseStartPos.position, _releaseEndPos.position, _movingSinceSeconds);
         }
-        //Debug.Log($"Moving card pos x:{_keyCards[_assignedRoom - 1].transform.position.x} y:{_keyCards[_assignedRoom - 1].transform.position.y} z:{_keyCards[_assignedRoom - 1].transform.position.z}");
     }
     /// <summary>
     /// Sets object into "default" state
@@ -249,7 +357,7 @@ public class ATM_controller : UdonSharpBehaviour
         {
             case _enumStateScreensaver: //screensaver
                 SetScreenMaterial(_startScreen);
-                _boolButtonWholeScreen = true;
+                //_boolButtonWholeScreen = true;
                 break;
             case _enumStateRoomtypeChoice: //roomtype-choice
                 SetScreenMaterial(_roomChoiceScreen);
@@ -284,7 +392,8 @@ public class ATM_controller : UdonSharpBehaviour
                 SetScreenMaterial(_errorScreen);
                 break;
         }
-        SetButtonsActive();
+        if (!_isInVR)
+            SetButtonsActive();
         _currentScreenState = _screenState;
     }
     /// <summary>
@@ -292,17 +401,17 @@ public class ATM_controller : UdonSharpBehaviour
     /// </summary>
     private void SetButtonsActive()
     {
-        if(_boolButtonSuiteRoom)
+        if (_boolButtonSuiteRoom)
             _desktopButtonSuiteRoom.enabled = true;
-        if(_boolButtonStandardRoom)
+        if (_boolButtonStandardRoom)
             _desktopButtonStandardRoom.enabled = true;
-        if(_boolButtonBack)
+        if (_boolButtonBack)
             _desktopButtonBack.enabled = true;
-        if(_boolButtonPayment1)
+        if (_boolButtonPayment1)
             _desktopButtonPayment1.enabled = true;
-        if(_boolButtonPayment2)
+        if (_boolButtonPayment2)
             _desktopButtonPayment2.enabled = true;
-        if(_boolButtonWholeScreen)
+        if (_boolButtonWholeScreen)
             _desktopButtonWholeScreen.enabled = true;
     }
     /// <summary>
@@ -318,12 +427,15 @@ public class ATM_controller : UdonSharpBehaviour
         _boolButtonPayment2 = false;
         _boolButtonWholeScreen = false;
         //disable all desktop buttons
-        _desktopButtonSuiteRoom.enabled = false;
-        _desktopButtonStandardRoom.enabled = false;
-        _desktopButtonBack.enabled = false;
-        _desktopButtonPayment1.enabled = false;
-        _desktopButtonPayment2.enabled = false;
-        _desktopButtonWholeScreen.enabled = false;
+        if (!_isInVR)
+        {
+            _desktopButtonSuiteRoom.enabled = false;
+            _desktopButtonStandardRoom.enabled = false;
+            _desktopButtonBack.enabled = false;
+            _desktopButtonPayment1.enabled = false;
+            _desktopButtonPayment2.enabled = false;
+            _desktopButtonWholeScreen.enabled = false;
+        }
     }
     /// <summary>
     /// When a button is pressed, this function is called
@@ -333,14 +445,14 @@ public class ATM_controller : UdonSharpBehaviour
         AudioSource.PlayClipAtPoint(_screenPressAudio, _screenMiddleAudioPosition.position, 0.3f);
         switch (_button)
         {
-            case 0: //book standard room
+            case 0: //select standard room
                 _selectedStandardRoomType = true;
-                _roomAvailable = _networkController.CheckForFreeRoom(isStandardRoom: true);
+                _roomAvailable = _networkController.LOCAL_IsRoomAvailable(isStandardRoom: true);
                 SetScreenState(_enumStateRoomtypeChoiceLaden);
                 break;
-            case 1: //book suite room
+            case 1: //select suite room
                 _selectedStandardRoomType = false;
-                _roomAvailable = _networkController.CheckForFreeRoom(isStandardRoom: false);
+                _roomAvailable = _networkController.LOCAL_IsRoomAvailable(isStandardRoom: false);
                 SetScreenState(_enumStateRoomtypeChoiceLaden);
                 break;
             case 2: //back-button
@@ -348,7 +460,7 @@ public class ATM_controller : UdonSharpBehaviour
                 break;
             case 3: //payment-option 1
             case 4: //payment-option 2
-                _assignedRoom = _networkController.BookFreeRoom(isStandardRoom: _selectedStandardRoomType);
+                _assignedRoom = _networkController.LOCAL_BookRandomRoom(isStandardRoom: _selectedStandardRoomType);
                 if (_assignedRoom == -1)
                 {
                     SetScreenState(_enumStateBookedOut);
@@ -365,5 +477,129 @@ public class ATM_controller : UdonSharpBehaviour
                 SetScreenState(_enumStateErrorScreen);
                 break;
         }
+    }
+    /// <summary>
+    /// Can be called by master to move a card back to spawn
+    /// </summary>
+    /// <param name=""></param>
+    public void ResetRoomCardPosition(int roomNumber)
+    {
+        KeycardScript keycardScript = _keyCards[roomNumber].gameObject.GetComponent<KeycardScript>();
+        keycardScript.MASTER_RespawnCard();
+    }
+    /// <summary>
+    /// Button-bounds for VR users, set on start via SetupBounds()
+    /// </summary>
+    private Bounds _0_buttonBounds; //_vrButtonStandardRoom 
+    private Bounds _1_buttonBounds; //_vrButtonSuiteRoom
+    private Bounds _2_buttonBounds; //_vrButtonBack
+    private Bounds _3_buttonBounds; //_vrButtonPayment1
+    private Bounds _4_buttonBounds; //_vrButtonPayment2
+    private Bounds _5_buttonBounds; //_vrButtonWholeScreen
+    /// <summary>
+    /// Store Bounds for all PushAreas
+    /// </summary>
+    private void SetupBounds()
+    {
+        _0_buttonBounds = new Bounds(_vrButtonStandardRoom.center, _vrButtonStandardRoom.size);
+        _1_buttonBounds = new Bounds(_vrButtonSuiteRoom.center, _vrButtonSuiteRoom.size);
+        _2_buttonBounds = new Bounds(_vrButtonBack.center, _vrButtonBack.size);
+        _3_buttonBounds = new Bounds(_vrButtonPayment1.center, _vrButtonPayment1.size);
+        _4_buttonBounds = new Bounds(_vrButtonPayment2.center, _vrButtonPayment2.size);
+        _5_buttonBounds = new Bounds(_vrButtonWholeScreen.center, _vrButtonWholeScreen.size);
+        _i_wasInBound = new bool[6];
+    }
+    private Vector3 _indexBoneL;
+    private Vector3 _indexBoneR;
+    /// <summary>
+    /// Reads bone positions of all hand bones
+    /// </summary>
+    void ReadBonePositions()
+    {
+        _indexBoneL = _localPlayer.GetBonePosition(_leftIndexBone);
+        _indexBoneR = _localPlayer.GetBonePosition(_rightIndexBone);
+    }
+    //splitting workload into two frames
+    private bool _evenFrame = false;
+    private bool _oneButtonPressed;
+    /// <summary>
+    /// Doing a check on all buttons
+    /// </summary>
+    private void CheckAllButtons()
+    {
+        _oneButtonPressed = false;
+        if (_evenFrame)
+        {
+            if (_boolButtonSuiteRoom)
+                CheckButton(0, _0_buttonBounds, _vrButtonSuiteRoom);
+            if (_boolButtonStandardRoom)
+                CheckButton(1, _1_buttonBounds, _vrButtonStandardRoom);
+            if (_boolButtonBack)
+                CheckButton(2, _2_buttonBounds, _vrButtonBack);
+        }
+        else
+        {
+            if (_boolButtonPayment1)
+                CheckButton(3, _3_buttonBounds, _vrButtonPayment1);
+            if (_boolButtonPayment2)
+                CheckButton(4, _4_buttonBounds, _vrButtonPayment2);
+            if (_boolButtonWholeScreen)
+                CheckButton(5, _5_buttonBounds, _vrButtonWholeScreen);
+        }
+        _evenFrame = !_evenFrame;
+    }
+    private float _distanceToHand = 0;
+    /// <summary>
+    /// Check if hand is inside a box collider area, if so it does a lot of magic
+    /// </summary>
+    void CheckButton(int i, Bounds pushAreaBounds, BoxCollider pushAreaCollider)
+    {
+        bool _isInBoundRightNow = false;
+        if (pushAreaBounds.Contains(pushAreaCollider.transform.InverseTransformPoint(_indexBoneL)))
+        {
+            //measure distances to both hands
+            _distanceToHand = SignedDistancePlanePoint(_pushUpVector, _pushRefPosition, _indexBoneL) - _fingerThickness;
+            //the lowest distance is important for us
+            if (_distanceToHand < _fingerThickness)
+            {
+                _isInBoundRightNow = true;
+            }
+        }
+        if (!_isInBoundRightNow && pushAreaBounds.Contains(pushAreaCollider.transform.InverseTransformPoint(_indexBoneR)))
+        {
+            //measure distances to both hands
+            _distanceToHand = SignedDistancePlanePoint(_pushUpVector, _pushRefPosition, _indexBoneR) - _fingerThickness;
+            //the lowest distance is important for us
+            if (_distanceToHand < _fingerThickness)
+            {
+                _isInBoundRightNow = true;
+            }
+        }
+        //check if hand is in bounds
+        if (_isInBoundRightNow)
+        {
+            if (!_i_wasInBound[i])
+            {
+                _i_wasInBound[i] = true;
+                if (!_oneButtonPressed)
+                {
+                    _oneButtonPressed = true;
+                    //trigger action
+                    ButtonPressed(i);
+                }
+            }
+        }
+        else
+        {
+            _i_wasInBound[i] = false;
+        }
+    }
+    /// <summary>
+    /// Get the shortest distance between a point and a plane. The output is signed so it holds information
+    /// as to which side of the plane normal the point is.
+    /// </summary>
+    public float SignedDistancePlanePoint(Vector3 planeNormal, Vector3 planePoint, Vector3 point)
+    {
+        return Vector3.Dot(planeNormal, (point - planePoint));
     }
 }
