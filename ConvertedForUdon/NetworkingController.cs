@@ -7,7 +7,11 @@ using System;
 public class NetworkingController : UdonSharpBehaviour
 {
     #region variables
-    private float _buttonVolume = 0.2f;
+    public DoorScript _floorDoorController;
+    public GameObject _notInitializedErrorMessage;
+    public GameObject _justForSuites;
+    public GameObject _justForRooms;
+    private const float _buttonVolume = 0.2f;
     public PlayerModCheck _playerModCheck;
     public ElevatorSoundController _elevatorSoundController;
     public ATM_controller _atmController;
@@ -435,6 +439,19 @@ public class NetworkingController : UdonSharpBehaviour
     {
         Debug.Log("[NetworkController] NetworkingController is now in Start()");
         MASTER_InitializeRooms();
+        _syncData2 |= SyncBool_MaskLong2_Room0IsLocked |
+                    SyncBool_MaskLong2_Room1IsLocked |
+                    SyncBool_MaskLong2_Room2IsLocked |
+                    SyncBool_MaskLong2_Room3IsLocked |
+                    SyncBool_MaskLong2_Room4IsLocked |
+                    SyncBool_MaskLong2_Room5IsLocked |
+                    SyncBool_MaskLong2_Room6IsLocked |
+                    SyncBool_MaskLong2_Room7IsLocked |
+                    SyncBool_MaskLong2_Room8IsLocked |
+                    SyncBool_MaskLong2_Room9IsLocked |
+                    SyncBool_MaskLong2_Room10IsLocked |
+                    SyncBool_MaskLong2_Room11IsLocked |
+                    SyncBool_MaskLong2_Room12IsLocked;
         _floorNumberSignRenderer = _floorNumberSign.GetComponent<Renderer>();
         _floorRoomNumberSignRenderer = _floorRoomNumberSign.GetComponent<Renderer>();
         _localPlayer = Networking.LocalPlayer;
@@ -442,6 +459,7 @@ public class NetworkingController : UdonSharpBehaviour
         //the first master has to set the constant scene settings
         if (_localPlayer.isMaster && 0L == (_syncData2 & (SyncBool_MaskLong2_Initialized)))
         {
+            Debug.Log("[NetworkController] LocalPlayer is Master");
             _isMaster = true;
             MASTER_SetConstSceneElevatorStates();
             MASTER_FirstMasterSetupElevatorControl();
@@ -451,13 +469,14 @@ public class NetworkingController : UdonSharpBehaviour
         //for reception level
         if (_userIsInVR)
         {
+            Debug.Log("[NetworkController] User is in VR");
             _InsidePanelScriptElevatorForVR_0.CustomStart(_buttonVolume);
             _InsidePanelScriptElevatorForVR_1.CustomStart(_buttonVolume);
             _InsidePanelScriptElevatorForVR_2.CustomStart(_buttonVolume);
             _InsidePanelFloorScriptElevatorForVR_0.CustomStart(_buttonVolume);
             _InsidePanelFloorScriptElevatorForVR_1.CustomStart(_buttonVolume);
             _InsidePanelFloorScriptElevatorForVR_2.CustomStart(_buttonVolume);
-            Debug.Log("[NetworkController] Fired CustomStart for Inside Button Panels");
+            Debug.Log("[NetworkController] Finished CustomStart for Inside Button Panels");
         }
         else
         {
@@ -476,10 +495,19 @@ public class NetworkingController : UdonSharpBehaviour
         _worldIsLoaded = true;
     }
     /// <summary>
+    /// Storing time of last casual log
+    /// </summary>
+    private float _timeOfLastLog = 0;
+    /// <summary>
     /// This update is run every frame
     /// </summary>
     public void Update()
     {
+        if(Time.timeSinceLevelLoad - _timeOfLastLog > 120f)
+        {
+            Debug.Log("[NetworkingController] I'm still alive!");
+            _timeOfLastLog = Time.timeSinceLevelLoad;
+        }
         //first checking if there is a pending teleport request
         CheckTeleportCounter();
         //master needs to run a different routine
@@ -496,7 +524,7 @@ public class NetworkingController : UdonSharpBehaviour
             //only the current master does this
             MASTER_RunElevatorControl();
             //master decreases all timers for roombooking
-            if (_roomReqTimeSinceLastDecrease > 10f) //should be 30 //TODO: change after testing
+            if (_roomReqTimeSinceLastDecrease > 30f) //should be 30
             {
                 //is called all 30 seconds by master
                 MASTER_DecrementRoomTimers();
@@ -626,22 +654,22 @@ public class NetworkingController : UdonSharpBehaviour
             MASTER_RunElevator(2, _elevator2FloorTargets_MASTER);
         }
         _elevatorCheckTick_MASTER++;
-        //TODO: Remove before pushing live
-        if (false && _elevatorCheckTick_MASTER == 4)
-        {
-            if (_elevator0FloorTargets_MASTER_COUNT != 0)
-                Debug.Log("_elevator0FloorTargets_MASTER_COUNT:" + _elevator0FloorTargets_MASTER_COUNT);
-            if (_elevator1FloorTargets_MASTER_COUNT != 0)
-                Debug.Log("_elevator1FloorTargets_MASTER_COUNT:" + _elevator1FloorTargets_MASTER_COUNT);
-            if (_elevator2FloorTargets_MASTER_COUNT != 0)
-                Debug.Log("_elevator2FloorTargets_MASTER_COUNT:" + _elevator2FloorTargets_MASTER_COUNT);
-            if (_calledToFloorToGoUp_MASTER_COUNT != 0)
-                Debug.Log("_calledToFloorToGoUp_MASTER_COUNT:" + _calledToFloorToGoUp_MASTER_COUNT);
-            if (_calledToFloorToGoDown_MASTER_COUNT != 0)
-                Debug.Log("_calledToFloorToGoDown_MASTER_COUNT:" + _calledToFloorToGoDown_MASTER_COUNT);
-        }
         if (_elevatorCheckTick_MASTER >= 4)
             _elevatorCheckTick_MASTER = 1;
+        //TODO: Remove before pushing live
+        //if (false && _elevatorCheckTick_MASTER == 4)
+        //{
+        //    if (_elevator0FloorTargets_MASTER_COUNT != 0)
+        //        Debug.Log("_elevator0FloorTargets_MASTER_COUNT:" + _elevator0FloorTargets_MASTER_COUNT);
+        //    if (_elevator1FloorTargets_MASTER_COUNT != 0)
+        //        Debug.Log("_elevator1FloorTargets_MASTER_COUNT:" + _elevator1FloorTargets_MASTER_COUNT);
+        //    if (_elevator2FloorTargets_MASTER_COUNT != 0)
+        //        Debug.Log("_elevator2FloorTargets_MASTER_COUNT:" + _elevator2FloorTargets_MASTER_COUNT);
+        //    if (_calledToFloorToGoUp_MASTER_COUNT != 0)
+        //        Debug.Log("_calledToFloorToGoUp_MASTER_COUNT:" + _calledToFloorToGoUp_MASTER_COUNT);
+        //    if (_calledToFloorToGoDown_MASTER_COUNT != 0)
+        //        Debug.Log("_calledToFloorToGoDown_MASTER_COUNT:" + _calledToFloorToGoDown_MASTER_COUNT);
+        //}
     }
     /// <summary>
     /// Running a single elevator, is only called by master in every Update
@@ -932,7 +960,6 @@ public class NetworkingController : UdonSharpBehaviour
     /// <param name="floor"></param>
     private void MASTER_HandleFloorDoorOpening(int elevatorNumber, int currentFloor, bool directionUp, bool isIdle)
     {
-        //TODO: I tried to solve this issue here, please check/test
         //When the other directional button is pressed on that floor level and we should consider to handle it
         //and set this elevator to idle if the other button on that floor wasn't pressed and there is no internal target
         //on this way, so the elevator would reverse next. We also need to reverse the elevator in that case.
@@ -1534,7 +1561,6 @@ public class NetworkingController : UdonSharpBehaviour
             case SyncBool_Room12IsLocked:
                 LOCAL_RoomLockStateChanged(12, newState);
                 break;
-
             default:
                 Debug.Log("ERROR: UNKNOWN BOOL HAS CHANGED IN SYNCBOOL, position: " + syncBoolPosition);
                 break;
@@ -1680,6 +1706,7 @@ public class NetworkingController : UdonSharpBehaviour
             {
                 LOCAL_ReadConstSceneElevatorStates();
                 _finishedLocalSetup = true;
+                _notInitializedErrorMessage.SetActive(false);
                 Debug.Log("[NetworkController] Local setup was finished");
             }
             else
@@ -1702,6 +1729,8 @@ public class NetworkingController : UdonSharpBehaviour
         if (setOpen)
         {
             Debug.Log($"[NetworkController] LocalPlayer received to open elevator {elevatorNumber} on floor {floorNumber} while localPlayer is on floor {_localPlayerCurrentFloor}");
+            //move pickups in any case, even when the player is not inside
+            _atmController.MovePickups(elevatorNumber, floorNumber);
             if (floorNumber == _localPlayerCurrentFloor)
                 _elevatorSoundController.ChangeElevatorStaticSoundState(elevatorNumber, turnOn: true);
             bool thisElevatorWasAlreadyOpened = false;
@@ -1811,7 +1840,6 @@ public class NetworkingController : UdonSharpBehaviour
                     //if NOT called up to floor X
                     if (0L == (_syncData1 & (1L << (SyncBoolReq_AddressLong1_ElevatorCalledUp + floor))))
                     {
-                        //TODO: link all elevator controllers here in Unity later
                         if (floor == 0)
                         {
                             Debug.Log("Dropped request, SetElevatorNotCalledUp() floor " + floor + " after " + (Time.time - _pendingCallTimeUp_LOCAL_EXT[floor]).ToString() + " seconds.");
@@ -1838,7 +1866,6 @@ public class NetworkingController : UdonSharpBehaviour
                     //if NOT called down to floor X
                     if (0L == (_syncData1 & (1L << (SyncBoolReq_AddressLong1_ElevatorCalledDown + floor))))
                     {
-                        //TODO: link all elevator controllers here in Unity later
                         if (floor == 0)
                         {
                             Debug.Log("Dropped request, SetElevatorNotCalledDown() floor " + floor + " after " + (Time.time - _pendingCallTimeDown_LOCAL_EXT[floor]).ToString() + " seconds.");
@@ -2027,44 +2054,6 @@ public class NetworkingController : UdonSharpBehaviour
         float floorLevelHeight = (50 * floorNumber);
         if (floorNumber != 0)
             _moveArrivalFloorHere.position = new Vector3(-32.6f, floorLevelHeight, 10.55f);//new Vector3(150, 0, (50 * floorNumber) - 300);
-        //read the new target position
-        Vector3 _targetElevatorPosition;
-        if (floorNumber == 0)
-        {
-            switch (elevatorNumberWithPlayerInside)
-            {
-                case 0:
-                    _targetElevatorPosition = _elevator0PositionReception.position;
-                    break;
-                case 1:
-                    _targetElevatorPosition = _elevator1PositionReception.position;
-                    break;
-                case 2:
-                    _targetElevatorPosition = _elevator2PositionReception.position;
-                    break;
-                default:
-                    Debug.Log("[Prepare] ERROR: Unknown elevator number in PrepareFloorForArrival()");
-                    return false;
-            }
-        }
-        else
-        {
-            switch (elevatorNumberWithPlayerInside)
-            {
-                case 0:
-                    _targetElevatorPosition = _elevator0PositionFloor.position;
-                    break;
-                case 1:
-                    _targetElevatorPosition = _elevator1PositionFloor.position;
-                    break;
-                case 2:
-                    _targetElevatorPosition = _elevator2PositionFloor.position;
-                    break;
-                default:
-                    Debug.Log("[Prepare] ERROR: Unknown elevator number in PrepareFloorForArrival()");
-                    return false;
-            }
-        }
         //Vector3 teleportTarget;
         if (floorNumber == 0)
         {
@@ -2076,9 +2065,6 @@ public class NetworkingController : UdonSharpBehaviour
             _teleportTarget = new Vector3(playerPosition.x, playerPosition.y + floorLevelHeight - arrivalFloorOldHeight, playerPosition.z);
         }
         ////teleport player to the new target
-        //teleportTarget = _targetElevatorPosition + teleportOffset;
-        ////setting the spawn a bit higher to avoid falling down
-        //teleportTarget.y = _targetElevatorPosition.y + 0.2f; // + 0.04f;
         Debug.Log($"[Prepare] new teleportTarget is x:{_teleportTarget.x},y:{_teleportTarget.y},z:{_teleportTarget.z}");
         //saving the floor the player is now on
         SetPlayerFloorLevel(floorNumber);
@@ -2088,12 +2074,12 @@ public class NetworkingController : UdonSharpBehaviour
             Debug.Log("[Prepare] Floor is 0 so we'll open reception elevator and teleport there.");
             //open just the reception elevator where the player is inside
             _elevatorControllerReception.OpenElevator(elevatorNumberWithPlayerInside, 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXgoingUp + elevatorNumberWithPlayerInside))), 0L != (_syncData1 & (1L << (SyncBool_AddressLong1_ElevatorXidle + elevatorNumberWithPlayerInside))), withSounds: true);
-            //teleport to reception
-            //_localPlayer.TeleportTo(_teleportTarget, _localPlayer.GetRotation());
             _teleportCounter = 3;
             return true;
         }
         Debug.Log("[Prepare] Setting the Callbutton-States on the arrival floor");
+        //preparing the door
+        _floorDoorController.SetDoorFloorInitialization(floorNumber, isLocked: LOCAL_isRoomLocked(floorNumber-1));
         //setting the callbutton-states
         _elevatorControllerArrivalArea.SetCallButtonState(buttonUp: false, isCalled: (0L != (_syncData1 & (1L << (SyncBoolReq_AddressLong1_ElevatorCalledDown + floorNumber)))));
         _elevatorControllerArrivalArea.SetCallButtonState(buttonUp: true, isCalled: (0L != (_syncData1 & (1L << (SyncBoolReq_AddressLong1_ElevatorCalledUp + floorNumber)))));
@@ -2120,9 +2106,7 @@ public class NetworkingController : UdonSharpBehaviour
         {
             Debug.Log($"[Prepare] Teleporting player to floor {floorNumber}");
             Debug.Log($"[Prepare] TeleportTarget is x:{_teleportTarget.x},y:{_teleportTarget.y},z:{_teleportTarget.z}");
-            //_localPlayer.TeleportTo(_teleportTarget, _localPlayer.GetRotation());
             _teleportCounter = 3;
-            //Debug.Log($"[Prepare] Teleported.");
         }
         else
         {
@@ -2181,7 +2165,21 @@ public class NetworkingController : UdonSharpBehaviour
         }
         //when the floor is reception-level, we don't change the number signs
         if (floorNumber == 0)
+        {
+            _justForSuites.SetActive(false);
+            _justForRooms.SetActive(false);
             return;
+        }
+        else if(floorNumber > 6)
+        {
+            _justForSuites.SetActive(true);
+            _justForRooms.SetActive(false);
+        }
+        else
+        {
+            _justForSuites.SetActive(false);
+            _justForRooms.SetActive(true);
+        }
         //setup the floor to the networked state of that level
         _floorNumberSignRenderer.materials[2].SetInt("_Index", floorNumber - 1);
         _floorRoomNumberSignRenderer.materials[0].SetInt("_Index", floorNumber - 1);
@@ -2265,18 +2263,9 @@ public class NetworkingController : UdonSharpBehaviour
             bool newState = !_elevatorMusicIsEnabled[elevatorNumber];
             _elevatorMusicIsEnabled[elevatorNumber] = newState;
             _elevatorSoundController.SetMusicUserChoiceState(elevatorNumber, newState);
-            switch (elevatorNumber)
-            {
-                case 0:
-                    LOCAL_SetElevatorInternalButtonState(0, buttonNumber, called: !newState);
-                    break;
-                case 1:
-                    LOCAL_SetElevatorInternalButtonState(1, buttonNumber, called: !newState);
-                    break;
-                case 2:
-                    LOCAL_SetElevatorInternalButtonState(2, buttonNumber, called: !newState);
-                    break;
-            }
+            LOCAL_SetElevatorInternalButtonState(0, buttonNumber, called: !newState);
+            LOCAL_SetElevatorInternalButtonState(1, buttonNumber, called: !newState);
+            LOCAL_SetElevatorInternalButtonState(2, buttonNumber, called: !newState);
             return;
         }
         //every other button is an internal floor request, button 4 is floor 0 etc.
@@ -2627,22 +2616,29 @@ public class NetworkingController : UdonSharpBehaviour
     }
     public void LOCAL_RoomLockStateChanged(int roomNumber, bool isLocked)
     {
-        //TODO: handler for change of room lock bools
+        //handler for change of room lock bools
         //only needs to handle changes on _localPlayerCurrentFloor !
-        //-> calling a function on the door which ist TBD
+        //-> calling a function on the door if player is on that level
+        if(_localPlayerCurrentFloor == roomNumber + 1)
+            _floorDoorController.ExternalSetLockedState(isLocked);
     }
-    
-    public void LOCAL_RoomAvailabilityStateChanged(int roomNumber, bool isBooked)
+
+    public void LOCAL_RoomAvailabilityStateChanged(int roomNumber, bool isAvailable)
     {
-        //Check if the room is now unbooked AND if this user had booked the room
-        if(!isBooked && roomNumber == _roomBookedByUser)
+        //Check if the room changed to unbooked AND if this user had booked the room
+        if (isAvailable && roomNumber == _roomBookedByUser)
         {
             //Disable the room watchlist
             _roomBookedByUser = -1;
 
             //Release the room from the local ATM
             _atmController.ResetRoomBooking();
-        }        
+        }
+        else if(!isAvailable && roomNumber == _roomBookedByUser)
+        {
+            //confirm the booking
+            _atmController.ConfirmBooking(roomNumber);
+        }
     }
 
     #endregion ROOM_FUNCTIONS

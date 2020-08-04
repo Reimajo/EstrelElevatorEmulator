@@ -495,7 +495,7 @@ public class ElevatorController : UdonSharpBehaviour
             doorCollider = _elevator3DoorCollider;
         }
         //Check if player is inside the door and teleport him/her if that is the case
-        if (inDoorCollider.bounds.Contains(_localPlayer.GetBonePosition(HumanBodyBones.Head)))
+        if (inDoorCollider.bounds.Contains(_localPlayer.GetTrackingData(VRCPlayerApi.TrackingDataType.Head).position))
         {
             _localPlayer.TeleportTo(elevatorObj.transform.position, _localPlayer.GetRotation());
         }
